@@ -42,7 +42,7 @@ Socrática do Grill with Docs, ainda vale.
 | `preenchimento_caderno` | string | Se a prova foi respondida | Redundante com `presenca` (834/835 casos coincidem) | **Fora do modelo, sempre** — leakage por redundância (ADR-0001) |
 | `alfabetizado` | string (Sim/Não) | Target — aluno atingiu 743 pts na escala Saeb | É o que o modelo prevê | Target |
 | `proficiencia` | float | Score contínuo da prova (escala Saeb) | Define `alfabetizado` por corte determinístico (743 pts, confirmado sem sobreposição na EDA) | **Fora do modelo, sempre** — define o target |
-| `peso_aluno` | float | Peso amostral (pós-estratificação) | Ajuste estatístico de representatividade, não desempenho | Sem diferença relevante entre classes (EDA item 8) — uso opcional, baixo valor preditivo esperado |
+| `peso_aluno` | float | Peso amostral (pós-estratificação) | Ajuste estatístico de representatividade, não desempenho | 🔴 **DECISÃO PENDENTE (2026-08-18)**: o SHAP mostrou 70,6% da influência do modelo vindo daqui, e a variável é ~constante por escola (proxy de escola, não do aluno). A leitura da EDA ("baixo valor preditivo") foi corrigida. Ver risco 8 e Cap. 9.3 do HANDOFF_RENAN.md |
 
 ## Features criadas (planejadas — dependem do snapshot com BigQuery, ainda não extraído)
 

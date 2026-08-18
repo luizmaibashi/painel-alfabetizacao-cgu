@@ -129,7 +129,21 @@ Máximo de quem é 'Não' (742,97) < mínimo de quem é 'Sim' (743,02) — corte
 | Não            |      1.16728 |
 | Sim            |      1.13157 |
 
-Sem diferença relevante entre classes — peso amostral não carrega sinal do target, comportamento esperado (é peso de desenho amostral, não de desempenho).
+~~Sem diferença relevante entre classes — peso amostral não carrega sinal do target, comportamento esperado (é peso de desenho amostral, não de desempenho).~~
+
+> ⚠️ **CORREÇÃO (2026-08-18) — esta conclusão estava errada.** O SHAP mostrou que
+> `peso_aluno` concentra **70,6% da influência** do modelo, e a ablação confirmou:
+> sem ele o ROC-AUC cai de 0,669 para 0,530 (≈ aleatório).
+>
+> **Por que o erro aconteceu:** comparar médias entre classes só detecta relação
+> **linear**. Duas distribuições podem ter médias quase idênticas (1,167 vs 1,132)
+> e ainda assim diferir muito em faixas específicas — que é exatamente o que um
+> modelo de árvore explora, porque ele corta o espaço em faixas em vez de traçar
+> uma reta. **Teste de média não é teste de poder preditivo.**
+>
+> **O que o dado é de fato:** `peso_aluno` é ~constante por escola (0,89 valores
+> distintos por escola), ou seja, funciona como identificador da escola, não como
+> atributo do aluno. Ver Cap. 9.3 do `docs/HANDOFF_RENAN.md`.
 
 ## Cobertura temporal, rede e município (contexto, não gate)
 
