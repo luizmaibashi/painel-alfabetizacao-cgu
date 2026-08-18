@@ -39,8 +39,12 @@ ALUNOS_COMPLETO = (BASE.parent / "tech-challenge-fase2-alfabetizacao" /
                     "dados" / "Alunos.csv")
 ALUNOS_AMOSTRA = BASE / "data" / "Alunos_amostra.csv"
 
-# Colunas excluídas por política de leakage (ADR-0001) — nunca entram no snapshot
-COLUNAS_LEAKAGE = ["proficiencia", "presenca", "preenchimento_caderno"]
+# Colunas excluídas por política de leakage (ADR-0001) — nunca entram no snapshot.
+# `peso_aluno` entrou nesta lista em 2026-08-18: a NULIDADE dela codifica "faltou
+# à prova" (100% dos nulos com alvo "Não"), o mesmo evento de `presenca`. Antes
+# ela era só excluída das features, mas continuava no snapshot e aparecia como
+# "coluna descartada em silêncio" — ver Cap. 9.3 do docs/HANDOFF_RENAN.md.
+COLUNAS_LEAKAGE = ["proficiencia", "presenca", "preenchimento_caderno", "peso_aluno"]
 
 # Colunas sem variância/sem uso como feature (EDA, reports/eda_alunos.md item 2)
 COLUNAS_SEM_USO = ["serie"]
@@ -166,27 +170,51 @@ def _imputar_coluna(snapshot: pd.DataFrame, col: str) -> pd.DataFrame:
     return snapshot
 
 
-def juntar_territorio_gcs(alunos: pd.DataFrame) -> pd.DataFrame:
+def juntar_territorio(alunos: pd.DataFrame, fonte: str) -> pd.DataFrame:
     """
-    Requer gcsfs + credenciais GCP — não executável neste ambiente.
-
     Traz território/socioeconômico + a meta imputada (ADR-004 da Fase 2).
+
+    `fonte` é o caminho da Silver: por padrão o bucket GCS (requer credencial),
+    mas aceita um Parquet local — usado tanto pelo ensaio de 2026-08-18
+    (`04_ensaio_full.py`) quanto por quem preferir baixar o arquivo em vez de
+    ler direto do GCS.
     A meta é feature legítima (não leakage): é definida externamente pelo PDE,
     não deriva do desempenho do aluno sendo predito — mesmo raciocínio que
     validou populacao_total/gasto_por_habitante_educacao no ADR-0001. Já
     `gap_meta` e `taxa_alfabetizacao` continuam FORA (circulares, calculadas a
     partir do desempenho do próprio ano).
     """
-    silver = pd.read_parquet(BUCKET_SILVER, columns=COLUNAS_TERRITORIO)
+    print(f"Lendo Silver de: {fonte}")
+    silver = pd.read_parquet(fonte, columns=COLUNAS_TERRITORIO)
+    n_silver = len(silver)
     silver["id_municipio"] = silver["id_municipio"].astype(str).str.zfill(7)
     silver = silver.drop_duplicates(subset=["id_municipio", "ano", "rede"])
+    if len(silver) < n_silver:
+        print(f"  Silver: {n_silver - len(silver)} duplicatas de "
+              f"(municipio, ano, rede) removidas.")
 
     # Flag de imputação derivado: a tabela do KNN não grava essa marcação.
     # Meta imputada sem rótulo = o erro de rotulagem apontado na Fase 2.
     silver["meta_is_imputada"] = silver["meta_alfabetizacao_2024"].isna().astype(int)
     silver = silver.drop(columns=["meta_alfabetizacao_2024"])
 
+    n_antes = len(alunos)
     out = alunos.merge(silver, on=["id_municipio", "ano", "rede"], how="left")
+
+    # Guarda contra o erro classico de join: left join que MULTIPLICA linhas
+    # porque a direita nao era unica na chave. Silencioso e devastador — o
+    # aluno viraria 2 linhas e o modelo treinaria com peso dobrado nele.
+    if len(out) != n_antes:
+        raise ValueError(
+            f"Join com a Silver mudou a contagem de linhas: {n_antes} -> "
+            f"{len(out)}. A Silver nao e unica em (id_municipio, ano, rede)."
+        )
+
+    casou = out["populacao_total"].notna().mean()
+    print(f"Territorio: {casou:.1%} das linhas casaram com a Silver.")
+    if casou < 0.5:
+        print("  ATENCAO: menos da metade casou. Checar tipo/zeros a esquerda de "
+              "id_municipio e os valores de `rede` dos dois lados.")
 
     cobertura = out["meta_alfabetizacao_2024_imputada"].notna().mean()
     pct_imputada = out["meta_is_imputada"].mean()
@@ -202,7 +230,11 @@ def juntar_territorio_gcs(alunos: pd.DataFrame) -> pd.DataFrame:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--full", action="store_true",
-                         help="Inclui join com Silver no GCS (requer credenciais GCP)")
+                         help="Inclui join com a Silver (territorio/socioeconomico/meta)")
+    parser.add_argument(
+        "--silver", default=BUCKET_SILVER,
+        help=("Caminho da Silver. Default: bucket GCS (requer credencial). "
+              "Aceita Parquet local, para quem preferir baixar o arquivo."))
     parser.add_argument(
         "--input", default=str(ALUNOS_COMPLETO),
         help=("CSV de Alunos a processar. Default: base COMPLETA (57.781 alunos) "
@@ -214,7 +246,7 @@ def main():
     snapshot = juntar_historico(alunos, historico)
 
     if args.full:
-        snapshot = juntar_territorio_gcs(snapshot)
+        snapshot = juntar_territorio(snapshot, args.silver)
 
     # Só aqui `sigla_uf` existe, se existir (ver imputar_historico).
     snapshot = imputar_historico(snapshot)

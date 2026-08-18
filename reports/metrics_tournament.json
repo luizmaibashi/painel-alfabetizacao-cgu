@@ -24,7 +24,7 @@
         "modelo__C": "10.0"
       },
       "n_combinacoes": 4,
-      "tempo_tuning_seg": 6.6,
+      "tempo_tuning_seg": 8.0,
       "recall_cv_media": 0.21288291495655018,
       "recall_cv_desvio": 0.0042711350643622244,
       "recall_treino_cv": 0.21333796109473074,
@@ -55,7 +55,7 @@
         "modelo__n_estimators": "400"
       },
       "n_combinacoes": 12,
-      "tempo_tuning_seg": 70.9,
+      "tempo_tuning_seg": 87.3,
       "recall_cv_media": 0.22930422496736505,
       "recall_cv_desvio": 0.00802146536916869,
       "recall_treino_cv": 0.25287788506087294,
@@ -86,7 +86,7 @@
         "modelo__n_estimators": "400"
       },
       "n_combinacoes": 8,
-      "tempo_tuning_seg": 13.7,
+      "tempo_tuning_seg": 17.9,
       "recall_cv_media": 0.7006143925195978,
       "recall_cv_desvio": 0.06869503055872296,
       "recall_treino_cv": 0.7378098926073997,
@@ -110,58 +110,5 @@
       }
     }
   },
-  "maior_recall_no_teste": "xgboost",
-  "checagem_temporal": {
-    "regressao_logistica": {
-      "recall": 0.0702815292615736,
-      "precision": 1.0,
-      "f1": 0.13133278925230712,
-      "roc_auc": 0.5503215779694417,
-      "accuracy": 0.5307423610404585,
-      "matriz_confusao": [
-        [
-          14604,
-          0
-        ],
-        [
-          13837,
-          1046
-        ]
-      ]
-    },
-    "random_forest": {
-      "recall": 0.0702815292615736,
-      "precision": 1.0,
-      "f1": 0.13133278925230712,
-      "roc_auc": 0.5503215779694417,
-      "accuracy": 0.5307423610404585,
-      "matriz_confusao": [
-        [
-          14604,
-          0
-        ],
-        [
-          13837,
-          1046
-        ]
-      ]
-    },
-    "xgboost": {
-      "recall": 0.8843647114157092,
-      "precision": 0.5096414466041973,
-      "f1": 0.6466383355032057,
-      "roc_auc": 0.5503215779694417,
-      "accuracy": 0.5121579000915658,
-      "matriz_confusao": [
-        [
-          1940,
-          12664
-        ],
-        [
-          1721,
-          13162
-        ]
-      ]
-    }
-  }
+  "maior_recall_no_teste": "xgboost"
 }

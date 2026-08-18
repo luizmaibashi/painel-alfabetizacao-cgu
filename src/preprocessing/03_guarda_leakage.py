@@ -86,14 +86,24 @@ def teste_b_valor(df: pd.DataFrame, col: str) -> dict | None:
     serie = df[col].dropna()
     if serie.empty:
         return None
-    if serie.nunique() <= 20:
-        grupos = df.groupby(col, dropna=True)["_y"]
-    else:
+
+    # Numérica de alta cardinalidade -> fatiar em decis. Categórica -> agrupar
+    # pelos próprios valores, qualquer que seja a cardinalidade.
+    #
+    # CORREÇÃO (2026-08-18, achada pelo ensaio do --full): a versão anterior
+    # mandava qualquer coluna com mais de 20 valores distintos para o `qcut`,
+    # inclusive texto. Com `sigla_uf` (27 UFs) isso levanta
+    # ArrowNotImplementedError, que não é ValueError nem TypeError e portanto
+    # escapava do `except` — o guarda MORRIA no snapshot `--full`, deixando a
+    # execução mais importante do projeto sem checagem de vazamento nenhuma.
+    if pd.api.types.is_numeric_dtype(serie) and serie.nunique() > 20:
         try:
             faixas = pd.qcut(serie, 10, duplicates="drop")
-        except (ValueError, TypeError):
+        except Exception:
             return None
         grupos = df.loc[serie.index].groupby(faixas, observed=True)["_y"]
+    else:
+        grupos = df.groupby(col, dropna=True, observed=True)["_y"]
 
     piores = []
     for valor, g in grupos:

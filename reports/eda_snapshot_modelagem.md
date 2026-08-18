@@ -15,7 +15,6 @@
 | caderno                       | int64   |
 | rede                          | str     |
 | alfabetizado                  | str     |
-| peso_aluno                    | float64 |
 | _ausente_no_exame             | int64   |
 | absenteismo_hist_escola_t1    | float64 |
 | n_alunos_hist_escola_t1       | float64 |
@@ -47,7 +46,6 @@ Faixas das numéricas:
 | id_escola                     |    6e+07   |    6.00223e+07 |    6.00428e+07 |
 | id_aluno                      |    1.1e+07 |    3.1201e+07  |    5.30276e+07 |
 | caderno                       |    1       |   10           |   12           |
-| peso_aluno                    |    0.1548  |    1.09        |   23.268       |
 | _ausente_no_exame             |    0       |    0           |    1           |
 | absenteismo_hist_escola_t1    |    0       |    0           |    1           |
 | n_alunos_hist_escola_t1       |    1       |    2           |   12           |
@@ -67,7 +65,6 @@ Faixas das numéricas:
 | id_escola                     |  6.00223e+07 |   6.00424e+07 |   6.00428e+07 |    1      |
 | id_aluno                      |  3.1201e+07  |   5.20746e+07 |   5.30276e+07 |    1.0183 |
 | caderno                       | 10           |  12           |  12           |    1      |
-| peso_aluno                    |  1.09        |   1.9938      |  23.268       |   11.67   |
 | absenteismo_hist_escola_t1    |  0           |   0.8         |   1           |    1.25   |
 | n_alunos_hist_escola_t1       |  2           |   9           |  12           |    1.3333 |
 | absenteismo_hist_municipio_t1 |  0.1667      |   0.5         |   1           |    2      |
@@ -81,7 +78,6 @@ Razão `max/p99` alta indica cauda desproporcional — não é prova de erro, é
 |:---------------------------|--------:|------:|
 | n_alunos_hist_escola_t1    |   51258 | 88.71 |
 | n_alunos_hist_municipio_t1 |   36442 | 63.07 |
-| peso_aluno                 |    9756 | 16.88 |
 
 ### 7. Redundância entre colunas
 
@@ -117,8 +113,6 @@ Razão `max/p99` alta indica cauda desproporcional — não é prova de erro, é
 | Estadual  |  6327 |      48.6 |
 | Municipal | 51455 |      51.4 |
 
-**`peso_aluno`** — mediana: risco=1.1034 · não-risco=1.0800
-
 **`_ausente_no_exame`**
 
 |   _ausente_no_exame |     n |   % risco |
@@ -150,7 +144,6 @@ Razão `max/p99` alta indica cauda desproporcional — não é prova de erro, é
 
 Item acrescentado em 2026-08-18. O item 6 conta nulos mas nunca os cruza com o alvo — e foi por essa fresta que `peso_aluno` passou: 835 nulos que eram os alunos ausentes, todos com alvo "Não". Ver Cap. 9 do `docs/HANDOFF_RENAN.md`.
 
-- `peso_aluno`: 9756 nulos (16.9%) — risco entre nulos **100.0%** vs **41.2%** no resto 🔴 **VAZAMENTO**
 - `n_alunos_hist_escola_t1`: 51258 nulos (88.7%) — risco entre nulos **51.1%** vs **51.0%** no resto
 - `n_alunos_hist_municipio_t1`: 36442 nulos (63.1%) — risco entre nulos **51.3%** vs **50.7%** no resto
 
