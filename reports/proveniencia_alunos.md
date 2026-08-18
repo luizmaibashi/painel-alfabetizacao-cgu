@@ -5,7 +5,7 @@
 
 ## Fonte
 
-INEP — microdados. Origem confirmada, mas **exportação manual e o próprio Luiz tem incerteza residual** ("se não me engano") sobre os detalhes exatos do processo. Sistema: microdados do INEP (Censo Escolar — não confirmado com 100% de certeza, mas é a hipótese mais provável dado o contexto do projeto).
+INEP — microdados. Origem confirmada, mas **exportação manual e o próprio Luiz tem incerteza residual** ("se não me engano") sobre os detalhes exatos do processo. Sistema: **atualizado em 2026-08-18** — não é Censo Escolar (hipótese inicial, descartada); é o **Indicador Criança Alfabetizada / Pesquisa Alfabetiza Brasil (2023)**, identificado via basedosdados.org (https://basedosdados.org/dataset/073a39d4-89cf-4068-b1e8-34ed0d9c0b72?table=bb27c746-18df-4ba8-8f98-5110232e2162) — coerente com o corte de 743 pts na escala Saeb e a coluna `alfabetizado`.
 
 ## Timestamp da fonte
 
@@ -31,10 +31,28 @@ Ao investigar `caderno=12` (ver seção abaixo), o `docs/HANDOFF_RENAN.md` (linh
 
 ## Investigação `caderno=12` — status: hipótese reforçada, NÃO confirmada
 
-**Hipótese:** `caderno=12` (236 alunos, 86,9% "Não" vs. ~50% dos demais cadernos) é uma versão adaptada/acessibilidade da prova SAEB (Braille, macrotipo, instrumento adaptado), não uma variação neutra de conteúdo (anti-cola).
+**Hipótese:** `caderno=12` (236 alunos, 86,9% "Não" vs. ~50% dos demais cadernos) é uma versão adaptada/acessibilidade da prova, não uma variação neutra de conteúdo (anti-cola).
 
 **Suporte encontrado (pesquisa web, 2026-08-17):** SAEB regular usa desenho BIB com 21-26 cadernos por combinação de blocos de conteúdo — nosso dataset só tem 4 valores distintos (1, 10, 11, 12), o que já destoa do padrão de cadernos "de conteúdo". SAEB também documenta cadernos de acessibilidade separados (Braille, macrotipo, adaptado) para necessidades especiais. Fontes: [SAEB — Microdados INEP](https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/saeb), [Diretrizes SAEB 2025](https://download.inep.gov.br/publicacoes/institucionais/avaliacoes_e_exames_da_educacao_basica/cartilha_saeb_2025_diretrizes_da_edicao.pdf).
 
-**Não confirmado:** o código oficial `12` não foi cruzado com o Dicionário de Variáveis do pacote de microdados do INEP (não está disponível localmente nem indexado em busca web). Sem esse cruzamento, a hipótese fica em "reforçada por analogia", não "validada".
+### Correção de premissa (2026-08-18)
 
-**Próximo passo real (retomar em casa):** localizar o pacote de microdados original do INEP (pasta "Dicionário") ou baixar novamente do portal oficial, e conferir o código de `caderno=12` no dicionário de variáveis. Até lá, a decisão de incluir `caderno` como feature (`reports/dicionario_alunos.md`, já marcada "com ressalva") permanece condicional a essa confirmação.
+Luiz trouxe uma definição genérica de `caderno` ("código do caderno atribuído ao aluno na prova de língua portuguesa") e o link da tabela no basedosdados.org
+(https://basedosdados.org/dataset/073a39d4-89cf-4068-b1e8-34ed0d9c0b72?table=bb27c746-18df-4ba8-8f98-5110232e2162).
+Isso identificou a base de origem com precisão: **não é o SAEB clássico/Prova Brasil** — é o **Indicador Criança Alfabetizada / Pesquisa Alfabetiza Brasil (2023)**, avaliação mais nova (divulgada desde 2024) com prova bem menor — **16 itens de múltipla escolha + 3 de resposta construída**, contra os 169 itens do SAEB tradicional que geram os 21-26 cadernos.
+
+**Isso enfraquece a analogia usada em 2026-08-17**: o raciocínio "SAEB tem 21-26 cadernos de conteúdo + cadernos de acessibilidade separados" foi construído em cima do SAEB clássico, uma prova de estrutura bem diferente desta. Não invalida a hipótese de acessibilidade (é plausível que qualquer prova em larga escala do INEP tenha versão adaptada), mas a base de comparação estava errada — o suporte anterior é mais fraco do que registrado.
+
+**Ainda não confirmado:** a página do basedosdados.org é uma aplicação client-side (React) — o fetch automatizado não consegue ler o dicionário de valores da coluna (só a casca da página). A página oficial do INEP sobre esses microdados está com acesso restrito (login gov.br exigido). **Checagem real pendente**: abrir o link do basedosdados.org num navegador e inspecionar a coluna `caderno` diretamente — só um humano com a página renderizada consegue ver isso agora.
+
+**Próximo passo real:** Luiz abrir https://basedosdados.org/dataset/073a39d4-89cf-4068-b1e8-34ed0d9c0b72?table=bb27c746-18df-4ba8-8f98-5110232e2162 no navegador e checar se a coluna `caderno` tem dicionário de valores (1, 10, 11, 12 → significado). Alternativa: localizar o pacote de microdados original do INEP (pasta "Dicionário") do Indicador Criança Alfabetizada. Até lá, a decisão de incluir `caderno` como feature (`reports/dicionario_alunos.md`, já marcada "com ressalva") permanece condicional a essa confirmação.
+
+### Beco sem saída, por ora (2026-08-18)
+
+Luiz checou o basedosdados.org no navegador: **não há dicionário de valores pra `caderno` nessa página** (confirma o limite que o fetch automatizado já tinha sinalizado). As duas rotas tentadas hoje (INEP direto — acesso restrito; basedosdados.org — sem dicionário de coluna) **não resolveram**. A hipótese de acessibilidade permanece "plausível por analogia geral com avaliações do INEP em larga escala", sem confirmação — status inalterado desde 2026-08-17, agora com duas tentativas documentadas de fechar a lacuna e nenhuma bem-sucedida.
+
+**Rotas tentadas e esgotadas nesta sessão:** (1) INEP direto — acesso restrito (login gov.br); (2) basedosdados.org — sem dicionário de valores pra coluna; (3) relatório técnico da Pesquisa Alfabetiza Brasil em PDF (https://download.inep.gov.br/publicacoes/institucionais/avaliacoes_e_exames_da_educacao_basica/relatorio_da_pesquisa_alfabetiza_brasil.pdf) — fetch falhou por erro de certificado/conexão do servidor do INEP, não é limite de conteúdo, é técnico. Pode valer tentar abrir esse PDF direto no navegador (fora do Claude) numa sessão futura.
+
+**Rotas ainda não tentadas:** contato direto com suporte do INEP; localizar pacote de microdados original (se existir, fora do portal restrito).
+
+**Decisão prática pra seguir o projeto:** tratar `caderno=12` como risco documentado e não resolvido (já está assim no `dicionario_alunos.md`), sem bloquear a Seção 2 do plano de refinamento por causa disso.
