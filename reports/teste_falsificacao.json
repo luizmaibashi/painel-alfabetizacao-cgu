@@ -1,0 +1,140 @@
+{
+  "desenho": {
+    "treino": "alunos de 2023",
+    "n_treino": 28295,
+    "teste": "alunos de 2024",
+    "n_teste": 29487,
+    "taxa_risco_teste": 0.50473089836199,
+    "features": [
+      "absenteismo_hist_escola_t1",
+      "absenteismo_hist_municipio_t1",
+      "n_alunos_hist_escola_t1",
+      "n_alunos_hist_municipio_t1",
+      "caderno",
+      "rede",
+      "possui_hist_escola_t1",
+      "possui_hist_municipio_t1"
+    ],
+    "baseline": "taxa de nao-alfabetizacao do municipio em t-1, aplicada uniformemente. PROXY explicito de agg_priorizacao (mart Gold da Fase 2, fora do git por ser saida regeneravel).",
+    "cobertura_baseline": 0.723708753009801
+  },
+  "roc_auc": {
+    "modelo_aluno (XGBoost)": 0.5503215779694417,
+    "baseline_municipal (taxa t-1)": 0.590151782460666,
+    "aleatorio (referencia)": 0.5024183242640536
+  },
+  "busca_ativa": {
+    "5%": {
+      "modelo_aluno (XGBoost)": {
+        "k": 1474,
+        "achados": 1474,
+        "recall": 0.09903917220990392,
+        "precision": 1.0
+      },
+      "baseline_municipal (taxa t-1)": {
+        "k": 1474,
+        "achados": 846,
+        "recall": 0.05684337835113888,
+        "precision": 0.5739484396200815
+      },
+      "aleatorio (referencia)": {
+        "k": 1474,
+        "achados": 708,
+        "recall": 0.047571054222938926,
+        "precision": 0.48032564450474896
+      }
+    },
+    "10%": {
+      "modelo_aluno (XGBoost)": {
+        "k": 2949,
+        "achados": 2781,
+        "recall": 0.18685748840959485,
+        "precision": 0.943031536113937
+      },
+      "baseline_municipal (taxa t-1)": {
+        "k": 2949,
+        "achados": 1765,
+        "recall": 0.11859168178458644,
+        "precision": 0.5985079688029841
+      },
+      "aleatorio (referencia)": {
+        "k": 2949,
+        "achados": 1472,
+        "recall": 0.09890479070079956,
+        "precision": 0.49915225500169547
+      }
+    },
+    "20%": {
+      "modelo_aluno (XGBoost)": {
+        "k": 5897,
+        "achados": 3888,
+        "recall": 0.26123765369885105,
+        "precision": 0.659318297439376
+      },
+      "baseline_municipal (taxa t-1)": {
+        "k": 5897,
+        "achados": 3575,
+        "recall": 0.2402069475240207,
+        "precision": 0.6062404612514838
+      },
+      "aleatorio (referencia)": {
+        "k": 5897,
+        "achados": 3003,
+        "recall": 0.2017738359201774,
+        "precision": 0.5092419874512464
+      }
+    },
+    "30%": {
+      "modelo_aluno (XGBoost)": {
+        "k": 8846,
+        "achados": 5092,
+        "recall": 0.3421353221796681,
+        "precision": 0.5756274022156908
+      },
+      "baseline_municipal (taxa t-1)": {
+        "k": 8846,
+        "achados": 5258,
+        "recall": 0.3532889874353289,
+        "precision": 0.5943929459642776
+      },
+      "aleatorio (referencia)": {
+        "k": 8846,
+        "achados": 4505,
+        "recall": 0.3026943492575422,
+        "precision": 0.5092697264300249
+      }
+    },
+    "50%": {
+      "modelo_aluno (XGBoost)": {
+        "k": 14744,
+        "achados": 8008,
+        "recall": 0.5380635624538064,
+        "precision": 0.5431361909929463
+      },
+      "baseline_municipal (taxa t-1)": {
+        "k": 14744,
+        "achados": 8343,
+        "recall": 0.5605724652287846,
+        "precision": 0.565857297883885
+      },
+      "aleatorio (referencia)": {
+        "k": 14744,
+        "achados": 7487,
+        "recall": 0.5030571793321239,
+        "precision": 0.507799782962561
+      }
+    }
+  },
+  "so_presentes": {
+    "rotulo": "so presentes",
+    "n_treino": 23550,
+    "n_teste": 24505,
+    "taxa_risco": 0.40403999183840034,
+    "roc_auc": {
+      "modelo_aluno": 0.5070837071726609,
+      "baseline_municipal": 0.5815595658315599
+    }
+  },
+  "veredito": "FALHOU",
+  "leitura": "O modelo aluno-nivel NAO supera repetir a taxa do municipio para todos os seus alunos. Pelo criterio do proprio ADR-0001 secao 5, o esforco tecnico da Fase 3 nao se justifica com o dado atual -- a resposta honesta e continuar usando o mart da Fase 2."
+}

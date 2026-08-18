@@ -29,7 +29,22 @@ Ao investigar `caderno=12` (ver seção abaixo), o `docs/HANDOFF_RENAN.md` (linh
 
 **Pendência real, não resolvida:** confirmar quem/quando baixou o `Alunos.csv` originalmente (Fase 2) e se o pacote de microdados original do INEP (com a pasta "Dicionário") ainda está acessível. Luiz confirmou em 2026-08-17 que **não lembra** se tem esse pacote — verificar em casa.
 
-## Investigação `caderno=12` — status: hipótese reforçada, NÃO confirmada
+## Investigação `caderno=12` — ✅ RESOLVIDA em 2026-08-18 (não era acessibilidade)
+
+> **RESPOSTA:** `caderno=12` é **proxy de ausência à prova**, não caderno
+> adaptado. 79,7% dos seus alunos faltaram (contra 12-16% dos outros cadernos),
+> e entre os que compareceram o desempenho é **melhor** que a média (37,3% de
+> "Não" contra ~41%). Os 87,3% que motivaram esta investigação eram inteiramente
+> artefato de ausência.
+>
+> **Como foi resolvido:** um `crosstab` de `caderno` contra `presenca` na base
+> completa. As 3 tentativas registradas abaixo — portal do INEP, basedosdados.org
+> e o PDF do relatório técnico — buscavam a resposta na documentação externa, e
+> ela estava no próprio dado. Fica o registro do contraste de método.
+>
+> Detalhe completo no Cap. 11.3 do `docs/HANDOFF_RENAN.md`.
+
+### Histórico da investigação (mantido: mostra o caminho até a resposta)
 
 **Hipótese:** `caderno=12` (236 alunos, 86,9% "Não" vs. ~50% dos demais cadernos) é uma versão adaptada/acessibilidade da prova, não uma variação neutra de conteúdo (anti-cola).
 
