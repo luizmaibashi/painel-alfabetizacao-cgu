@@ -226,7 +226,18 @@ def juntar_territorio(alunos: pd.DataFrame, fonte: str) -> pd.DataFrame:
     partir do desempenho do próprio ano).
     """
     print(f"Lendo Silver de: {fonte}")
-    silver = pd.read_parquet(fonte, columns=COLUNAS_TERRITORIO)
+
+    # Tolerante a colunas ausentes: a Silver do GCS tem todas, mas o substituto
+    # local (`05_montar_territorio.py`) nao traz `gasto_por_habitante_educacao`
+    # porque o SICONFI custa ~9k requisicoes. Ler so o que existe, e DECLARAR o
+    # que faltou — em vez de quebrar, ou pior, seguir em silencio.
+    disponiveis = set(pd.read_parquet(fonte).columns)
+    usar = [c for c in COLUNAS_TERRITORIO if c in disponiveis]
+    faltando = [c for c in COLUNAS_TERRITORIO if c not in disponiveis]
+    if faltando:
+        print(f"  ATENCAO: a fonte nao tem {faltando} — o snapshot sai sem "
+              f"essas features.")
+    silver = pd.read_parquet(fonte, columns=usar)
     n_silver = len(silver)
     silver["id_municipio"] = silver["id_municipio"].astype(str).str.zfill(7)
     silver = silver.drop_duplicates(subset=["id_municipio", "ano", "rede"])
@@ -236,8 +247,9 @@ def juntar_territorio(alunos: pd.DataFrame, fonte: str) -> pd.DataFrame:
 
     # Flag de imputação derivado: a tabela do KNN não grava essa marcação.
     # Meta imputada sem rótulo = o erro de rotulagem apontado na Fase 2.
-    silver["meta_is_imputada"] = silver["meta_alfabetizacao_2024"].isna().astype(int)
-    silver = silver.drop(columns=["meta_alfabetizacao_2024"])
+    if "meta_alfabetizacao_2024" in silver.columns:
+        silver["meta_is_imputada"] = silver["meta_alfabetizacao_2024"].isna().astype(int)
+        silver = silver.drop(columns=["meta_alfabetizacao_2024"])
 
     n_antes = len(alunos)
     out = alunos.merge(silver, on=["id_municipio", "ano", "rede"], how="left")
@@ -251,19 +263,31 @@ def juntar_territorio(alunos: pd.DataFrame, fonte: str) -> pd.DataFrame:
             f"{len(out)}. A Silver nao e unica em (id_municipio, ano, rede)."
         )
 
-    casou = out["populacao_total"].notna().mean()
-    print(f"Territorio: {casou:.1%} das linhas casaram com a Silver.")
+    # Municipio sem territorio deixa NaN nas colunas do join. Para o flag de
+    # meta isso tem leitura semantica: sem meta na fonte, ela certamente NAO e
+    # meta oficial do PDE -> 1. Preencher aqui evita NaN chegando ao modelo por
+    # um bloco `passthrough`, que por definicao nao imputa.
+    if "meta_is_imputada" in out.columns:
+        n_sem = int(out["meta_is_imputada"].isna().sum())
+        if n_sem:
+            out["meta_is_imputada"] = out["meta_is_imputada"].fillna(1).astype(int)
+            print(f"  {n_sem} linhas sem meta na fonte -> meta_is_imputada=1")
+
+    ref = "populacao_total" if "populacao_total" in out.columns else usar[-1]
+    casou = out[ref].notna().mean()
+    print(f"Territorio: {casou:.1%} das linhas casaram (referencia: {ref}).")
     if casou < 0.5:
         print("  ATENCAO: menos da metade casou. Checar tipo/zeros a esquerda de "
               "id_municipio e os valores de `rede` dos dois lados.")
 
-    cobertura = out["meta_alfabetizacao_2024_imputada"].notna().mean()
-    pct_imputada = out["meta_is_imputada"].mean()
-    print(f"Meta: cobertura {cobertura:.1%} das linhas | "
-          f"{pct_imputada:.1%} vêm de imputação KNN (não de meta oficial do PDE).")
-    if pct_imputada > 0.5:
-        print("  ATENÇÃO: maioria das metas é imputada — checar no SHAP se o "
-              "modelo está aprendendo o artefato de imputação, não a meta real.")
+    if "meta_alfabetizacao_2024_imputada" in out.columns:
+        cobertura = out["meta_alfabetizacao_2024_imputada"].notna().mean()
+        pct_imputada = out["meta_is_imputada"].mean()
+        print(f"Meta: cobertura {cobertura:.1%} das linhas | "
+              f"{pct_imputada:.1%} vêm de imputação (não de meta oficial do PDE).")
+        if pct_imputada > 0.5:
+            print("  ATENÇÃO: maioria das metas é imputada — checar no SHAP se o "
+                  "modelo está aprendendo o artefato de imputação, não a meta real.")
 
     return out
 

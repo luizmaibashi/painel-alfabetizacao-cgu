@@ -154,7 +154,13 @@ def construir_preprocessador(df: pd.DataFrame) -> ColumnTransformer:
     if tipos["categoricas"]:
         blocos.append(("cat", pipeline_categorica, tipos["categoricas"]))
     if tipos["passthrough"]:
-        blocos.append(("bin", "passthrough", tipos["passthrough"]))
+        # NAO usar "passthrough" cru: colunas binarias vindas de left join podem
+        # carregar NaN, e passthrough nao imputa — o erro so aparece la na
+        # frente, quando o estimador recusa NaN. Achado em 2026-08-18 ao
+        # integrar territorio: `meta_is_imputada` ficava NaN nos municipios sem
+        # match e derrubava a LogisticRegression.
+        blocos.append(("bin", SimpleImputer(strategy="most_frequent"),
+                       tipos["passthrough"]))
 
     if not blocos:
         raise ValueError(

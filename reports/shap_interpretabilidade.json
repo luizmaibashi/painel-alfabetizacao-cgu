@@ -2,62 +2,94 @@
   "contexto": {
     "modelo_explicado": "XGBoost (vencedor do tournament)",
     "hiperparametros": {
-      "n_estimators": "200",
-      "max_depth": "6",
+      "n_estimators": "400",
+      "max_depth": "3",
       "learning_rate": "0.1",
       "random_state": "42",
       "eval_metric": "logloss",
       "tree_method": "hist",
       "n_jobs": "-1"
     },
-    "snapshot": "local-only",
+    "snapshot": "full",
     "n_explicado": 9611,
     "aviso": "Metrica de influencia = |SHAP| medio. Mede o quanto a variavel move a predicao, NAO se o efeito e bom ou ruim."
   },
   "influencia_por_variavel": {
-    "absenteismo_hist_municipio_t1": 0.10367879271507263,
-    "n_alunos_hist_municipio_t1": 0.07287287712097168,
-    "rede": 0.04231942072510719,
-    "caderno": 0.03692762041464448,
-    "n_alunos_hist_escola_t1": 0.01960783079266548,
-    "possui_hist_municipio_t1": 0.016611646860837936,
-    "absenteismo_hist_escola_t1": 0.012957651168107986,
-    "possui_hist_escola_t1": 0.012453273870050907
+    "meta_alfabetizacao_2024_imputada": 0.44182610511779785,
+    "sigla_uf": 0.19045543612446636,
+    "n_alunos_hist_municipio_t1": 0.06502871215343475,
+    "populacao_total": 0.06171632185578346,
+    "absenteismo_hist_municipio_t1": 0.059818822890520096,
+    "meta_is_imputada": 0.04050455614924431,
+    "rede": 0.03738165646791458,
+    "caderno": 0.025413438328541815,
+    "absenteismo_hist_escola_t1": 0.02293272316455841,
+    "possui_hist_municipio_t1": 0.013854198157787323,
+    "n_alunos_hist_escola_t1": 0.011211363598704338,
+    "possui_hist_escola_t1": 0.003407431300729513
   },
   "influencia_por_categoria": {
-    "num__absenteismo_hist_municipio_t1": 0.10367999970912933,
-    "num__n_alunos_hist_municipio_t1": 0.07287000119686127,
-    "cat__rede_Estadual": 0.042319998145103455,
-    "num__n_alunos_hist_escola_t1": 0.019610000774264336,
-    "bin__possui_hist_municipio_t1": 0.016610000282526016,
-    "cat__caderno_11": 0.016270000487565994,
-    "num__absenteismo_hist_escola_t1": 0.012959999963641167,
-    "bin__possui_hist_escola_t1": 0.012450000271201134,
-    "cat__caderno_1": 0.011169999837875366,
-    "cat__caderno_10": 0.007309999782592058,
-    "cat__caderno_12": 0.0021699999924749136,
+    "num__meta_alfabetizacao_2024_imputada": 0.44183000922203064,
+    "num__n_alunos_hist_municipio_t1": 0.06503000110387802,
+    "num__populacao_total": 0.061719998717308044,
+    "num__absenteismo_hist_municipio_t1": 0.05982000008225441,
+    "cat__sigla_uf_MG": 0.04061000049114227,
+    "bin__meta_is_imputada": 0.04050000011920929,
+    "cat__rede_Estadual": 0.037379998713731766,
+    "cat__sigla_uf_CE": 0.03302000090479851,
+    "cat__sigla_uf_RS": 0.029090000316500664,
+    "num__absenteismo_hist_escola_t1": 0.022929999977350235,
+    "cat__sigla_uf_SP": 0.021570000797510147,
+    "cat__sigla_uf_BA": 0.015049999579787254,
+    "bin__possui_hist_municipio_t1": 0.013849999755620956,
+    "cat__caderno_10": 0.011839999817311764,
+    "num__n_alunos_hist_escola_t1": 0.011210000142455101,
+    "cat__sigla_uf_GO": 0.009560000151395798,
+    "cat__caderno_1": 0.007249999791383743,
+    "cat__sigla_uf_PA": 0.006399999838322401,
+    "cat__caderno_11": 0.005109999794512987,
+    "cat__sigla_uf_PE": 0.0037799999117851257,
+    "cat__sigla_uf_MS": 0.003599999938160181,
+    "bin__possui_hist_escola_t1": 0.0034099998883903027,
+    "cat__sigla_uf_TO": 0.003280000062659383,
+    "cat__sigla_uf_ES": 0.0031900000758469105,
+    "cat__sigla_uf_RJ": 0.0026100000832229853,
+    "cat__sigla_uf_SE": 0.0024500000290572643,
+    "cat__sigla_uf_PR": 0.0021699999924749136,
+    "cat__sigla_uf_AP": 0.001820000004954636,
+    "cat__sigla_uf_SC": 0.001820000004954636,
+    "cat__sigla_uf_MA": 0.0018100000452250242,
+    "cat__sigla_uf_PI": 0.0017500000540167093,
+    "cat__sigla_uf_AL": 0.0017099999822676182,
+    "cat__sigla_uf_AM": 0.0014199999859556556,
+    "cat__sigla_uf_PB": 0.001339999958872795,
+    "cat__sigla_uf_RN": 0.0012499999720603228,
+    "cat__caderno_12": 0.0012100000167265534,
+    "cat__sigla_uf_MT": 0.0005000000237487257,
+    "cat__sigla_uf_RO": 0.00039000000106170774,
+    "cat__sigla_uf_AC": 0.00026000000070780516,
     "cat__rede_Municipal": 0.0
   },
   "gates_adr0001_seccao5": [
     {
       "gate": "territorio_nao_domina_o_top5",
-      "status": "NAO_APLICAVEL",
-      "detalhe": "Snapshot --local-only não tem território/socioeconômico. Este gate só pode ser avaliado depois do --full."
+      "status": "PASSOU",
+      "detalhe": "2 de 5 do top-5 são território/socioeconômico. Top-5: ['meta_alfabetizacao_2024_imputada', 'sigla_uf', 'n_alunos_hist_municipio_t1', 'populacao_total', 'absenteismo_hist_municipio_t1']"
     },
     {
       "gate": "flags_de_imputacao_sem_influencia_relevante",
       "status": "PASSOU",
-      "detalhe": "Participação na influência: possui_hist_escola_t1=3.9%, possui_hist_municipio_t1=5.2%. Limiar: 10%. (Critério por posição do ADR-0001 não discrimina aqui: o modelo tem 8 features, então top-5 seria o modelo inteiro.)"
+      "detalhe": "Participação na influência: possui_hist_escola_t1=0.4%, possui_hist_municipio_t1=1.4%, meta_is_imputada=4.2%. Limiar: 10%. (Critério por posição do ADR-0001 não discrimina aqui: o modelo tem 12 features, então top-5 seria o modelo inteiro.)"
     },
     {
       "gate": "nenhuma_feature_isolada_domina",
       "status": "PASSOU",
-      "detalhe": "`absenteismo_hist_municipio_t1` concentra 32.7% da influência. Limiar: 50%."
+      "detalhe": "`meta_alfabetizacao_2024_imputada` concentra 45.4% da influência. Limiar: 50%."
     },
     {
       "gate": "caderno_12_nao_domina",
       "status": "PASSOU",
-      "detalhe": "|SHAP| de caderno=12 é 0.19x a média das outras categorias de caderno (0.0022 vs 0.0116). Limiar de alerta: 2.0x"
+      "detalhe": "|SHAP| de caderno=12 é 0.15x a média das outras categorias de caderno (0.0012 vs 0.0081). Limiar de alerta: 2.0x"
     }
   ],
   "teste_ablacao": null,

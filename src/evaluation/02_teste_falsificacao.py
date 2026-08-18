@@ -84,19 +84,43 @@ def carregar() -> pd.DataFrame:
     return df
 
 
-def baseline_municipal(df: pd.DataFrame) -> pd.Series:
+def baselines_municipais(df: pd.DataFrame) -> dict[str, pd.Series]:
     """
-    Taxa de não-alfabetização do município no ano ANTERIOR, aplicada a cada
-    aluno. Município sem dado de t-1 recebe a taxa global de t-1 (é o que um
-    gestor faria: sem número local, usa a média nacional).
+    TODOS os baselines municipais disponíveis — não apenas um.
+
+    CORREÇÃO DE MÉTODO (2026-08-18): a primeira versão comparava o modelo
+    apenas contra a taxa de não-alfabetização de t-1. Isso tornou o critério de
+    falsificação fácil demais, e o modelo "passou". Ao testar a **meta do PDE**
+    como baseline — outro número municipal, aplicado igualmente a todos os
+    alunos do município — ela sozinha superou o modelo inteiro.
+
+    O ADR-0001 §5 manda comparar contra `agg_priorizacao`, que é um score de
+    priorização elaborado. Usar a taxa bruta como proxy era uma aproximação
+    mais FRACA do que o alvo real. Um critério de falsificação só vale se o
+    baseline for o melhor que a alternativa trivial consegue — senão a barra
+    está no chão e passar não significa nada.
+
+    Agora o veredito usa o MELHOR baseline municipal, não um escolhido a dedo.
     """
-    taxa_t1 = (
-        df[df["ano"] == ANO_TREINO]
-        .groupby("id_municipio")["_y"].mean()
-        .rename("risco_municipal")
-    )
+    saida = {}
+
+    taxa_t1 = df[df["ano"] == ANO_TREINO].groupby("id_municipio")["_y"].mean()
     global_t1 = df.loc[df["ano"] == ANO_TREINO, "_y"].mean()
-    return df["id_municipio"].map(taxa_t1).fillna(global_t1)
+    saida["taxa_nao_alfab_t1"] = df["id_municipio"].map(taxa_t1).fillna(global_t1)
+
+    # Meta do PDE: alvo de politica do municipio. Meta alta => menos risco, por
+    # isso entra negativa. E numero municipal aplicado a todos os seus alunos,
+    # exatamente a forma de baseline que o ADR-0001 §5 descreve.
+    if "meta_alfabetizacao_2024_imputada" in df.columns:
+        m = df["meta_alfabetizacao_2024_imputada"]
+        saida["meta_pde"] = -m.fillna(m.median())
+
+    # Combinacao dos dois por media de ranks (escalas diferentes).
+    if len(saida) > 1:
+        ranks = pd.DataFrame({k: v.rank(pct=True) for k, v in saida.items()})
+        saida["combinado_ranks"] = ranks.mean(axis=1)
+
+    return saida
 
 
 def recall_no_orcamento(y: np.ndarray, score: np.ndarray, fracao: float) -> dict:
@@ -110,6 +134,41 @@ def recall_no_orcamento(y: np.ndarray, score: np.ndarray, fracao: float) -> dict
         "achados": achados,
         "recall": achados / total_risco if total_risco else float("nan"),
         "precision": achados / k,
+    }
+
+
+def ic_diferenca_auc(y, score_a, score_b, n_boot: int = 2000) -> dict:
+    """
+    Intervalo de confianca da DIFERENCA de ROC-AUC, por bootstrap pareado.
+
+    Por que isto existe: o veredito deste script passou a depender de uma
+    margem de +0,02 de AUC. Declarar vitoria com essa margem sem intervalo e a
+    "falsa precisao" que o AGENTS.md desta base proibe — proporcao sem `n` e
+    sem intervalo. Se o IC de 95% cruzar o zero, a vitoria nao e distinguivel
+    de ruido amostral, e o veredito precisa dizer isso.
+
+    Bootstrap PAREADO: reamostra as mesmas linhas para os dois modelos, porque
+    o que interessa e a diferenca entre eles no mesmo aluno, nao a variancia de
+    cada um isoladamente.
+    """
+    rng = np.random.default_rng(RANDOM_STATE)
+    n = len(y)
+    difs = []
+    for _ in range(n_boot):
+        idx = rng.integers(0, n, n)
+        yb = y[idx]
+        if yb.min() == yb.max():   # reamostra degenerada, sem as duas classes
+            continue
+        difs.append(roc_auc_score(yb, score_a[idx]) - roc_auc_score(yb, score_b[idx]))
+    difs = np.array(difs)
+    lo, hi = np.percentile(difs, [2.5, 97.5])
+    return {
+        "diferenca_observada": float(roc_auc_score(y, score_a) - roc_auc_score(y, score_b)),
+        "ic95_inferior": float(lo),
+        "ic95_superior": float(hi),
+        "n_teste": int(n),
+        "n_bootstrap": int(len(difs)),
+        "significativo": bool(lo > 0),
     }
 
 
@@ -129,13 +188,20 @@ def avaliar_populacao(df_pop: pd.DataFrame, df_ref: pd.DataFrame, rotulo: str) -
     global_t1 = df_pop.loc[df_pop["ano"] == ANO_TREINO, "_y"].mean()
 
     y = teste["_y"].to_numpy()
-    scores = {
-        "modelo_aluno": pipe.predict_proba(teste[feats])[:, 1],
-        "baseline_municipal": teste["id_municipio"].map(taxa_t1).fillna(global_t1).to_numpy(),
-    }
+    scores = {"modelo_aluno": pipe.predict_proba(teste[feats])[:, 1]}
+    for nome, serie in baselines_municipais(df_pop).items():
+        scores[f"baseline_{nome}"] = serie.loc[teste.index].to_numpy()
     aucs = {n: float(roc_auc_score(y, sc)) for n, sc in scores.items()}
+
+    # O baseline que vale e o MAIS FORTE, nao um qualquer (ver docstring).
+    melhor = max((k for k in aucs if k.startswith("baseline_")), key=lambda k: aucs[k])
+    aucs["baseline_municipal"] = aucs[melhor]
+    scores["baseline_municipal"] = scores[melhor]
     return {"rotulo": rotulo, "n_treino": int(len(treino)), "n_teste": int(len(teste)),
-            "taxa_risco": float(y.mean()), "roc_auc": aucs, "y": y, "scores": scores}
+            "taxa_risco": float(y.mean()), "roc_auc": aucs, "y": y, "scores": scores,
+            "melhor_baseline": melhor,
+            "ic_diferenca": ic_diferenca_auc(y, scores["modelo_aluno"],
+                                              scores["baseline_municipal"])}
 
 
 def main():
@@ -151,7 +217,11 @@ def main():
     print(f"Taxa de risco no teste: {teste['_y'].mean():.1%}")
 
     # --- baseline: risco do municipio em t-1 ---
-    teste["score_baseline"] = baseline_municipal(df).loc[teste.index]
+    bl = baselines_municipais(df)
+    melhor_nome = max(bl, key=lambda k: roc_auc_score(
+        teste["_y"], bl[k].loc[teste.index]))
+    print(f"Baselines municipais testados: {list(bl)} -> mais forte: {melhor_nome}")
+    teste["score_baseline"] = bl[melhor_nome].loc[teste.index]
     mun_t1 = set(df.loc[df["ano"] == ANO_TREINO, "id_municipio"])
     cobertos = teste["id_municipio"].isin(mun_t1)
     print(f"\nBaseline municipal: {cobertos.sum():,} de {len(teste):,} alunos "
@@ -174,7 +244,7 @@ def main():
     y = teste["_y"].to_numpy()
     abordagens = {
         "modelo_aluno (XGBoost)": teste["score_modelo"].to_numpy(),
-        "baseline_municipal (taxa t-1)": teste["score_baseline"].to_numpy(),
+        f"baseline_municipal ({melhor_nome})": teste["score_baseline"].to_numpy(),
         "aleatorio (referencia)": teste["score_aleatorio"].to_numpy(),
     }
 
@@ -232,13 +302,14 @@ def main():
 
     # --- veredito ---
     auc_modelo = aucs["modelo_aluno (XGBoost)"]
-    auc_base = aucs["baseline_municipal (taxa t-1)"]
+    auc_base = aucs[f"baseline_municipal ({melhor_nome})"]
     delta = auc_modelo - auc_base
     vence_auc = auc_modelo > auc_base
 
     vitorias = sum(
         1 for l in por_orcamento.values()
-        if l["modelo_aluno (XGBoost)"]["recall"] > l["baseline_municipal (taxa t-1)"]["recall"]
+        if l["modelo_aluno (XGBoost)"]["recall"]
+        > l[f"baseline_municipal ({melhor_nome})"]["recall"]
     )
 
     print("\n" + "=" * 74)
@@ -252,12 +323,26 @@ def main():
         am = saida_presentes["roc_auc"]["modelo_aluno"]
         ab = saida_presentes["roc_auc"]["baseline_municipal"]
         print(chr(10) + f"So entre quem fez a prova: modelo {am:.4f} vs baseline {ab:.4f}")
-        vence_auc = am > ab
+        ic = saida_presentes["ic_diferenca"]
+        print(f"Diferenca: {ic['diferenca_observada']:+.4f} "
+              f"(IC95% bootstrap pareado: [{ic['ic95_inferior']:+.4f}, "
+              f"{ic['ic95_superior']:+.4f}], n={ic['n_teste']:,})".replace(",", "."))
+        # Tres desfechos possiveis, nao dois: o codigo anterior so distinguia
+        # "ganhou" de "nao ganhou", e imprimia "cruza o zero" mesmo quando o
+        # intervalo estava inteiramente NEGATIVO (perda significativa).
+        if ic["ic95_superior"] < 0:
+            print("  O intervalo esta INTEIRAMENTE ABAIXO DE ZERO: o modelo "
+                  "perde do baseline de forma estatisticamente significativa.")
+        elif not ic["significativo"]:
+            print("  O intervalo CRUZA O ZERO: empate — a diferenca nao e "
+                  "distinguivel de ruido amostral.")
+        vence_auc = am > ab and ic["significativo"]
 
     if vence_auc and vitorias >= len(ORCAMENTOS) / 2:
         veredito = "PASSOU"
-        txt = ("O modelo aluno-nivel supera o baseline municipal. A tese de descer "
-               "de granularidade se sustenta, dentro das limitacoes do dado atual.")
+        txt = ("O modelo aluno-nivel supera o baseline municipal, com a vantagem "
+               "confirmada por intervalo de confianca. A tese de descer de "
+               "granularidade se sustenta, dentro das limitacoes do dado atual.")
     elif vence_auc:
         veredito = "PARCIAL"
         txt = ("O modelo separa melhor no agregado (ROC-AUC), mas nao converte isso "
@@ -265,8 +350,9 @@ def main():
                "seria usado. Vantagem real duvidosa.")
     else:
         veredito = "FALHOU"
-        txt = ("O modelo aluno-nivel NAO supera repetir a taxa do municipio para "
-               "todos os seus alunos. Pelo criterio do proprio ADR-0001 secao 5, o "
+        txt = (f"O modelo aluno-nivel NAO supera o melhor baseline municipal "
+               f"({melhor_nome}), que aplica um unico numero do municipio a "
+               f"todos os seus alunos. Pelo criterio do proprio ADR-0001 secao 5, o "
                "esforco tecnico da Fase 3 nao se justifica com o dado atual -- a "
                "resposta honesta e continuar usando o mart da Fase 2.")
     print(f"\n>> {veredito}: {txt}")

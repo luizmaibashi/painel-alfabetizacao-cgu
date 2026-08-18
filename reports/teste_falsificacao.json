@@ -10,32 +10,36 @@
       "absenteismo_hist_municipio_t1",
       "n_alunos_hist_escola_t1",
       "n_alunos_hist_municipio_t1",
+      "populacao_total",
+      "meta_alfabetizacao_2024_imputada",
       "caderno",
       "rede",
+      "sigla_uf",
       "possui_hist_escola_t1",
-      "possui_hist_municipio_t1"
+      "possui_hist_municipio_t1",
+      "meta_is_imputada"
     ],
     "baseline": "taxa de nao-alfabetizacao do municipio em t-1, aplicada uniformemente. PROXY explicito de agg_priorizacao (mart Gold da Fase 2, fora do git por ser saida regeneravel).",
     "cobertura_baseline": 0.7085084676596612
   },
   "roc_auc": {
-    "modelo_aluno (XGBoost)": 0.5070837071726609,
-    "baseline_municipal (taxa t-1)": 0.5815595658315599,
+    "modelo_aluno (XGBoost)": 0.6012832091112034,
+    "baseline_municipal (meta_pde)": 0.6330826061326773,
     "aleatorio (referencia)": 0.5038678867100371
   },
   "busca_ativa": {
     "5%": {
       "modelo_aluno (XGBoost)": {
         "k": 1225,
-        "achados": 479,
-        "recall": 0.048378951621048376,
-        "precision": 0.39102040816326533
+        "achados": 674,
+        "recall": 0.06807393192606807,
+        "precision": 0.5502040816326531
       },
-      "baseline_municipal (taxa t-1)": {
+      "baseline_municipal (meta_pde)": {
         "k": 1225,
-        "achados": 613,
-        "recall": 0.061912938087061914,
-        "precision": 0.5004081632653061
+        "achados": 763,
+        "recall": 0.07706292293707706,
+        "precision": 0.6228571428571429
       },
       "aleatorio (referencia)": {
         "k": 1225,
@@ -47,15 +51,15 @@
     "10%": {
       "modelo_aluno (XGBoost)": {
         "k": 2450,
-        "achados": 945,
-        "recall": 0.09544490455509544,
-        "precision": 0.38571428571428573
+        "achados": 1289,
+        "recall": 0.13018886981113018,
+        "precision": 0.5261224489795918
       },
-      "baseline_municipal (taxa t-1)": {
+      "baseline_municipal (meta_pde)": {
         "k": 2450,
-        "achados": 1251,
-        "recall": 0.12635087364912634,
-        "precision": 0.5106122448979592
+        "achados": 1479,
+        "recall": 0.1493788506211494,
+        "precision": 0.6036734693877551
       },
       "aleatorio (referencia)": {
         "k": 2450,
@@ -67,15 +71,15 @@
     "20%": {
       "modelo_aluno (XGBoost)": {
         "k": 4901,
-        "achados": 1924,
-        "recall": 0.1943238056761943,
-        "precision": 0.3925729442970822
+        "achados": 2517,
+        "recall": 0.2542167457832542,
+        "precision": 0.5135686594572536
       },
-      "baseline_municipal (taxa t-1)": {
+      "baseline_municipal (meta_pde)": {
         "k": 4901,
-        "achados": 2449,
-        "recall": 0.24734875265124734,
-        "precision": 0.4996939400122424
+        "achados": 2781,
+        "recall": 0.28088071911928086,
+        "precision": 0.5674352173025913
       },
       "aleatorio (referencia)": {
         "k": 4901,
@@ -87,15 +91,15 @@
     "30%": {
       "modelo_aluno (XGBoost)": {
         "k": 7352,
-        "achados": 3010,
-        "recall": 0.30400969599030403,
-        "precision": 0.4094124047878128
+        "achados": 3671,
+        "recall": 0.37077062922937076,
+        "precision": 0.49931991294885747
       },
-      "baseline_municipal (taxa t-1)": {
+      "baseline_municipal (meta_pde)": {
         "k": 7352,
-        "achados": 3566,
-        "recall": 0.3601656398343602,
-        "precision": 0.485038084874864
+        "achados": 3957,
+        "recall": 0.39965660034339967,
+        "precision": 0.5382208922742111
       },
       "aleatorio (referencia)": {
         "k": 7352,
@@ -107,15 +111,15 @@
     "50%": {
       "modelo_aluno (XGBoost)": {
         "k": 12252,
-        "achados": 4929,
-        "recall": 0.4978285021714978,
-        "precision": 0.4023016650342801
+        "achados": 5779,
+        "recall": 0.5836784163215837,
+        "precision": 0.4716780933725106
       },
-      "baseline_municipal (taxa t-1)": {
+      "baseline_municipal (meta_pde)": {
         "k": 12252,
-        "achados": 5566,
-        "recall": 0.5621654378345622,
-        "precision": 0.45429317662422464
+        "achados": 6002,
+        "recall": 0.6062013937986062,
+        "precision": 0.489879203395364
       },
       "aleatorio (referencia)": {
         "k": 12252,
@@ -131,10 +135,22 @@
     "n_teste": 24505,
     "taxa_risco": 0.40403999183840034,
     "roc_auc": {
-      "modelo_aluno": 0.5070837071726609,
-      "baseline_municipal": 0.5815595658315599
+      "modelo_aluno": 0.6012832091112034,
+      "baseline_taxa_nao_alfab_t1": 0.5815595658315599,
+      "baseline_meta_pde": 0.6330826061326773,
+      "baseline_combinado_ranks": 0.6214432115135127,
+      "baseline_municipal": 0.6330826061326773
+    },
+    "melhor_baseline": "baseline_meta_pde",
+    "ic_diferenca": {
+      "diferenca_observada": -0.03179939702147394,
+      "ic95_inferior": -0.037405511357064325,
+      "ic95_superior": -0.026074605952052552,
+      "n_teste": 24505,
+      "n_bootstrap": 2000,
+      "significativo": false
     }
   },
   "veredito": "FALHOU",
-  "leitura": "O modelo aluno-nivel NAO supera repetir a taxa do municipio para todos os seus alunos. Pelo criterio do proprio ADR-0001 secao 5, o esforco tecnico da Fase 3 nao se justifica com o dado atual -- a resposta honesta e continuar usando o mart da Fase 2."
+  "leitura": "O modelo aluno-nivel NAO supera o melhor baseline municipal (meta_pde), que aplica um unico numero do municipio a todos os seus alunos. Pelo criterio do proprio ADR-0001 secao 5, o esforco tecnico da Fase 3 nao se justifica com o dado atual -- a resposta honesta e continuar usando o mart da Fase 2."
 }
