@@ -1,22 +1,20 @@
 {
   "snapshot": "snapshot_modelagem.parquet",
-  "n_linhas": 57782,
+  "n_linhas": 48055,
   "candidatas_testadas": [
     "absenteismo_hist_escola_t1",
     "absenteismo_hist_municipio_t1",
     "n_alunos_hist_escola_t1",
     "n_alunos_hist_municipio_t1",
+    "populacao_total",
+    "gasto_por_habitante_educacao",
+    "meta_alfabetizacao_2024_imputada",
     "caderno",
     "rede",
+    "sigla_uf",
     "possui_hist_escola_t1",
-    "possui_hist_municipio_t1"
+    "possui_hist_municipio_t1",
+    "meta_is_imputada"
   ],
-  "achados": [
-    {
-      "coluna": "caderno",
-      "teste": "B_valor_isola_target",
-      "gravidade": "MEDIA",
-      "detalhe": "grupo `12` tem 2551 linhas com alvo 'risco' em 87.3% (pureza 87.3%). 1 grupo(s) acima do limiar."
-    }
-  ]
+  "achados": []
 }

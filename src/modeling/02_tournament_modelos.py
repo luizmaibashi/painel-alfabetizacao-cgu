@@ -39,9 +39,16 @@ risco não identificado) é o erro caro no caso de uso de busca ativa. Precision
 entra como contrapeso: Recall alto com Precision no chão significa marcar todo
 mundo como risco, o que não prioriza nada.
 
-ATENÇÃO AO LER OS NÚMEROS: roda sobre o snapshot --local-only (5.000 linhas,
-sem território/socioeconômico/meta). NÃO são números de README — servem para
-escolher o algoritmo e como base de comparação para quando o --full rodar.
+ATENÇÃO AO LER OS NÚMEROS: roda sobre o snapshot `--local-only` (48.055 alunos
+avaliados, sem território/socioeconômico/meta). NÃO são números de README —
+servem para escolher o algoritmo e como base de comparação para quando o
+`--full` rodar.
+
+POPULAÇÃO (2026-08-18): o snapshot passou a conter só alunos AVALIADOS, que é a
+metodologia oficial do indicador (ver docstring de `carregar_alunos` em
+02_extrair_snapshot.py). Isso mudou a taxa base de 50,8% para 41,2% e tornou
+visível um desequilíbrio de configuração entre os candidatos — corrigido com
+`scale_pos_weight` no XGBoost, ver CANDIDATOS abaixo.
 """
 import argparse
 import json
@@ -95,10 +102,18 @@ CANDIDATOS = {
         "papel": "ensemble paralelo (bagging) - o baseline atual do projeto",
     },
     "xgboost": {
+        # `scale_pos_weight` e o equivalente do class_weight="balanced" no
+        # XGBoost. Sem ele, com taxa base de 41%, o XGBoost tende a prever a
+        # classe majoritaria e sai com Recall proximo de zero — enquanto os
+        # outros dois candidatos estao balanceados. A comparacao ficaria
+        # injusta e nao mediria o algoritmo, mediria a configuracao.
+        # (Achado em 2026-08-18, depois que a populacao correta mudou a taxa
+        # base de 50,8% para 41,2% e o desequilibrio ficou visivel.)
         "estimador": XGBClassifier(
             random_state=RANDOM_STATE, eval_metric="logloss",
             tree_method="hist", n_jobs=-1,
         ),
+        "balancear": True,
         "grid": {
             "modelo__n_estimators": [200, 400],
             "modelo__max_depth": [3, 6],
@@ -132,6 +147,12 @@ def avaliar(pipeline, X_test, y_test) -> dict:
 
 
 def rodar_candidato(nome, config, X_train, y_train, X_test, y_test, cv):
+    # Balanceamento explicito para o XGBoost (ver comentario em CANDIDATOS).
+    if config.get("balancear"):
+        pos = int(y_train.sum())
+        neg = int(len(y_train) - pos)
+        config["estimador"].set_params(scale_pos_weight=neg / pos if pos else 1.0)
+
     print("\n" + "=" * 72)
     print(f"{nome.upper()}  ({config['papel']})")
     print("=" * 72)

@@ -217,6 +217,9 @@ def main():
 
     if "_ausente_no_exame" in df.columns:
         presentes = df[df["_ausente_no_exame"] == 0]
+        if len(presentes) == len(df):
+            print("  (o snapshot ja contem so avaliados — mesma populacao "
+                  "da secao 1; repetido aqui por completude do relatorio)")
         r_pres = avaliar_populacao(presentes, df, "so presentes")
         print(f"  n_teste={r_pres['n_teste']:,} | risco={r_pres['taxa_risco']:.1%}"
               .replace(",", "."))

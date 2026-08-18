@@ -34,8 +34,13 @@ from sklearn.preprocessing import OneHotEncoder, RobustScaler
 # Colunas fora do modelo, sempre (ADR-0001): proficiencia, presenca,
 # preenchimento_caderno já nem existem no snapshot (removidas na extração).
 # Identificadores não são feature (mas seguem no dataframe para split/auditoria).
+# Prefixo `_` = coluna de apoio, NUNCA feature.
+#   `_ausente_no_exame` — auditoria da populacao (Cap. 13)
+#   `_peso_amostral`    — peso do desenho amostral, para PONDERAR metricas.
+#      Usar como feature foi o 4o vazamento do projeto: a nulidade dele
+#      codificava "faltou a prova". Como peso, e o uso correto e oficial.
 COLUNAS_ID = ["ano", "id_municipio", "id_municipio_nome", "id_escola", "id_aluno",
-               "_ausente_no_exame"]  # `_` = auditoria, nunca feature
+               "_ausente_no_exame", "_peso_amostral"]
 COLUNA_TARGET = "alfabetizado"
 
 # --- Catálogo de features candidatas (nem todas existem em todo snapshot) ---

@@ -1,108 +1,116 @@
 {
   "split_aleatorio": {
     "split": "aleatorio_estratificado",
-    "n_treino": 4000,
-    "n_teste": 1000,
-    "accuracy": 0.526,
-    "precision": 0.5429292929292929,
-    "recall": 0.42322834645669294,
-    "f1": 0.4756637168141593,
-    "roc_auc": 0.5255125312079892,
+    "n_treino": 38444,
+    "n_teste": 9611,
+    "accuracy": 0.49713869524503174,
+    "precision": 0.43292776836593255,
+    "recall": 0.709490156486623,
+    "f1": 0.5377331420373027,
+    "roc_auc": 0.538594274390566,
     "matriz_confusao": [
       [
-        311,
-        181
+        1967,
+        3682
       ],
       [
-        293,
-        215
+        1151,
+        2811
       ]
     ],
     "relatorio_classificacao": {
       "0": {
-        "precision": 0.5149006622516556,
-        "recall": 0.6321138211382114,
-        "f1-score": 0.5675182481751825,
-        "support": 492.0
+        "precision": 0.6308531109685696,
+        "recall": 0.34820322180916974,
+        "f1-score": 0.44872818524010494,
+        "support": 5649.0
       },
       "1": {
-        "precision": 0.5429292929292929,
-        "recall": 0.42322834645669294,
-        "f1-score": 0.4756637168141593,
-        "support": 508.0
+        "precision": 0.43292776836593255,
+        "recall": 0.709490156486623,
+        "f1-score": 0.5377331420373027,
+        "support": 3962.0
       },
-      "accuracy": 0.526,
+      "accuracy": 0.49713869524503174,
       "macro avg": {
-        "precision": 0.5289149775904742,
-        "recall": 0.5276710837974521,
-        "f1-score": 0.521590982494671,
-        "support": 1000.0
+        "precision": 0.531890439667251,
+        "recall": 0.5288466891478963,
+        "f1-score": 0.4932306636387038,
+        "support": 9611.0
       },
       "weighted avg": {
-        "precision": 0.5291392066358954,
-        "recall": 0.526,
-        "f1-score": 0.5208561462437827,
-        "support": 1000.0
+        "precision": 0.5492611634717797,
+        "recall": 0.49713869524503174,
+        "f1-score": 0.4854192307952498,
+        "support": 9611.0
       }
     },
     "permutation_importance": {
-      "caderno": 0.0386,
-      "rede": 0.0091,
-      "absenteismo_historico_t1": 0.0,
-      "possui_historico_t1": -0.0006
+      "possui_hist_municipio_t1": 0.1892,
+      "absenteismo_hist_municipio_t1": 0.1613,
+      "n_alunos_hist_municipio_t1": 0.0886,
+      "possui_hist_escola_t1": 0.0417,
+      "n_alunos_hist_escola_t1": 0.0261,
+      "absenteismo_hist_escola_t1": 0.0059,
+      "caderno": 0.0025,
+      "rede": -0.002
     }
   },
   "split_temporal": {
     "split": "temporal_2023_treino_2024_teste",
-    "n_treino": 2480,
-    "n_teste": 2520,
-    "accuracy": 0.5341269841269841,
-    "precision": 1.0,
-    "recall": 0.07266982622432859,
-    "f1": 0.13549337260677466,
-    "roc_auc": 0.5318705261646145,
+    "n_treino": 23550,
+    "n_teste": 24505,
+    "accuracy": 0.4341562946337482,
+    "precision": 0.40719936338529233,
+    "recall": 0.8785981214018787,
+    "f1": 0.5564866939611054,
+    "roc_auc": 0.5070837071726609,
     "matriz_confusao": [
       [
-        1254,
-        0
+        1940,
+        12664
       ],
       [
-        1174,
-        92
+        1202,
+        8699
       ]
     ],
     "relatorio_classificacao": {
       "0": {
-        "precision": 0.5164744645799012,
-        "recall": 1.0,
-        "f1-score": 0.6811515480717002,
-        "support": 1254.0
+        "precision": 0.6174411203055379,
+        "recall": 0.13284031772117227,
+        "f1-score": 0.218640820466584,
+        "support": 14604.0
       },
       "1": {
-        "precision": 1.0,
-        "recall": 0.07266982622432859,
-        "f1-score": 0.13549337260677466,
-        "support": 1266.0
+        "precision": 0.40719936338529233,
+        "recall": 0.8785981214018787,
+        "f1-score": 0.5564866939611054,
+        "support": 9901.0
       },
-      "accuracy": 0.5341269841269841,
+      "accuracy": 0.4341562946337482,
       "macro avg": {
-        "precision": 0.7582372322899507,
-        "recall": 0.5363349131121643,
-        "f1-score": 0.4083224603392374,
-        "support": 2520.0
+        "precision": 0.5123202418454151,
+        "recall": 0.5057192195615254,
+        "f1-score": 0.38756375721384473,
+        "support": 24505.0
       },
       "weighted avg": {
-        "precision": 0.7593884835647604,
-        "recall": 0.5341269841269841,
-        "f1-score": 0.4070232742071781,
-        "support": 2520.0
+        "precision": 0.5324950425553909,
+        "recall": 0.4341562946337482,
+        "f1-score": 0.35514406443594765,
+        "support": 24505.0
       }
     },
     "permutation_importance": {
-      "caderno": 0.0356,
-      "absenteismo_historico_t1": 0.0,
-      "rede": 0.0,
-      "possui_historico_t1": 0.0
+      "rede": 0.0068,
+      "absenteismo_hist_escola_t1": 0.0,
+      "absenteismo_hist_municipio_t1": 0.0,
+      "n_alunos_hist_escola_t1": 0.0,
+      "n_alunos_hist_municipio_t1": 0.0,
+      "possui_hist_escola_t1": 0.0,
+      "possui_hist_municipio_t1": 0.0,
+      "caderno": -0.0001
     }
   }
 }

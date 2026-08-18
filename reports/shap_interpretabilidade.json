@@ -2,7 +2,7 @@
   "contexto": {
     "modelo_explicado": "XGBoost (vencedor do tournament)",
     "hiperparametros": {
-      "n_estimators": "400",
+      "n_estimators": "200",
       "max_depth": "6",
       "learning_rate": "0.1",
       "random_state": "42",
@@ -11,31 +11,31 @@
       "n_jobs": "-1"
     },
     "snapshot": "local-only",
-    "n_explicado": 11557,
+    "n_explicado": 9611,
     "aviso": "Metrica de influencia = |SHAP| medio. Mede o quanto a variavel move a predicao, NAO se o efeito e bom ou ruim."
   },
   "influencia_por_variavel": {
-    "caderno": 0.25537582766264677,
-    "absenteismo_hist_municipio_t1": 0.12886185944080353,
-    "n_alunos_hist_municipio_t1": 0.1102323979139328,
-    "possui_hist_municipio_t1": 0.0569550059735775,
-    "rede": 0.0403108149766922,
-    "n_alunos_hist_escola_t1": 0.02714614011347294,
-    "possui_hist_escola_t1": 0.02244844287633896,
-    "absenteismo_hist_escola_t1": 0.01563497632741928
+    "absenteismo_hist_municipio_t1": 0.10367879271507263,
+    "n_alunos_hist_municipio_t1": 0.07287287712097168,
+    "rede": 0.04231942072510719,
+    "caderno": 0.03692762041464448,
+    "n_alunos_hist_escola_t1": 0.01960783079266548,
+    "possui_hist_municipio_t1": 0.016611646860837936,
+    "absenteismo_hist_escola_t1": 0.012957651168107986,
+    "possui_hist_escola_t1": 0.012453273870050907
   },
   "influencia_por_categoria": {
-    "cat__caderno_12": 0.18904000520706177,
-    "num__absenteismo_hist_municipio_t1": 0.1288599967956543,
-    "num__n_alunos_hist_municipio_t1": 0.11022999882698059,
-    "bin__possui_hist_municipio_t1": 0.05696000158786774,
-    "cat__rede_Estadual": 0.04030999913811684,
-    "cat__caderno_1": 0.03499000146985054,
-    "num__n_alunos_hist_escola_t1": 0.027149999514222145,
-    "bin__possui_hist_escola_t1": 0.022450000047683716,
-    "cat__caderno_10": 0.017470000311732292,
-    "num__absenteismo_hist_escola_t1": 0.015629999339580536,
-    "cat__caderno_11": 0.013880000449717045,
+    "num__absenteismo_hist_municipio_t1": 0.10367999970912933,
+    "num__n_alunos_hist_municipio_t1": 0.07287000119686127,
+    "cat__rede_Estadual": 0.042319998145103455,
+    "num__n_alunos_hist_escola_t1": 0.019610000774264336,
+    "bin__possui_hist_municipio_t1": 0.016610000282526016,
+    "cat__caderno_11": 0.016270000487565994,
+    "num__absenteismo_hist_escola_t1": 0.012959999963641167,
+    "bin__possui_hist_escola_t1": 0.012450000271201134,
+    "cat__caderno_1": 0.011169999837875366,
+    "cat__caderno_10": 0.007309999782592058,
+    "cat__caderno_12": 0.0021699999924749136,
     "cat__rede_Municipal": 0.0
   },
   "gates_adr0001_seccao5": [
@@ -47,17 +47,17 @@
     {
       "gate": "flags_de_imputacao_sem_influencia_relevante",
       "status": "PASSOU",
-      "detalhe": "Participação na influência: possui_hist_escola_t1=3.4%, possui_hist_municipio_t1=8.7%. Limiar: 10%. (Critério por posição do ADR-0001 não discrimina aqui: o modelo tem 8 features, então top-5 seria o modelo inteiro.)"
+      "detalhe": "Participação na influência: possui_hist_escola_t1=3.9%, possui_hist_municipio_t1=5.2%. Limiar: 10%. (Critério por posição do ADR-0001 não discrimina aqui: o modelo tem 8 features, então top-5 seria o modelo inteiro.)"
     },
     {
       "gate": "nenhuma_feature_isolada_domina",
       "status": "PASSOU",
-      "detalhe": "`caderno` concentra 38.9% da influência. Limiar: 50%."
+      "detalhe": "`absenteismo_hist_municipio_t1` concentra 32.7% da influência. Limiar: 50%."
     },
     {
       "gate": "caderno_12_nao_domina",
-      "status": "FALHOU",
-      "detalhe": "|SHAP| de caderno=12 é 8.55x a média das outras categorias de caderno (0.1890 vs 0.0221). Limiar de alerta: 2.0x"
+      "status": "PASSOU",
+      "detalhe": "|SHAP| de caderno=12 é 0.19x a média das outras categorias de caderno (0.0022 vs 0.0116). Limiar de alerta: 2.0x"
     }
   ],
   "teste_ablacao": null,

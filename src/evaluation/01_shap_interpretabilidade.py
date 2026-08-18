@@ -66,7 +66,7 @@ TOP_N = 5  # o "top-5" citado no checklist do ADR-0001 §5
 # Fixos aqui de propósito: este script explica o modelo ESCOLHIDO, não procura
 # um novo. Se o tournament for re-rodado (ex.: com --full), atualizar aqui.
 PARAMS_XGB = dict(
-    n_estimators=400, max_depth=6, learning_rate=0.1,
+    n_estimators=200, max_depth=6, learning_rate=0.1,
     random_state=RANDOM_STATE, eval_metric="logloss", tree_method="hist", n_jobs=-1,
 )
 

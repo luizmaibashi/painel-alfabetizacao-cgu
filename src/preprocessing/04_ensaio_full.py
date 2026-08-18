@@ -132,16 +132,23 @@ def main():
         sys.exit(1)
 
     snap = pd.read_parquet(BASE / "data" / "snapshot_modelagem.parquet")
-    alunos_n = len(pd.read_csv(ALUNOS, usecols=["ano"]))
+
+    # Esperado = população de modelagem (só avaliados), não o CSV bruto.
+    # A extração filtra os ausentes por metodologia oficial (ver docstring de
+    # `carregar_alunos`), então comparar contra o total do arquivo daria falso
+    # negativo. O que este teste precisa garantir é que o JOIN com a Silver não
+    # multiplicou nem perdeu linhas — não que nada foi filtrado antes dele.
+    bruto = pd.read_csv(ALUNOS, usecols=["presenca"])
+    alunos_n = int((bruto["presenca"] != "Ausente").sum())
 
     print("\n" + "-" * 74)
     print("VERIFICACOES")
     print("-" * 74)
     ok = []
 
-    ok.append(checar("linhas preservadas (join nao multiplicou nem perdeu)",
+    ok.append(checar("join preservou as linhas da populacao de modelagem",
                      len(snap) == alunos_n,
-                     f"alunos={alunos_n} snapshot={len(snap)}"))
+                     f"avaliados no CSV={alunos_n} snapshot={len(snap)}"))
 
     esperadas = ["populacao_total", "gasto_por_habitante_educacao", "sigla_uf",
                  "meta_alfabetizacao_2024_imputada", "meta_is_imputada"]

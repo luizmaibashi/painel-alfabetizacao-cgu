@@ -70,7 +70,30 @@ COLUNAS_TERRITORIO = ["id_municipio", "ano", "rede", "populacao_total",
                        "meta_alfabetizacao_2024", "meta_alfabetizacao_2024_imputada"]
 
 
-def carregar_alunos(caminho_csv: Path) -> pd.DataFrame:
+def carregar_alunos(caminho_csv: Path, populacao: str) -> pd.DataFrame:
+    """
+    Carrega os microdados e aplica a POPULAÇÃO DE MODELAGEM.
+
+    `populacao="avaliados"` (padrão) mantém só quem fez a prova. Isso não é
+    escolha de conveniência — é a metodologia OFICIAL do indicador, confirmada
+    em 2026-08-18 por três caminhos:
+
+      1. O INEP define o Indicador Criança Alfabetizada sobre estudantes
+         AVALIADOS, com ponderação pelo peso amostral.
+      2. A Fase 2 implementou exatamente isso e validou contra a taxa publicada
+         pelo INEP (`06_alunos_bronze_to_silver.py`: numerador = peso dos
+         alfabetizados, denominador = peso total dos PRESENTES). O teste
+         `test_delta_calculo_correto` filtra `presenca == "Presente"`
+         explicitamente. Foi um dos pontos elogiados na avaliação da Fase 2.
+      3. Reproduzindo as duas contas sobre a base completa de 2023: só-presentes
+         ponderado dá 57,1%, contra ~55-56% publicado; incluindo ausentes dá
+         48,2%. A primeira é a que bate.
+
+    Consequência: os ~9.700 alunos ausentes (16,8%) NÃO fazem parte da população
+    do indicador. Mantê-los foi a origem dos CINCO caminhos de vazamento que
+    este projeto encontrou — todos codificavam o mesmo evento, "faltou à prova".
+    Removê-los corta o problema na raiz. Ver Cap. 13 do docs/HANDOFF_RENAN.md.
+    """
     df = pd.read_csv(caminho_csv)
     df["id_municipio"] = df["id_municipio"].astype(str).str.zfill(7)  # ADR-005 Fase 2
 
@@ -83,12 +106,30 @@ def carregar_alunos(caminho_csv: Path) -> pd.DataFrame:
     # leakage. Daí registrar aqui, explicitamente fora do modelo.
     if "presenca" in df.columns:
         df["_ausente_no_exame"] = (df["presenca"] == "Ausente").astype(int)
+        n_antes = len(df)
+        if populacao == "avaliados":
+            df = df[df["_ausente_no_exame"] == 0].copy()
+            print(f"Populacao: apenas AVALIADOS — {len(df)} de {n_antes} alunos "
+                  f"({len(df) / n_antes:.1%}); {n_antes - len(df)} ausentes "
+                  f"removidos (metodologia oficial, ver docstring).")
+        else:
+            print(f"Populacao: TODOS os {n_antes} alunos, incluindo "
+                  f"{int(df['_ausente_no_exame'].sum())} ausentes cujo rotulo e "
+                  f"CONVENCAO e nao medicao. Fora da metodologia oficial.")
+
+    # `peso_aluno` sai como FEATURE (a nulidade dele vazava a ausencia), mas
+    # sobrevive como `_peso_amostral` para PONDERAR metricas. O prefixo `_`
+    # marca "nunca vira feature". Sao usos diferentes da mesma coluna:
+    # peso amostral serve para a estatistica representar a populacao, nao para
+    # o modelo aprender sobre o aluno.
+    if "peso_aluno" in df.columns:
+        df["_peso_amostral"] = df["peso_aluno"]
 
     df = df.drop(columns=[c for c in COLUNAS_LEAKAGE + COLUNAS_SEM_USO if c in df.columns])
     return df
 
 
-def calcular_historico_t1(caminho_csv: Path) -> dict[str, pd.DataFrame]:
+def calcular_historico_t1(caminho_csv: Path) -> dict[str, pd.DataFrame]:  # noqa: C901
     """
     Absenteísmo do ano anterior, em DOIS níveis: escola e município.
 
@@ -229,6 +270,11 @@ def juntar_territorio(alunos: pd.DataFrame, fonte: str) -> pd.DataFrame:
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--populacao", choices=["avaliados", "todos"], default="avaliados",
+        help=("Populacao de modelagem. 'avaliados' (padrao) = so quem fez a "
+              "prova, que e a metodologia oficial do indicador. 'todos' inclui "
+              "os ausentes, cujo rotulo e convencao — util so para comparacao."))
     parser.add_argument("--full", action="store_true",
                          help="Inclui join com a Silver (territorio/socioeconomico/meta)")
     parser.add_argument(
@@ -241,7 +287,7 @@ def main():
               "do repo da Fase 2. Use --input <caminho da amostra> para os 5.000."))
     args = parser.parse_args()
 
-    alunos = carregar_alunos(Path(args.input))
+    alunos = carregar_alunos(Path(args.input), args.populacao)
     historico = calcular_historico_t1(Path(args.input))
     snapshot = juntar_historico(alunos, historico)
 
