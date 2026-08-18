@@ -1,8 +1,17 @@
-# Dicionário de Dados — Alunos (Tech Challenge Fase 3)
+# Dicionário de Dados — Alunos e snapshot_modelagem (Tech Challenge Fase 3)
 
-Cobre `Alunos.csv` (microdados SAEB individuais, amostra de
-`dados_sample/Alunos.csv` da Fase 2) e as features derivadas planejadas para
-o snapshot de modelagem. Ancorado em
+**Datasets cobertos por este dicionário:**
+
+| Dataset | Arquivo | O que é |
+|---|---|---|
+| `alunos` | `../tech-challenge-fase2-alfabetizacao/dados/Alunos.csv` | Base completa, 57.781 alunos. **É a base de trabalho desde 2026-08-18** |
+| `alunos_amostra` | `data/Alunos_amostra.csv` | Amostra aleatória de 5.000 (8,7%), cópia byte a byte de `dados_sample/Alunos.csv` da Fase 2. Foi a base de trabalho até 2026-08-18; mantida como referência histórica dos relatórios daquele período |
+| `snapshot_modelagem` | `data/snapshot_modelagem.parquet` | Saída de `02_extrair_snapshot.py`: alunos + histórico t-1 (dois níveis) + território/meta quando em `--full`. **É o que o modelo consome** |
+
+EDA de cada um em `reports/eda_<dataset>.md`.
+
+Este documento cobre os microdados do Indicador Criança Alfabetizada / Alfabetiza
+Brasil (INEP) e as features derivadas do snapshot de modelagem. Ancorado em
 `docs/wayfinder/tech_challenge_fase3/SPEC_FINAL.md` e
 `docs/wayfinder/tech_challenge_fase3/adr/0001-pipeline-sklearn-snapshot-e-politica-leakage.md`.
 
@@ -44,15 +53,32 @@ Socrática do Grill with Docs, ainda vale.
 | `proficiencia` | float | Score contínuo da prova (escala Saeb) | Define `alfabetizado` por corte determinístico (743 pts, confirmado sem sobreposição na EDA) | **Fora do modelo, sempre** — define o target |
 | `peso_aluno` | float | Peso amostral (pós-estratificação) | Ajuste estatístico de representatividade, não desempenho | ❌ **FORA DO MODELO, SEMPRE (desde 2026-08-18) — leakage.** Os 835 nulos desta coluna são os alunos ausentes, e neles o alvo é "Não" em 100% dos casos. É o mesmo vazamento de `presenca`/`preenchimento_caderno` (ADR-0001 §2.2), entrando pela **nulidade**. Após imputação pela mediana, o valor imputado identifica os ausentes com 94,7% de pureza. Ver Cap. 9.3 do HANDOFF_RENAN.md |
 
-## Features criadas (planejadas — dependem do snapshot com BigQuery, ainda não extraído)
+## Features criadas
+
+**Atualizado em 2026-08-18** — reescrito após três achados: a base completa
+(57.781 alunos) passou a ser usada, o histórico por escola se mostrou inviável
+por desenho amostral, e `peso_aluno` foi para a lista de leakage.
+
+### Já existentes no snapshot `--local-only`
+
+| Feature | Origem | Cálculo | Justificativa | Cobertura real (não imputada) |
+|---|---|---|---|---|
+| `absenteismo_hist_municipio_t1` | `Alunos.csv`, agregado | Taxa de ausência do **município** no ano anterior; imputada por mediana da UF (ou global se `sigla_uf` ausente) | Substitui `presenca` do próprio aluno (leakage) por sinal histórico legítimo — ADR-0001 §2.1/2.3. **Nível município escolhido por evidência**: SHAP dá 45,1% da influência ao bloco município contra 9,9% ao de escola | **36,9%** |
+| `n_alunos_hist_municipio_t1` | idem | Quantos alunos sustentam a taxa acima | Uma taxa vinda de 1 aluno só pode valer 0% ou 100% — não é taxa. O contador deixa o modelo distinguir taxa confiável de taxa frágil. Sozinho pesa 16,8% no SHAP | 36,9% |
+| `possui_hist_municipio_t1` | Derivada | Binária: 1 se o município tem dado do ano anterior | Sinaliza imputação sem ser leakage (indica disponibilidade de dado, não resultado) — ADR-0001 §2.3. Vigiado pelo gate de artefato (limiar 10%; hoje 8,7%) | — |
+| `absenteismo_hist_escola_t1` | `Alunos.csv`, agregado | Mesma lógica, no nível **escola** | ⚠️ **Estruturalmente frágil**: 49,9% dos grupos escola-ano têm 1 aluno só, e apenas 22,4% das escolas de 2024 aparecem em 2023. Mantida para documentar o achado e permitir comparação — SHAP dá só 2,4% a ela | **11,3%** |
+| `n_alunos_hist_escola_t1` | idem | Contador do nível escola | Mesma justificativa do contador municipal | 11,3% |
+| `possui_hist_escola_t1` | Derivada | Binária, nível escola | idem | — |
+| `_ausente_no_exame` | Derivada de `presenca` | Binária: 1 se `presenca == "Ausente"` | ⚠️ **AUDITORIA, NUNCA FEATURE** (prefixo `_`). Existe porque 16,8% da base tem rótulo por convenção ("não fez prova ⇒ não alfabetizado"), e decidir se essas linhas ficam na população exige saber quem são mesmo depois de `presenca` sair por leakage. Ver Cap. 11.2 do HANDOFF_RENAN.md | — |
+### Planejadas — só existem no snapshot `--full` (dependem de credencial GCP)
 
 | Feature | Origem | Cálculo | Justificativa |
 |---|---|---|---|
-| `possui_historico_t1` | Derivada | Binária: 1 se o município/escola do aluno tem dado do ano anterior, 0 caso contrário (sempre 0 para cohort 2023) | Sinaliza imputação sem ser leakage (só indica disponibilidade de dado, não resultado) — ADR-0001 Seção 2.3 |
-| `absenteismo_historico_t1` | Silver/Gold Fase 2, agregado | Taxa de ausência da escola/município no ano anterior (imputada por mediana da UF quando ausente) | Substitui `presenca` do próprio aluno (leakage) por sinal histórico legítimo — ADR-0001 Seção 2.1/2.3 |
-| `populacao_total` | Silver Fase 2 (`populacao_total`, IBGE) | Direto, join por `id_municipio`+`ano` | Estrutural, não deriva de desempenho educacional |
+| `populacao_total` | Silver Fase 2 (IBGE) | Direto, join por `id_municipio`+`ano` | Estrutural, não deriva de desempenho educacional |
 | `gasto_por_habitante_educacao` | Silver Fase 2 (SICONFI) | Direto, join por `id_municipio`+`ano` | Estrutural/fiscal, não deriva de desempenho educacional |
-| `sigla_uf` / região | Silver Fase 2 (`sigla_uf`, mapeamento por UF) | Direto ou derivado do prefixo de `id_municipio` | Contexto territorial, mesmo princípio do `03_modelo_preditivo_risco.py` da Fase 2 |
+| `sigla_uf` / região | Silver Fase 2 | Direto ou derivado do prefixo de `id_municipio` | Contexto territorial, mesmo princípio do `03_modelo_preditivo_risco.py` da Fase 2. Também habilita a imputação por mediana de UF do ADR-0001 §2.3, que hoje cai no fallback global |
+| `meta_alfabetizacao_2024_imputada` | Silver Fase 2, OBT **com metas imputadas** (KNN, ADR-004) | Direto, join por `id_municipio`+`ano`+`rede` | Meta do PDE: definida externamente por política pública, não deriva do desempenho do aluno predito. Enunciado pede "metas estaduais e municipais" explicitamente. Ver Cap. 6.3 do HANDOFF_RENAN.md |
+| `meta_is_imputada` | Derivada | Binária: 1 se a meta original era nula (veio do KNN) | A tabela do KNN não grava essa marcação. Meta imputada sem rótulo repete o erro apontado no dashboard da Fase 2 |
 
 **Fora do modelo, sempre** (leakage, ADR-0001 + adição de 2026-08-18):
 `proficiencia`, `presenca`, `preenchimento_caderno`, **`peso_aluno`**, qualquer métrica de desempenho município-nível do

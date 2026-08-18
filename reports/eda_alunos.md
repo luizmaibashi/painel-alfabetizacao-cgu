@@ -1,173 +1,149 @@
-# EDA — Alunos.csv (amostra, n=5000)
-
-Gerado a partir de `data/Alunos_amostra.csv` (cópia de `dados_sample/Alunos.csv` da Fase 2, regra AI Jail).
+# EDA — alunos (n=57.782)
+**Origem:** `C:/Users/Luiz Maibashi/Base_de_Conhecimento/PROJETOS/01_PRIORITY/tech-challenge-fase2-alfabetizacao/dados/Alunos.csv`
+**Gerado por:** `src/preprocessing/01_eda_alunos.py`
+**Alvo:** `alfabetizado` · classe de risco `"Não"` = 51.1% das linhas
 
 ## Colunas e tipos
 
-|                       | 0       |
+|                       | tipo    |
 |:----------------------|:--------|
 | ano                   | int64   |
 | id_municipio          | int64   |
-| id_municipio_nome     | object  |
+| id_municipio_nome     | str     |
 | id_escola             | int64   |
 | id_aluno              | int64   |
 | caderno               | int64   |
-| serie                 | object  |
-| rede                  | object  |
-| presenca              | object  |
-| preenchimento_caderno | object  |
-| alfabetizado          | object  |
+| serie                 | str     |
+| rede                  | str     |
+| presenca              | str     |
+| preenchimento_caderno | str     |
+| alfabetizado          | str     |
 | proficiencia          | float64 |
 | peso_aluno            | float64 |
 
-## Checklist obrigatório CRISP-DM (.claude/rules/dados.md)
+## Checklist CRISP-DM (`.claude/rules/dados.md`)
 
 ### 1. Duplicatas
 
-- Linha inteira: 0
+- Linha inteira: **0**
+- `id_aluno` sozinho: **333** — mas `id_aluno`+`ano`: **0**. O aluno reaparece em ano diferente; a chave real inclui `ano`.
 
-- `id_aluno` (sozinho): 1 — investigado: reaparece em ano diferente (0 duplicatas em `id_aluno`+`ano`), não é erro de chave, é o mesmo aluno em dois anos letivos.
+### 2. Colunas constantes / quase-constantes
 
-### 2. Colunas constantes/quase-constantes
-
-- `serie`: 100.0% concentrado em `'2° ano do Ensino Fundamental'` — sem variância, não serve como feature preditiva.
+- `serie`: **100.0%** concentrado em `'2° ano do Ensino Fundamental'` — sem variância útil.
 
 ### 3. Valores sentinela em numéricas
 
-- `proficiencia`: min=588.7892388, max=903.60064 — sem valor implausível óbvio (ex.: 9999, -1).
+- Nenhum valor sentinela clássico com frequência relevante.
 
-- `peso_aluno`: min=0.1548171, max=12.0113505 — sem valor implausível óbvio (ex.: 9999, -1).
+Faixas das numéricas:
 
-- `caderno`: min=1, max=12 — sem valor implausível óbvio (ex.: 9999, -1).
+|              |            min |            50% |            max |
+|:-------------|---------------:|---------------:|---------------:|
+| ano          | 2023           | 2024           | 2024           |
+| id_municipio |    1.10002e+06 |    3.1704e+06  |    5.30011e+06 |
+| id_escola    |    6e+07       |    6.00223e+07 |    6.00428e+07 |
+| id_aluno     |    1.1e+07     |    3.1201e+07  |    5.30276e+07 |
+| caderno      |    1           |   10           |   12           |
+| proficiencia |  580.56        |  752.7         |  903.601       |
+| peso_aluno   |    0.1548      |    1.09        |   23.268       |
 
 ### 4. Códigos de ausência mascarados em categóricas
 
-- Nenhum código de ausência mascarada encontrado nas categóricas checadas.
+- Nenhum código de ausência mascarado encontrado.
 
 ### 5. Outliers implausíveis (critério relacional)
 
-- `peso_aluno`: mediana=1.09, 7/4165 alunos com peso > 3× a mediana (0.17%) — plausível para peso amostral de pós-estratificação em estratos pequenos, não tratado como erro (regra: erro implausível vira nulo, não teto — aqui não há evidência de erro, só variância normal do desenho amostral).
+| coluna       |       mediana |           p99 |           max |   max/p99 |
+|:-------------|--------------:|--------------:|--------------:|----------:|
+| id_municipio |   3.1704e+06  |   5.22045e+06 |   5.30011e+06 |    1.0153 |
+| id_escola    |   6.00223e+07 |   6.00424e+07 |   6.00428e+07 |    1      |
+| id_aluno     |   3.1201e+07  |   5.20746e+07 |   5.30276e+07 |    1.0183 |
+| caderno      |  10           |  12           |  12           |    1      |
+| proficiencia | 752.7         | 851.597       | 903.601       |    1.0611 |
+| peso_aluno   |   1.09        |   1.9938      |  23.268       |   11.67   |
 
-### 6. Perfil de nulos por coluna (%)
+Razão `max/p99` alta indica cauda desproporcional — não é prova de erro, é candidato a checar contra a metodologia da fonte antes de usar sem tratamento.
 
-|                       |    0 |
-|:----------------------|-----:|
-| proficiencia          | 16.7 |
-| peso_aluno            | 16.7 |
-| id_municipio_nome     |  0   |
-| id_municipio          |  0   |
-| ano                   |  0   |
-| id_aluno              |  0   |
-| id_escola             |  0   |
-| caderno               |  0   |
-| serie                 |  0   |
-| presenca              |  0   |
-| rede                  |  0   |
-| alfabetizado          |  0   |
-| preenchimento_caderno |  0   |
+### 6. Perfil de nulos por coluna
+
+|              |   nulos |     % |
+|:-------------|--------:|------:|
+| proficiencia |    9756 | 16.88 |
+| peso_aluno   |    9756 | 16.88 |
 
 ### 7. Redundância entre colunas
 
-- `id_municipio` ↔ `id_municipio_nome`: mapeamento 1:1 (confirmado), esperado, sem ação necessária.
+- `id_municipio` ↔ `id_escola`: correlação 0.980
+- `id_municipio` ↔ `id_aluno`: correlação 1.000
+- `id_escola` ↔ `id_aluno`: correlação 0.980
 
-- `presenca` ↔ `preenchimento_caderno`: **redundância real encontrada** (ver Seção 8 abaixo) — mesmo evento, motivou exclusão de `preenchimento_caderno` da política de leakage (ADR-0001).
-
-### 8. Relação de cada bloco com o alvo `alfabetizado`
-
-#### `presenca` × `alfabetizado`
-
-| presenca   |   Não |   Sim |
-|:-----------|------:|------:|
-| Ausente    |   834 |     0 |
-| Presente   |  1708 |  2458 |
+### 8. Relação de cada coluna com o alvo
 
 
-**100.0% dos alunos 'Ausente' têm `alfabetizado = Não`** — confirma leakage direto (ADR-0001).
+**`ano`**
 
-#### `preenchimento_caderno` × `alfabetizado`
+|   ano |     n |   % risco |
+|------:|------:|----------:|
+|  2023 | 28295 |      51.8 |
+|  2024 | 29487 |      50.5 |
 
-| preenchimento_caderno   |   Não |   Sim |
-|:------------------------|------:|------:|
-| Prova não preenchida    |   100 |     0 |
-| Prova preenchida        |    41 |    59 |
+**`id_municipio`** — mediana: risco=3168705.0000 · não-risco=3201209.0000
 
-834 dos 835 casos de `preenchimento_caderno='Prova não preenchida'` são exatamente os mesmos alunos de `presenca='Ausente'` — confirma a redundância do item 7, motivou excluir `preenchimento_caderno` também (ADR-0001).
+**`id_escola`** — mediana: risco=60021974.0000 · não-risco=60022558.0000
 
-#### `proficiencia` × `alfabetizado` (sanity check do corte 743 pts)
+**`id_aluno`** — mediana: risco=31187434.0000 · não-risco=32008459.0000
 
-| alfabetizado   |   count |    mean |     std |     min |     25% |     50% |     75% |     max |
-|:---------------|--------:|--------:|--------:|--------:|--------:|--------:|--------:|--------:|
-| Não            |    1707 | 704.463 | 30.7459 | 588.789 | 683.454 | 712.354 | 731.005 | 742.97  |
-| Sim            |    2458 | 779.949 | 27.5025 | 743.023 | 758.582 | 774.33  | 795.048 | 903.601 |
+**`caderno`**
 
-Máximo de quem é 'Não' (742,97) < mínimo de quem é 'Sim' (743,02) — corte perfeitamente determinístico, confirma exclusão obrigatória de `proficiencia` como feature.
+|   caderno |     n |   % risco |
+|----------:|------:|----------:|
+|         1 | 22831 |      50.6 |
+|        10 | 16246 |      48.4 |
+|        11 | 16154 |      48.8 |
+|        12 |  2551 |      87.3 |
 
-#### `caderno` × `alfabetizado` — cardinalidade e achado novo
+**`serie`**
 
-- Valores distintos: 4 (baixa cardinalidade, seguro para one-hot — resolve o blind spot levantado no Grill with Docs).
+| serie                        |     n |   % risco |
+|:-----------------------------|------:|----------:|
+| 2° ano do Ensino Fundamental | 57782 |      51.1 |
 
-|   caderno |   Não |   Sim |
-|----------:|------:|------:|
-|         1 |  50.5 |  49.5 |
-|        10 |  47.4 |  52.6 |
-|        11 |  48.7 |  51.3 |
-|        12 |  86.9 |  13.1 |
+**`rede`**
 
-**Achado a investigar**: `caderno=12` (236 alunos, ver contagem abaixo) tem 86,9% de `Não`, bem acima dos ~50% dos outros cadernos. Se caderno é só versão anti-cola (aleatória), essa discrepância não deveria existir — hipótese a checar antes de treinar: caderno 12 pode ser versão adaptada/especial (ex.: acessibilidade), o que mudaria sua leitura de 'metadado neutro' para 'proxy de necessidade especial', não necessariamente leakage, mas precisa de decisão explícita, não assumida. Ver `## Conexão com objetivo de negócio` no dicionário.
+| rede      |     n |   % risco |
+|:----------|------:|----------:|
+| Estadual  |  6327 |      48.6 |
+| Municipal | 51455 |      51.4 |
 
-|   caderno |   count |
-|----------:|--------:|
-|         1 |    1925 |
-|        11 |    1436 |
-|        10 |    1403 |
-|        12 |     236 |
+**`presenca`**
 
-#### `peso_aluno` × `alfabetizado`
+| presenca   |     n |   % risco |
+|:-----------|------:|----------:|
+| Ausente    |  9727 |     100   |
+| Presente   | 48055 |      41.2 |
 
-| alfabetizado   |   peso_aluno |
-|:---------------|-------------:|
-| Não            |      1.16728 |
-| Sim            |      1.13157 |
+**`preenchimento_caderno`**
 
-~~Sem diferença relevante entre classes — peso amostral não carrega sinal do target, comportamento esperado (é peso de desenho amostral, não de desempenho).~~
+| preenchimento_caderno   |     n |   % risco |
+|:------------------------|------:|----------:|
+| Prova não preenchida    |  9756 |     100   |
+| Prova preenchida        | 48026 |      41.2 |
 
-> ⚠️ **CORREÇÃO (2026-08-18) — esta conclusão estava errada, e o motivo do erro
-> é mais importante que o erro.**
->
-> **O que `peso_aluno` é de fato:** uma coluna com **835 valores nulos**, e esses
-> nulos são exatamente os alunos `presenca="Ausente"`. Entre eles, o alvo é "Não"
-> em **100,0%** dos casos, contra 41,0% no resto da base. Ou seja: a **nulidade**
-> desta coluna é o mesmo vazamento que o ADR-0001 já removeu ao excluir
-> `presenca` e `preenchimento_caderno` — só que entrando pela ausência do valor.
-> Uma regra única "nulo ⇒ risco" atinge Precision 1,000.
->
-> **Por que esta análise não pegou:** a comparação acima olhou a **média dos
-> valores preenchidos** e ignorou o **padrão de nulos**. Nenhum dos 8 itens do
-> checklist de EDA cobre "a ausência de valor prediz o alvo?" — o item 6 conta
-> nulos por coluna, mas não os cruza com o target. Essa lacuna é a razão de o
-> vazamento sobreviver a EDA, dicionário, ADR, baseline, tournament e SHAP.
->
-> **O que mudou por causa disso:** `peso_aluno` saiu das features, e foi criado
-> `src/preprocessing/03_guarda_leakage.py`, que testa nulidade-contra-alvo em
-> toda feature candidata. Ver Cap. 9 do `docs/HANDOFF_RENAN.md`.
->
-> *(Uma observação secundária que continua valendo: comparar médias só detecta
-> relação linear, então "médias parecidas" nunca é evidência suficiente de
-> ausência de sinal — mas não foi essa a causa principal aqui.)*
+**`proficiencia`** — mediana: risco=709.8800 · não-risco=774.2690
 
-## Cobertura temporal, rede e município (contexto, não gate)
+**`peso_aluno`** — mediana: risco=1.1034 · não-risco=1.0800
 
-### ano
-|   ano |   count |
-|------:|--------:|
-|  2023 |    2480 |
-|  2024 |    2520 |
+### 9. A NULIDADE de cada coluna prediz o alvo? (item novo — não estava no checklist)
 
-### rede
-| rede      |   count |
-|:----------|--------:|
-| Municipal |    4486 |
-| Estadual  |     514 |
+Item acrescentado em 2026-08-18. O item 6 conta nulos mas nunca os cruza com o alvo — e foi por essa fresta que `peso_aluno` passou: 835 nulos que eram os alunos ausentes, todos com alvo "Não". Ver Cap. 9 do `docs/HANDOFF_RENAN.md`.
 
-### municípios distintos
-- 1905 municípios distintos na amostra
+- `proficiencia`: 9756 nulos (16.9%) — risco entre nulos **100.0%** vs **41.2%** no resto 🔴 **VAZAMENTO**
+- `peso_aluno`: 9756 nulos (16.9%) — risco entre nulos **100.0%** vs **41.2%** no resto 🔴 **VAZAMENTO**
+
+## Contexto estrutural (não é gate, mas decide o que é possível)
+
+- **escolas**: 24.346 · 2.37 alunos por escola · 42.8% com 1 aluno só
+- **municípios**: 4.591 · 12.59 alunos por município · 16.8% com 1 aluno só
+- **anos**: [2023, 2024]
+- **escolas em 2023 e 2024**: 4.188 (22.4% das de 2024) — limita qualquer feature histórica por escola
