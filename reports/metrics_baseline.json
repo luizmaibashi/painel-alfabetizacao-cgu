@@ -3,108 +3,106 @@
     "split": "aleatorio_estratificado",
     "n_treino": 4000,
     "n_teste": 1000,
-    "accuracy": 0.626,
-    "precision": 0.7887931034482759,
-    "recall": 0.36023622047244097,
-    "f1": 0.4945945945945946,
-    "roc_auc": 0.657482315472761,
+    "accuracy": 0.526,
+    "precision": 0.5429292929292929,
+    "recall": 0.42322834645669294,
+    "f1": 0.4756637168141593,
+    "roc_auc": 0.5255125312079892,
     "matriz_confusao": [
       [
-        443,
-        49
+        311,
+        181
       ],
       [
-        325,
-        183
+        293,
+        215
       ]
     ],
     "relatorio_classificacao": {
       "0": {
-        "precision": 0.5768229166666666,
-        "recall": 0.9004065040650406,
-        "f1-score": 0.7031746031746032,
+        "precision": 0.5149006622516556,
+        "recall": 0.6321138211382114,
+        "f1-score": 0.5675182481751825,
         "support": 492.0
       },
       "1": {
-        "precision": 0.7887931034482759,
-        "recall": 0.36023622047244097,
-        "f1-score": 0.4945945945945946,
+        "precision": 0.5429292929292929,
+        "recall": 0.42322834645669294,
+        "f1-score": 0.4756637168141593,
         "support": 508.0
       },
-      "accuracy": 0.626,
+      "accuracy": 0.526,
       "macro avg": {
-        "precision": 0.6828080100574713,
-        "recall": 0.6303213622687408,
-        "f1-score": 0.5988845988845989,
+        "precision": 0.5289149775904742,
+        "recall": 0.5276710837974521,
+        "f1-score": 0.521590982494671,
         "support": 1000.0
       },
       "weighted avg": {
-        "precision": 0.6845037715517241,
-        "recall": 0.626,
-        "f1-score": 0.5972159588159589,
+        "precision": 0.5291392066358954,
+        "recall": 0.526,
+        "f1-score": 0.5208561462437827,
         "support": 1000.0
       }
     },
     "permutation_importance": {
-      "peso_aluno": 0.0791,
-      "possui_historico_t1": 0.003,
+      "caderno": 0.0386,
+      "rede": 0.0091,
       "absenteismo_historico_t1": 0.0,
-      "rede": -0.002,
-      "caderno": -0.0461
+      "possui_historico_t1": -0.0006
     }
   },
   "split_temporal": {
     "split": "temporal_2023_treino_2024_teste",
     "n_treino": 2480,
     "n_teste": 2520,
-    "accuracy": 0.6551587301587302,
-    "precision": 0.796711509715994,
-    "recall": 0.42101105845181674,
-    "f1": 0.5509043927648579,
-    "roc_auc": 0.6773673376317427,
+    "accuracy": 0.5341269841269841,
+    "precision": 1.0,
+    "recall": 0.07266982622432859,
+    "f1": 0.13549337260677466,
+    "roc_auc": 0.5318705261646145,
     "matriz_confusao": [
       [
-        1118,
-        136
+        1254,
+        0
       ],
       [
-        733,
-        533
+        1174,
+        92
       ]
     ],
     "relatorio_classificacao": {
       "0": {
-        "precision": 0.6039978390059427,
-        "recall": 0.8915470494417863,
-        "f1-score": 0.7201288244766506,
+        "precision": 0.5164744645799012,
+        "recall": 1.0,
+        "f1-score": 0.6811515480717002,
         "support": 1254.0
       },
       "1": {
-        "precision": 0.796711509715994,
-        "recall": 0.42101105845181674,
-        "f1-score": 0.5509043927648579,
+        "precision": 1.0,
+        "recall": 0.07266982622432859,
+        "f1-score": 0.13549337260677466,
         "support": 1266.0
       },
-      "accuracy": 0.6551587301587302,
+      "accuracy": 0.5341269841269841,
       "macro avg": {
-        "precision": 0.7003546743609683,
-        "recall": 0.6562790539468015,
-        "f1-score": 0.6355166086207542,
+        "precision": 0.7582372322899507,
+        "recall": 0.5363349131121643,
+        "f1-score": 0.4083224603392374,
         "support": 2520.0
       },
       "weighted avg": {
-        "precision": 0.7008135164340875,
-        "recall": 0.6551587301587302,
-        "f1-score": 0.6351136933071547,
+        "precision": 0.7593884835647604,
+        "recall": 0.5341269841269841,
+        "f1-score": 0.4070232742071781,
         "support": 2520.0
       }
     },
     "permutation_importance": {
-      "peso_aluno": 0.0892,
+      "caderno": 0.0356,
       "absenteismo_historico_t1": 0.0,
-      "possui_historico_t1": 0.0,
-      "rede": -0.0042,
-      "caderno": -0.0224
+      "rede": 0.0,
+      "possui_historico_t1": 0.0
     }
   }
 }

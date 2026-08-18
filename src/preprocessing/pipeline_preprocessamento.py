@@ -34,17 +34,32 @@ from sklearn.preprocessing import OneHotEncoder, RobustScaler
 # Colunas fora do modelo, sempre (ADR-0001): proficiencia, presenca,
 # preenchimento_caderno já nem existem no snapshot (removidas na extração).
 # Identificadores não são feature (mas seguem no dataframe para split/auditoria).
-COLUNAS_ID = ["ano", "id_municipio", "id_municipio_nome", "id_escola", "id_aluno"]
+COLUNAS_ID = ["ano", "id_municipio", "id_municipio_nome", "id_escola", "id_aluno",
+               "_ausente_no_exame"]  # `_` = auditoria, nunca feature
 COLUNA_TARGET = "alfabetizado"
 
 # --- Catálogo de features candidatas (nem todas existem em todo snapshot) ---
 
-# Numéricas: peso_aluno tem outliers plausíveis (peso amostral de
-# pós-estratificação, EDA item 5) -> Robust Scaling, não Standardization
-# (aula 6: mediana/IQR, não sensível a outlier). Robust Scaling também protege
-# populacao_total, que é fortemente assimétrica (São Paulo vs. município rural).
+# --- POR QUE `peso_aluno` NÃO ESTÁ AQUI (removido em 2026-08-18) ---
+# A NULIDADE de `peso_aluno` codifica o evento "aluno faltou à prova": os 835
+# nulos da amostra têm alfabetizado="Não" em 100% dos casos (contra 41% no
+# resto), e 834 deles são exatamente os `presenca="Ausente"`. Depois do
+# SimpleImputer(median), todos recebem o mesmo valor exato — e "peso_aluno ==
+# mediana" vira bandeira de ausência, com pureza de 94,7%.
+#
+# É o MESMO vazamento que o ADR-0001 §2.2 já removeu ao excluir `presenca` e
+# `preenchimento_caderno`; ele apenas entrava pela ausência do valor, não pelo
+# valor. Excluir aqui é aplicar a política existente, não criar política nova.
+#
+# Efeito medido: uma regra única "peso_aluno é nulo -> risco" atinge
+# Precision 1,000. Sem essa coluna e sem os alunos ausentes, o ROC-AUC do
+# modelo cai para 0,497 — ou seja, todo o desempenho aparente vinha daqui.
+# Detalhe completo no Cap. 9 do docs/HANDOFF_RENAN.md.
+#
+# Numéricas restantes -> Robust Scaling, não Standardization (aula 6:
+# mediana/IQR, não sensível a outlier). Protege `populacao_total`, que é
+# fortemente assimétrica (São Paulo vs. município rural).
 CANDIDATAS_NUMERICAS = [
-    "peso_aluno",
     "absenteismo_historico_t1",
     # Só existem no snapshot --full (território/socioeconômico via GCS):
     "populacao_total",

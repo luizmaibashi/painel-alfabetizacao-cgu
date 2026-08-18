@@ -131,19 +131,29 @@ Máximo de quem é 'Não' (742,97) < mínimo de quem é 'Sim' (743,02) — corte
 
 ~~Sem diferença relevante entre classes — peso amostral não carrega sinal do target, comportamento esperado (é peso de desenho amostral, não de desempenho).~~
 
-> ⚠️ **CORREÇÃO (2026-08-18) — esta conclusão estava errada.** O SHAP mostrou que
-> `peso_aluno` concentra **70,6% da influência** do modelo, e a ablação confirmou:
-> sem ele o ROC-AUC cai de 0,669 para 0,530 (≈ aleatório).
+> ⚠️ **CORREÇÃO (2026-08-18) — esta conclusão estava errada, e o motivo do erro
+> é mais importante que o erro.**
 >
-> **Por que o erro aconteceu:** comparar médias entre classes só detecta relação
-> **linear**. Duas distribuições podem ter médias quase idênticas (1,167 vs 1,132)
-> e ainda assim diferir muito em faixas específicas — que é exatamente o que um
-> modelo de árvore explora, porque ele corta o espaço em faixas em vez de traçar
-> uma reta. **Teste de média não é teste de poder preditivo.**
+> **O que `peso_aluno` é de fato:** uma coluna com **835 valores nulos**, e esses
+> nulos são exatamente os alunos `presenca="Ausente"`. Entre eles, o alvo é "Não"
+> em **100,0%** dos casos, contra 41,0% no resto da base. Ou seja: a **nulidade**
+> desta coluna é o mesmo vazamento que o ADR-0001 já removeu ao excluir
+> `presenca` e `preenchimento_caderno` — só que entrando pela ausência do valor.
+> Uma regra única "nulo ⇒ risco" atinge Precision 1,000.
 >
-> **O que o dado é de fato:** `peso_aluno` é ~constante por escola (0,89 valores
-> distintos por escola), ou seja, funciona como identificador da escola, não como
-> atributo do aluno. Ver Cap. 9.3 do `docs/HANDOFF_RENAN.md`.
+> **Por que esta análise não pegou:** a comparação acima olhou a **média dos
+> valores preenchidos** e ignorou o **padrão de nulos**. Nenhum dos 8 itens do
+> checklist de EDA cobre "a ausência de valor prediz o alvo?" — o item 6 conta
+> nulos por coluna, mas não os cruza com o target. Essa lacuna é a razão de o
+> vazamento sobreviver a EDA, dicionário, ADR, baseline, tournament e SHAP.
+>
+> **O que mudou por causa disso:** `peso_aluno` saiu das features, e foi criado
+> `src/preprocessing/03_guarda_leakage.py`, que testa nulidade-contra-alvo em
+> toda feature candidata. Ver Cap. 9 do `docs/HANDOFF_RENAN.md`.
+>
+> *(Uma observação secundária que continua valendo: comparar médias só detecta
+> relação linear, então "médias parecidas" nunca é evidência suficiente de
+> ausência de sinal — mas não foi essa a causa principal aqui.)*
 
 ## Cobertura temporal, rede e município (contexto, não gate)
 

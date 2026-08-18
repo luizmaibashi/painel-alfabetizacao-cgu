@@ -2,9 +2,9 @@
   "contexto": {
     "modelo_explicado": "XGBoost (vencedor do tournament)",
     "hiperparametros": {
-      "n_estimators": "400",
+      "n_estimators": "200",
       "max_depth": "6",
-      "learning_rate": "0.1",
+      "learning_rate": "0.05",
       "random_state": "42",
       "eval_metric": "logloss",
       "tree_method": "hist",
@@ -15,21 +15,19 @@
     "aviso": "Metrica de influencia = |SHAP| medio. Mede o quanto a variavel move a predicao, NAO se o efeito e bom ou ruim."
   },
   "influencia_por_variavel": {
-    "peso_aluno": 0.994986355304718,
-    "caderno": 0.3261197358369827,
-    "rede": 0.0641321986913681,
-    "possui_historico_t1": 0.020704414695501328,
-    "absenteismo_historico_t1": 0.003757956437766552
+    "caderno": 0.24096644460223615,
+    "rede": 0.028869619593024254,
+    "possui_historico_t1": 0.009282141923904419,
+    "absenteismo_historico_t1": 0.004998150281608105
   },
   "influencia_por_categoria": {
-    "num__peso_aluno": 0.9949899911880493,
-    "cat__caderno_12": 0.13925999402999878,
-    "cat__caderno_11": 0.06627999991178513,
-    "cat__caderno_1": 0.06584999710321426,
-    "cat__rede_Estadual": 0.06413000077009201,
-    "cat__caderno_10": 0.05471999943256378,
-    "bin__possui_historico_t1": 0.02070000022649765,
-    "num__absenteismo_historico_t1": 0.003759999992325902,
+    "cat__caderno_12": 0.16408999264240265,
+    "cat__caderno_10": 0.05693000182509422,
+    "cat__rede_Estadual": 0.028869999572634697,
+    "cat__caderno_1": 0.01858999952673912,
+    "bin__possui_historico_t1": 0.009279999881982803,
+    "num__absenteismo_historico_t1": 0.004999999888241291,
+    "cat__caderno_11": 0.0013599999947473407,
     "cat__rede_Municipal": 0.0
   },
   "gates_adr0001_seccao5": [
@@ -41,38 +39,38 @@
     {
       "gate": "flags_de_imputacao_sem_influencia_relevante",
       "status": "PASSOU",
-      "detalhe": "Participação na influência: possui_historico_t1=1.5%. Limiar: 10%. (Critério por posição do ADR-0001 não discrimina aqui: o modelo tem 5 features, então top-5 seria o modelo inteiro.)"
+      "detalhe": "Participação na influência: possui_historico_t1=3.3%. Limiar: 10%. (Critério por posição do ADR-0001 não discrimina aqui: o modelo tem 4 features, então top-5 seria o modelo inteiro.)"
     },
     {
       "gate": "nenhuma_feature_isolada_domina",
       "status": "FALHOU",
-      "detalhe": "`peso_aluno` concentra 70.6% da influência. Limiar: 50%."
+      "detalhe": "`caderno` concentra 84.8% da influência. Limiar: 50%."
     },
     {
       "gate": "caderno_12_nao_domina",
       "status": "FALHOU",
-      "detalhe": "|SHAP| de caderno=12 é 2.24x a média das outras categorias de caderno (0.1393 vs 0.0623). Limiar de alerta: 2.0x"
+      "detalhe": "|SHAP| de caderno=12 é 6.40x a média das outras categorias de caderno (0.1641 vs 0.0256). Limiar de alerta: 2.0x"
     }
   ],
   "teste_ablacao": {
-    "feature_removida": "peso_aluno",
+    "feature_removida": "caderno",
     "com_a_feature": {
-      "recall": 0.49803149606299213,
-      "precision": 0.695054945054945,
-      "f1": 0.5802752293577982,
-      "roc_auc": 0.668551149094168
-    },
-    "sem_a_feature": {
       "recall": 0.65748031496063,
       "precision": 0.5122699386503068,
       "f1": 0.5758620689655173,
-      "roc_auc": 0.5302777511042828
+      "roc_auc": 0.5303097592983804
+    },
+    "sem_a_feature": {
+      "recall": 0.9015748031496063,
+      "precision": 0.5163472378804961,
+      "f1": 0.6566308243727599,
+      "roc_auc": 0.5115649606299212
     },
     "delta": {
-      "recall": 0.1594,
-      "precision": -0.1828,
-      "f1": -0.0044,
-      "roc_auc": -0.1383
+      "recall": 0.2441,
+      "precision": 0.0041,
+      "f1": 0.0808,
+      "roc_auc": -0.0187
     }
   },
   "graficos": [

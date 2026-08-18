@@ -1,0 +1,18 @@
+{
+  "snapshot": "snapshot_modelagem.parquet",
+  "n_linhas": 5000,
+  "candidatas_testadas": [
+    "absenteismo_historico_t1",
+    "caderno",
+    "rede",
+    "possui_historico_t1"
+  ],
+  "achados": [
+    {
+      "coluna": "caderno",
+      "teste": "B_valor_isola_target",
+      "gravidade": "MEDIA",
+      "detalhe": "grupo `12` tem 236 linhas com alvo 'risco' em 86.9% (pureza 86.9%). 1 grupo(s) acima do limiar."
+    }
+  ]
+}

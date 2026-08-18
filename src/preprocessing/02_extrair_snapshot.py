@@ -59,11 +59,22 @@ COLUNAS_TERRITORIO = ["id_municipio", "ano", "rede", "populacao_total",
 def carregar_alunos(caminho_csv: Path) -> pd.DataFrame:
     df = pd.read_csv(caminho_csv)
     df["id_municipio"] = df["id_municipio"].astype(str).str.zfill(7)  # ADR-005 Fase 2
+
+    # Coluna de AUDITORIA (2026-08-18), nunca feature — prefixo `_` marca isso.
+    # Motivo: 100% dos alunos ausentes têm alfabetizado="Não" por CONVENÇÃO do
+    # dado (não fez prova => não alfabetizado), não por medição. São 16,7% da
+    # amostra. Manter ou remover essas linhas da população de modelagem é uma
+    # decisão em aberto (Cap. 10.2 do HANDOFF_RENAN.md) — e ela só pode ser
+    # analisada se soubermos QUEM são, mesmo depois de `presenca` sair por
+    # leakage. Daí registrar aqui, explicitamente fora do modelo.
+    if "presenca" in df.columns:
+        df["_ausente_no_exame"] = (df["presenca"] == "Ausente").astype(int)
+
     df = df.drop(columns=[c for c in COLUNAS_LEAKAGE + COLUNAS_SEM_USO if c in df.columns])
     return df
 
 
-def calcular_historico_t1(alunos: pd.DataFrame) -> pd.DataFrame:
+def calcular_historico_t1(caminho_csv: Path) -> pd.DataFrame:
     """
     Absenteísmo histórico por escola, agregado do ano anterior.
     Recalculado a partir do PRÓPRIO Alunos.csv (não precisa de Silver/GCS
@@ -72,8 +83,13 @@ def calcular_historico_t1(alunos: pd.DataFrame) -> pd.DataFrame:
 
     Atenção: `presenca` já foi removida do dataframe principal (leakage do
     ano atual) — recalcular aqui a partir do CSV bruto, antes do drop.
+
+    CORREÇÃO (2026-08-18): esta função lia `data/Alunos_amostra.csv` FIXO,
+    ignorando o arquivo passado em `--input`. Rodar com a base completa
+    (57.781 linhas) calcularia o histórico sobre a amostra de 5.000 e faria o
+    join na base inteira — silenciosamente errado, sem erro nenhum.
     """
-    bruto = pd.read_csv(BASE / "data" / "Alunos_amostra.csv")
+    bruto = pd.read_csv(caminho_csv)
     bruto["id_municipio"] = bruto["id_municipio"].astype(str).str.zfill(7)
     absenteismo_ano = (
         bruto.groupby(["id_escola", "ano"])["presenca"]
@@ -86,12 +102,38 @@ def calcular_historico_t1(alunos: pd.DataFrame) -> pd.DataFrame:
 
 
 def juntar_historico(alunos: pd.DataFrame, historico: pd.DataFrame) -> pd.DataFrame:
+    """Só faz o join e marca disponibilidade. A imputação vem depois (ver abaixo)."""
     out = alunos.merge(historico, on=["id_escola", "ano"], how="left")
     out["possui_historico_t1"] = out["absenteismo_historico_t1"].notna().astype(int)
-    mediana_por_uf = out.groupby("sigla_uf")["absenteismo_historico_t1"].transform("median") \
-        if "sigla_uf" in out.columns else out["absenteismo_historico_t1"].median()
-    out["absenteismo_historico_t1"] = out["absenteismo_historico_t1"].fillna(mediana_por_uf)
     return out
+
+
+def imputar_historico(snapshot: pd.DataFrame) -> pd.DataFrame:
+    """
+    Imputa `absenteismo_historico_t1` pela mediana da UF (ADR-0001 §2.3), com
+    fallback para mediana global quando a UF não está disponível.
+
+    CORREÇÃO (2026-08-18): a imputação estava dentro de `juntar_historico`,
+    que roda ANTES do join de território — e `sigla_uf` só chega nesse join.
+    Resultado: a condição `if "sigla_uf" in out.columns` era sempre falsa e a
+    mediana-por-UF documentada no ADR-0001 NUNCA executou, nem no `--full`.
+    Caía sempre no fallback global, sem aviso. Agora a imputação é um passo
+    separado, chamado depois do território.
+    """
+    col = "absenteismo_historico_t1"
+    if "sigla_uf" in snapshot.columns:
+        mediana = snapshot.groupby("sigla_uf")[col].transform("median")
+        # UF inteira sem histórico -> transform devolve NaN; completa com global
+        mediana = mediana.fillna(snapshot[col].median())
+        origem = "mediana da UF (ADR-0001 2.3)"
+    else:
+        mediana = snapshot[col].median()
+        origem = "mediana GLOBAL (sem sigla_uf -- modo --local-only)"
+    n_imp = int(snapshot[col].isna().sum())
+    snapshot[col] = snapshot[col].fillna(mediana)
+    print(f"Historico t-1: {n_imp} de {len(snapshot)} linhas imputadas "
+          f"({n_imp / len(snapshot):.1%}) por {origem}.")
+    return snapshot
 
 
 def juntar_territorio_gcs(alunos: pd.DataFrame) -> pd.DataFrame:
@@ -136,12 +178,16 @@ def main():
     args = parser.parse_args()
 
     alunos = carregar_alunos(Path(args.input))
-    historico = calcular_historico_t1(alunos)
+    historico = calcular_historico_t1(Path(args.input))
     snapshot = juntar_historico(alunos, historico)
 
     if args.full:
         snapshot = juntar_territorio_gcs(snapshot)
-    else:
+
+    # Só aqui `sigla_uf` existe, se existir (ver imputar_historico).
+    snapshot = imputar_historico(snapshot)
+
+    if not args.full:
         print("Rodando --local-only: sem território/socioeconômico "
               "(populacao_total, gasto_por_habitante_educacao, sigla_uf) e "
               "SEM META (meta_alfabetizacao_2024_imputada, meta_is_imputada). "
