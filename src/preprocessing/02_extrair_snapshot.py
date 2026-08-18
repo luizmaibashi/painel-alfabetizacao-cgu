@@ -35,9 +35,25 @@ COLUNAS_LEAKAGE = ["proficiencia", "presenca", "preenchimento_caderno"]
 # Colunas sem variância/sem uso como feature (EDA, reports/eda_alunos.md item 2)
 COLUNAS_SEM_USO = ["serie"]
 
-BUCKET_SILVER = "gs://tc-alfabetizacao-fiap-879273/silver/alfabetizacao_municipios_obt"
+# ATENÇÃO (correção de 2026-08-18, motivada pelo feedback oficial da Fase 2 —
+# ver docs/FEEDBACK_FASE2_E_LICOES.md, Seção 3.1):
+# Apontamos para a OBT *com metas imputadas*, não para a OBT base. A imputação
+# KNN de metas (dataproc_05_knn_metas.py, ADR-004 da Fase 2) foi o primeiro
+# ponto forte citado pelo avaliador — cobertura 43,6% → 100%, holdout MAE
+# 5,12pp — e estava sendo ignorada por esta extração. O enunciado da Fase 3
+# pede explicitamente "metas estaduais e municipais" entre as variáveis.
+BUCKET_SILVER = ("gs://tc-alfabetizacao-fiap-879273/silver/"
+                  "alfabetizacao_municipios_obt_com_metas_imputadas")
+
+# `meta_alfabetizacao_2024` (original, com NULLs) vem junto NÃO como feature,
+# mas para derivar o flag `meta_is_imputada` — a tabela do KNN não grava esse
+# flag, e usar meta imputada sem marcar que é imputada repete exatamente o erro
+# de rotulagem que o avaliador apontou no dashboard da Fase 2 (Seção 2.2 do
+# FEEDBACK_FASE2_E_LICOES.md). O flag é descartado do modelo se a cobertura
+# real de meta original for baixa demais para ele significar algo.
 COLUNAS_TERRITORIO = ["id_municipio", "ano", "rede", "populacao_total",
-                       "gasto_por_habitante_educacao", "sigla_uf"]
+                       "gasto_por_habitante_educacao", "sigla_uf",
+                       "meta_alfabetizacao_2024", "meta_alfabetizacao_2024_imputada"]
 
 
 def carregar_alunos(caminho_csv: Path) -> pd.DataFrame:
@@ -79,11 +95,36 @@ def juntar_historico(alunos: pd.DataFrame, historico: pd.DataFrame) -> pd.DataFr
 
 
 def juntar_territorio_gcs(alunos: pd.DataFrame) -> pd.DataFrame:
-    """Requer gcsfs + credenciais GCP — não executável neste ambiente."""
+    """
+    Requer gcsfs + credenciais GCP — não executável neste ambiente.
+
+    Traz território/socioeconômico + a meta imputada (ADR-004 da Fase 2).
+    A meta é feature legítima (não leakage): é definida externamente pelo PDE,
+    não deriva do desempenho do aluno sendo predito — mesmo raciocínio que
+    validou populacao_total/gasto_por_habitante_educacao no ADR-0001. Já
+    `gap_meta` e `taxa_alfabetizacao` continuam FORA (circulares, calculadas a
+    partir do desempenho do próprio ano).
+    """
     silver = pd.read_parquet(BUCKET_SILVER, columns=COLUNAS_TERRITORIO)
     silver["id_municipio"] = silver["id_municipio"].astype(str).str.zfill(7)
     silver = silver.drop_duplicates(subset=["id_municipio", "ano", "rede"])
-    return alunos.merge(silver, on=["id_municipio", "ano", "rede"], how="left")
+
+    # Flag de imputação derivado: a tabela do KNN não grava essa marcação.
+    # Meta imputada sem rótulo = o erro de rotulagem apontado na Fase 2.
+    silver["meta_is_imputada"] = silver["meta_alfabetizacao_2024"].isna().astype(int)
+    silver = silver.drop(columns=["meta_alfabetizacao_2024"])
+
+    out = alunos.merge(silver, on=["id_municipio", "ano", "rede"], how="left")
+
+    cobertura = out["meta_alfabetizacao_2024_imputada"].notna().mean()
+    pct_imputada = out["meta_is_imputada"].mean()
+    print(f"Meta: cobertura {cobertura:.1%} das linhas | "
+          f"{pct_imputada:.1%} vêm de imputação KNN (não de meta oficial do PDE).")
+    if pct_imputada > 0.5:
+        print("  ATENÇÃO: maioria das metas é imputada — checar no SHAP se o "
+              "modelo está aprendendo o artefato de imputação, não a meta real.")
+
+    return out
 
 
 def main():
@@ -101,8 +142,9 @@ def main():
     if args.full:
         snapshot = juntar_territorio_gcs(snapshot)
     else:
-        print("Rodando --local-only: sem features de território/socioeconômico "
-              "(populacao_total, gasto_por_habitante_educacao, sigla_uf). "
+        print("Rodando --local-only: sem território/socioeconômico "
+              "(populacao_total, gasto_por_habitante_educacao, sigla_uf) e "
+              "SEM META (meta_alfabetizacao_2024_imputada, meta_is_imputada). "
               "Rode com --full (e credenciais GCP) para o snapshot completo.")
 
     out_path = BASE / "data" / "snapshot_modelagem.parquet"
