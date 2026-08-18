@@ -27,7 +27,7 @@ from sklearn.pipeline import Pipeline
 BASE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BASE / "src" / "preprocessing"))
 from pipeline_preprocessamento import (  # noqa: E402
-    COLUNA_TARGET, colunas_feature, construir_preprocessador,
+    COLUNA_TARGET, colunas_feature, construir_preprocessador, descrever_features,
 )
 
 RANDOM_STATE = 42
@@ -44,12 +44,12 @@ def carregar_snapshot() -> pd.DataFrame:
 
 
 def montar_X_y(df: pd.DataFrame):
-    return df[colunas_feature()], df[COLUNA_TARGET]
+    return df[colunas_feature(df)], df[COLUNA_TARGET]
 
 
 def treinar_e_avaliar(X_train, y_train, X_test, y_test, nome_split: str) -> dict:
     pipeline = Pipeline([
-        ("preprocessador", construir_preprocessador()),
+        ("preprocessador", construir_preprocessador(X_train)),
         ("modelo", RandomForestClassifier(
             n_estimators=200, max_depth=8, min_samples_leaf=20,
             class_weight="balanced", random_state=RANDOM_STATE,
@@ -94,6 +94,7 @@ def main():
 
     print(f"Snapshot: {len(df)} linhas, target balanceado em "
           f"{y.mean():.1%} (classe 'Sim').")
+    print(descrever_features(df))
 
     resultados = {}
 
