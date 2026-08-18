@@ -7,8 +7,10 @@
 
 ## Comece por aqui
 
-- [`docs/HANDOFF_RENAN.md`](docs/HANDOFF_RENAN.md) — resumo de tudo que foi
-  decidido até agora e por quê (leitura de 15 min antes da call).
+- [`docs/HANDOFF_RENAN.md`](docs/HANDOFF_RENAN.md) — **documento vivo do
+  projeto**: de onde viemos (feedback da Fase 2), decisões técnicas e por quê,
+  auditoria contra o enunciado, riscos abertos e o que falta. É o único
+  documento necessário pra entender o projeto inteiro.
 - [`docs/CONTEUDO_AULAS_RELEVANTE.md`](docs/CONTEUDO_AULAS_RELEVANTE.md) —
   conteúdo das aulas do curso conectado às decisões técnicas do projeto.
 - `reports/eda_alunos.md` — EDA real sobre a amostra de `Alunos.csv`.

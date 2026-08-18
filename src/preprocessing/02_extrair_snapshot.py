@@ -36,7 +36,7 @@ COLUNAS_LEAKAGE = ["proficiencia", "presenca", "preenchimento_caderno"]
 COLUNAS_SEM_USO = ["serie"]
 
 # ATENÇÃO (correção de 2026-08-18, motivada pelo feedback oficial da Fase 2 —
-# ver docs/FEEDBACK_FASE2_E_LICOES.md, Seção 3.1):
+# ver docs/HANDOFF_RENAN.md, Capítulo 6):
 # Apontamos para a OBT *com metas imputadas*, não para a OBT base. A imputação
 # KNN de metas (dataproc_05_knn_metas.py, ADR-004 da Fase 2) foi o primeiro
 # ponto forte citado pelo avaliador — cobertura 43,6% → 100%, holdout MAE
@@ -48,8 +48,8 @@ BUCKET_SILVER = ("gs://tc-alfabetizacao-fiap-879273/silver/"
 # `meta_alfabetizacao_2024` (original, com NULLs) vem junto NÃO como feature,
 # mas para derivar o flag `meta_is_imputada` — a tabela do KNN não grava esse
 # flag, e usar meta imputada sem marcar que é imputada repete exatamente o erro
-# de rotulagem que o avaliador apontou no dashboard da Fase 2 (Seção 2.2 do
-# FEEDBACK_FASE2_E_LICOES.md). O flag é descartado do modelo se a cobertura
+# de rotulagem que o avaliador apontou no dashboard da Fase 2 (crítica (b) do
+# Cap. 1.2 do HANDOFF_RENAN.md). O flag é descartado do modelo se a cobertura
 # real de meta original for baixa demais para ele significar algo.
 COLUNAS_TERRITORIO = ["id_municipio", "ano", "rede", "populacao_total",
                        "gasto_por_habitante_educacao", "sigla_uf",
