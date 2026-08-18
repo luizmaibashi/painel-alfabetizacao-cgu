@@ -60,7 +60,18 @@ COLUNA_TARGET = "alfabetizado"
 # mediana/IQR, não sensível a outlier). Protege `populacao_total`, que é
 # fortemente assimétrica (São Paulo vs. município rural).
 CANDIDATAS_NUMERICAS = [
-    "absenteismo_historico_t1",
+    # Histórico t-1 em dois níveis (2026-08-18). O nível ESCOLA é estruturalmente
+    # frágil nesta base amostral (49,9% dos grupos escola-ano têm 1 aluno só, e
+    # só 22,4% das escolas de 2024 aparecem em 2023); o nível MUNICÍPIO tem
+    # 65,2% de cobertura. Mantemos os dois para o SHAP mostrar qual carrega
+    # sinal, em vez de escolhermos no palpite.
+    "absenteismo_hist_escola_t1",
+    "absenteismo_hist_municipio_t1",
+    # Quantos alunos sustentam cada taxa acima — uma taxa vinda de 1 aluno vale
+    # 0% ou 100% e não é taxa. Entra como feature para o modelo poder distinguir
+    # taxa confiável de taxa frágil.
+    "n_alunos_hist_escola_t1",
+    "n_alunos_hist_municipio_t1",
     # Só existem no snapshot --full (território/socioeconômico via GCS):
     "populacao_total",
     "gasto_por_habitante_educacao",
@@ -81,7 +92,8 @@ CANDIDATAS_CATEGORICAS = ["caderno", "rede", "sigla_uf"]
 # necessárias (usar valor imputado sem sinalizar que é imputado esconde o
 # artefato), mas se aparecerem no topo do SHAP é sinal de que o modelo está
 # lendo o artefato de imputação, não sinal real (ADR-0001 §5, cenário 3).
-CANDIDATAS_PASSTHROUGH = ["possui_historico_t1", "meta_is_imputada"]
+CANDIDATAS_PASSTHROUGH = ["possui_hist_escola_t1", "possui_hist_municipio_t1",
+                           "meta_is_imputada"]
 
 TODAS_CANDIDATAS = (
     CANDIDATAS_NUMERICAS + CANDIDATAS_CATEGORICAS + CANDIDATAS_PASSTHROUGH

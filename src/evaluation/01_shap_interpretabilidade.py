@@ -66,13 +66,14 @@ TOP_N = 5  # o "top-5" citado no checklist do ADR-0001 §5
 # Fixos aqui de propósito: este script explica o modelo ESCOLHIDO, não procura
 # um novo. Se o tournament for re-rodado (ex.: com --full), atualizar aqui.
 PARAMS_XGB = dict(
-    n_estimators=200, max_depth=6, learning_rate=0.05,
+    n_estimators=400, max_depth=6, learning_rate=0.1,
     random_state=RANDOM_STATE, eval_metric="logloss", tree_method="hist", n_jobs=-1,
 )
 
 # Prefixos usados para classificar features nos gates do ADR-0001 §5.
 FEATURES_TERRITORIO = ("populacao_total", "gasto_por_habitante_educacao", "sigla_uf")
-FEATURES_ARTEFATO = ("possui_historico_t1", "meta_is_imputada")
+FEATURES_ARTEFATO = ("possui_hist_escola_t1", "possui_hist_municipio_t1",
+                     "meta_is_imputada")
 
 
 def carregar_snapshot() -> pd.DataFrame:
@@ -85,9 +86,11 @@ def nome_original(nome_transformado: str) -> str:
     """`cat__caderno_12` -> `caderno`. Usado para agregar One-Hot por feature."""
     sem_prefixo = nome_transformado.split("__", 1)[-1]
     for candidata in sorted(
-        ["absenteismo_historico_t1", "populacao_total",
+        ["absenteismo_hist_escola_t1", "absenteismo_hist_municipio_t1",
+         "n_alunos_hist_escola_t1", "n_alunos_hist_municipio_t1", "populacao_total",
          "gasto_por_habitante_educacao", "meta_alfabetizacao_2024_imputada",
-         "caderno", "rede", "sigla_uf", "possui_historico_t1", "meta_is_imputada"],
+         "caderno", "rede", "sigla_uf", "possui_hist_escola_t1",
+         "possui_hist_municipio_t1", "meta_is_imputada"],
         key=len, reverse=True,
     ):
         if sem_prefixo.startswith(candidata):

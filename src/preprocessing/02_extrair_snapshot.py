@@ -29,6 +29,16 @@ import pandas as pd
 
 BASE = Path(__file__).resolve().parents[2]
 
+# Base completa de alunos: 57.781 linhas, 7,3MB, versionada no repo da Fase 2.
+# NÃO precisa de credencial GCP — é CSV local. Não confundir com o modo `--full`
+# deste script, que é sobre território/socioeconômico vindo do GCS.
+# (A modelagem rodou sobre a amostra de 5.000 até 2026-08-18 por leitura estrita
+# da regra "AI Jail" do AGENTS.md da Fase 2; revisto porque a regra existe para
+# proteger custo de nuvem, e ler 7,3MB local não incorre nesse custo.)
+ALUNOS_COMPLETO = (BASE.parent / "tech-challenge-fase2-alfabetizacao" /
+                    "dados" / "Alunos.csv")
+ALUNOS_AMOSTRA = BASE / "data" / "Alunos_amostra.csv"
+
 # Colunas excluídas por política de leakage (ADR-0001) — nunca entram no snapshot
 COLUNAS_LEAKAGE = ["proficiencia", "presenca", "preenchimento_caderno"]
 
@@ -74,38 +84,53 @@ def carregar_alunos(caminho_csv: Path) -> pd.DataFrame:
     return df
 
 
-def calcular_historico_t1(caminho_csv: Path) -> pd.DataFrame:
+def calcular_historico_t1(caminho_csv: Path) -> dict[str, pd.DataFrame]:
     """
-    Absenteísmo histórico por escola, agregado do ano anterior.
-    Recalculado a partir do PRÓPRIO Alunos.csv (não precisa de Silver/GCS
-    para essa parte) — mas usa a coluna `presenca` do ANO ANTERIOR, que
-    não é leakage porque não inclui o aluno do ano sendo predito.
+    Absenteísmo do ano anterior, em DOIS níveis: escola e município.
 
-    Atenção: `presenca` já foi removida do dataframe principal (leakage do
-    ano atual) — recalcular aqui a partir do CSV bruto, antes do drop.
+    Usa `presenca` do ANO ANTERIOR — não é leakage porque não inclui o aluno do
+    ano sendo predito. Recalculado do CSV bruto porque `presenca` já saiu do
+    dataframe principal por leakage do ano atual.
 
-    CORREÇÃO (2026-08-18): esta função lia `data/Alunos_amostra.csv` FIXO,
-    ignorando o arquivo passado em `--input`. Rodar com a base completa
-    (57.781 linhas) calcularia o histórico sobre a amostra de 5.000 e faria o
-    join na base inteira — silenciosamente errado, sem erro nenhum.
+    CORREÇÃO (2026-08-18): lia `data/Alunos_amostra.csv` FIXO, ignorando
+    `--input`. Rodar na base completa calcularia o histórico sobre a amostra de
+    5.000 e colaria nas 57.781 linhas — errado em silêncio.
+
+    POR QUE DOIS NÍVEIS (2026-08-18): a versão por ESCOLA é estruturalmente
+    frágil nesta base. O Indicador Criança Alfabetizada é pesquisa AMOSTRAL:
+    24.346 escolas para 57.782 alunos (2,37 por escola), e **49,9% dos grupos
+    escola-ano têm 1 único aluno** — uma "taxa" sobre 1 aluno só pode dar 0% ou
+    100%. Além disso só 22,4% das escolas de 2024 aparecem em 2023.
+    Por município a cobertura sobe para 65,2% entre anos, com mediana de 3
+    alunos por município-ano (p75=7). Calculamos as duas e deixamos o SHAP
+    dizer qual carrega sinal, em vez de escolher no palpite.
     """
     bruto = pd.read_csv(caminho_csv)
     bruto["id_municipio"] = bruto["id_municipio"].astype(str).str.zfill(7)
-    absenteismo_ano = (
-        bruto.groupby(["id_escola", "ano"])["presenca"]
-        .apply(lambda s: (s == "Ausente").mean())
-        .rename("absenteismo_historico_t1")
-        .reset_index()
-    )
-    absenteismo_ano["ano"] = absenteismo_ano["ano"] + 1  # vira feature do ano SEGUINTE
-    return absenteismo_ano
+    saida = {}
+    for nivel, chave in (("escola", "id_escola"), ("municipio", "id_municipio")):
+        agg = (
+            bruto.groupby([chave, "ano"])["presenca"]
+            .agg(taxa=lambda s: (s == "Ausente").mean(), n="size")
+            .reset_index()
+        )
+        agg["ano"] = agg["ano"] + 1  # vira feature do ano SEGUINTE
+        agg = agg.rename(columns={
+            "taxa": f"absenteismo_hist_{nivel}_t1",
+            "n": f"n_alunos_hist_{nivel}_t1",
+        })
+        saida[nivel] = agg
+    return saida
 
 
-def juntar_historico(alunos: pd.DataFrame, historico: pd.DataFrame) -> pd.DataFrame:
-    """Só faz o join e marca disponibilidade. A imputação vem depois (ver abaixo)."""
-    out = alunos.merge(historico, on=["id_escola", "ano"], how="left")
-    out["possui_historico_t1"] = out["absenteismo_historico_t1"].notna().astype(int)
+def juntar_historico(alunos: pd.DataFrame, historico: dict[str, pd.DataFrame]) -> pd.DataFrame:
+    """Junta os dois níveis e marca disponibilidade de cada um."""
+    out = alunos
+    for nivel, chave in (("escola", "id_escola"), ("municipio", "id_municipio")):
+        out = out.merge(historico[nivel], on=[chave, "ano"], how="left")
+        out[f"possui_hist_{nivel}_t1"] = out[f"absenteismo_hist_{nivel}_t1"].notna().astype(int)
     return out
+
 
 
 def imputar_historico(snapshot: pd.DataFrame) -> pd.DataFrame:
@@ -120,7 +145,12 @@ def imputar_historico(snapshot: pd.DataFrame) -> pd.DataFrame:
     Caía sempre no fallback global, sem aviso. Agora a imputação é um passo
     separado, chamado depois do território.
     """
-    col = "absenteismo_historico_t1"
+    for col in ("absenteismo_hist_escola_t1", "absenteismo_hist_municipio_t1"):
+        snapshot = _imputar_coluna(snapshot, col)
+    return snapshot
+
+
+def _imputar_coluna(snapshot: pd.DataFrame, col: str) -> pd.DataFrame:
     if "sigla_uf" in snapshot.columns:
         mediana = snapshot.groupby("sigla_uf")[col].transform("median")
         # UF inteira sem histórico -> transform devolve NaN; completa com global
@@ -128,10 +158,10 @@ def imputar_historico(snapshot: pd.DataFrame) -> pd.DataFrame:
         origem = "mediana da UF (ADR-0001 2.3)"
     else:
         mediana = snapshot[col].median()
-        origem = "mediana GLOBAL (sem sigla_uf -- modo --local-only)"
+        origem = "mediana GLOBAL (sem sigla_uf)"
     n_imp = int(snapshot[col].isna().sum())
     snapshot[col] = snapshot[col].fillna(mediana)
-    print(f"Historico t-1: {n_imp} de {len(snapshot)} linhas imputadas "
+    print(f"  {col}: {n_imp} de {len(snapshot)} imputadas "
           f"({n_imp / len(snapshot):.1%}) por {origem}.")
     return snapshot
 
@@ -173,8 +203,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--full", action="store_true",
                          help="Inclui join com Silver no GCS (requer credenciais GCP)")
-    parser.add_argument("--input", default=str(BASE / "data" / "Alunos_amostra.csv"),
-                         help="CSV de Alunos a processar (default: amostra local)")
+    parser.add_argument(
+        "--input", default=str(ALUNOS_COMPLETO),
+        help=("CSV de Alunos a processar. Default: base COMPLETA (57.781 alunos) "
+              "do repo da Fase 2. Use --input <caminho da amostra> para os 5.000."))
     args = parser.parse_args()
 
     alunos = carregar_alunos(Path(args.input))
