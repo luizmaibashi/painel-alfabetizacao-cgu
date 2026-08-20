@@ -11,9 +11,9 @@
 | # | Entregável | Resultado |
 |---|---|---|
 | 1 | **Modelo supervisionado aluno-nível** (exigência do enunciado) | Executado com rigor e **reprovado no próprio critério de falsificação**: 0,6013 contra 0,6331 da meta do PDE aplicada uniformemente, IC95% [−0,0374, −0,0261]. Resultado negativo, medido e documentado |
-| 2 | **Modelo de priorização municipal intra-UF** | AUC **0,6496** contra **0,4014** da intuição corrente, vencendo em **14 de 17** estados. Responde a pergunta de negócio nº 4 do enunciado, a única sem resposta |
+| 2 | **Modelo de priorização municipal intra-UF** | AUC **0,6478** contra **0,4032** da intuição corrente, vencendo em **18 de 23** estados (validação adaptativa + IC95% por bootstrap, ADR-0004). Responde a pergunta de negócio nº 4 do enunciado, a única sem resposta |
 | 3 | **Advertência de validade sobre comparação entre estados** | Ranking nacional de municípios compara réguas de avaliação distintas — inclusive nos marts da nossa Fase 2 |
-| 4 | **Painel de priorização** (`reports/painel_intra_uf.html`) | 4.794 municípios pontuados, particionado por UF por decisão de projeto, com a advertência embutida na interface |
+| 4 | **Painel de priorização** (`reports/painel_intra_uf.html`) | 5.216 municípios pontuados, particionado por UF por decisão de projeto, com a advertência embutida na interface |
 
 A narrativa curta: **testamos onde o enunciado mandou testar, provamos com
 rigor que não funciona, e achamos onde funciona.**
@@ -160,7 +160,7 @@ Pipeline scikit-learn completa, com pré-processamento integrado ao modelo
 10. **Modelo produtizado** (`src/modeling/04_ranking_intra_uf.py`) — um modelo
     por UF, predições **out-of-fold** (cada município pontuado por um modelo
     que não o viu no treino), nome do município via API pública do IBGE.
-    Saída: `reports/ranking_intra_uf.{json,csv}`, 4.794 municípios.
+    Saída: `reports/ranking_intra_uf.{json,csv}`, 5.216 municípios.
 11. **Painel** (`src/visualization/01_gerar_painel_intra_uf.py`) — gera
     `reports/painel_intra_uf.html`, autocontido, particionado por UF.
 
@@ -355,9 +355,10 @@ nível de 2023 (−0,431) — não é artefato mecânico da fórmula da meta, é
 do ano. Uma variação de ±20pp em um ano não é aprendizado real: é mudança de
 régua na aplicação da prova.
 
-**O que funciona:** rodando o modelo dentro de cada UF (17 estados com n≥100),
-AUC **0,6496** contra **0,4015** do baseline intuitivo, vencendo em **14 de 17**
-UFs. E o baseline intuitivo — *"quem estava pior em 2023 falha mais"* — é
+**O que funciona:** rodando o modelo dentro de cada UF (23 estados com n≥40,
+dobras adaptativas — ADR-0004), AUC **0,6478** contra **0,4032** do baseline
+intuitivo, vencendo em **18 de 23** UFs. E o baseline intuitivo —
+*"quem estava pior em 2023 falha mais"* — é
 **ativamente errado** (abaixo do acaso): por regressão à média e pela meta
 progressiva do PDE, municípios com taxa baixa melhoram mais e batem a meta com
 mais frequência.
@@ -408,7 +409,7 @@ intervalo de confiança:**
    explicar, mais barata de manter (nenhum pipeline de ML em produção), e
    estatisticamente mais eficaz com os dados disponíveis.
 2. **Para priorização entre municípios**, comparar **dentro do estado**, nunca
-   entre estados — e usar o modelo intra-UF (AUC 0,6496), porque a intuição
+   entre estados — e usar o modelo intra-UF (AUC 0,6478), porque a intuição
    corrente ("priorizar quem estava pior") tem desempenho **abaixo do acaso**
    neste alvo.
 
@@ -416,7 +417,7 @@ intervalo de confiança:**
 
 A recomendação 2 não fica em prosa: `reports/painel_intra_uf.html` é uma
 página autocontida onde o gestor escolhe o estado e vê os municípios ordenados
-por risco previsto — 4.794 municípios, 17 estados, com taxa de 2023, meta,
+por risco previsto — 5.216 municípios, 23 estados, com taxa de 2023, meta,
 resultado real e busca por nome.
 
 Três decisões de produto que valem registro:
@@ -424,9 +425,12 @@ Três decisões de produto que valem registro:
 - **Não existe visão nacional, de propósito.** Se a interface permitisse
   ordenar municípios de estados diferentes, ela convidaria exatamente o erro
   descrito em §9. A restrição vive na ferramenta, não no rodapé.
-- **Cada estado declara se o modelo ajuda ali.** Em AL, CE e PE o modelo perde
-  para a intuição corrente, e o painel mostra isso com destaque em vez de
-  esconder atrás da média nacional de 0,6496.
+- **Cada estado declara se o modelo ajuda ali.** Em AL, AM, CE, ES e PE o
+  modelo perde para a intuição corrente, e o painel mostra isso com destaque
+  em vez de esconder atrás da média nacional de 0,6478. Em AM e ES (estados
+  pequenos, incluídos via validação adaptativa — ADR-0004) o intervalo de
+  confiança é largo o bastante pra o resultado ser inconclusivo, não uma
+  derrota clara do modelo.
 - **Predições out-of-fold.** O número que o gestor vê é o que o modelo
   entregaria para um município que ele não conhece.
 

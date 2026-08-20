@@ -332,8 +332,11 @@ print(f"  AUC da intuição corrente:         {res['auc_intuicao_ponderado']:.4f
 print(f"  UFs em que o modelo vence:        {res['ufs_modelo_vence']} de {res['ufs']}")
 print(f"  Municípios pontuados:             {res['municipios']:,}".replace(",", "."))
 print()
-print("  Os 3 estados em que o modelo perde (AL, CE, PE) aparecem no painel")
-print("  com alerta explícito — não escondidos atrás da média nacional.")"""),
+perdedores = ", ".join(m["uf"] for m in rk["metricas_por_uf"] if not m["modelo_vence"])
+print(f"  Os estados em que o modelo perde ({perdedores}) aparecem no painel")
+print("  com alerta explícito — não escondidos atrás da média nacional. Em")
+print("  estados pequenos (validação adaptativa, ADR-0004) o IC95% costuma")
+print("  ser largo o bastante pra 'perde' ser inconclusivo, não uma derrota clara.")"""),
 
 (MD, """## 7. O que sai disso
 
@@ -347,7 +350,7 @@ print("  com alerta explícito — não escondidos atrás da média nacional.")"
    desempenho abaixo do acaso.
 
 A recomendação 2 não fica em prosa: `reports/painel_intra_uf.html` é a
-ferramenta, com 4.794 municípios e a advertência de validade embutida na
+ferramenta, com 5.216 municípios e a advertência de validade embutida na
 interface — o painel **não tem visão nacional, de propósito**.
 
 ---

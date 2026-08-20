@@ -12,3 +12,4 @@ esta pasta migra de novo.
 | [0001](0001-pipeline-sklearn-snapshot-e-politica-leakage.md) | Pipeline sklearn sobre snapshot único do Gold + política de data leakage e validação temporal | Proposed | 2026-08-10 |
 | [0002](0002-modelo-final-validacao-temporal-e-tratamento-caderno.md) | Modelo final, validação temporal e tratamento do campo `caderno` | Proposed | 2026-08-18 |
 | [0003](0003-gold-vs-silver-fonte-de-dados.md) | Gold vs Silver como fonte de dados | Accepted | 2026-08-19 |
+| [0004](0004-validacao-adaptativa-ranking-intra-uf.md) | Validação adaptativa e piso de amostra no ranking intra-UF | Accepted | 2026-08-20 |

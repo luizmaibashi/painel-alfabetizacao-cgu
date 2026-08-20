@@ -20,9 +20,10 @@ municípios de estados diferentes compara réguas de avaliação distintas. Se a
 interface permitisse ordenar nacionalmente, ela convidaria exatamente o erro
 que o projeto descobriu. A restrição está na ferramenta, não só no rodapé.
 
-Cada estado também mostra se o modelo **de fato ajuda ali**: em 3 das 17 UFs
-(AL, CE, PE) ele perde para a intuição corrente, e o painel diz isso na cara
-em vez de esconder atrás da média nacional.
+Cada estado também mostra se o modelo **de fato ajuda ali**: em 5 das 23 UFs
+(AL, AM, CE, ES, PE) ele perde para a intuição corrente, e o painel diz isso
+na cara em vez de esconder atrás da média nacional. Piso e dobras adaptativas
+desde 2026-08-20 (ADR-0004) — antes eram 17 UFs com piso fixo de 100.
 
 SAÍDA
 -----
@@ -62,7 +63,10 @@ def compactar(dados: dict) -> dict:
             "n": metricas[uf]["n_municipios"],
             "taxa_falha": metricas[uf]["taxa_falha_observada"],
             "auc": metricas[uf]["auc_modelo"],
+            "auc_ic": metricas[uf]["auc_modelo_ic95"],
             "auc_intuicao": metricas[uf]["auc_baseline_intuicao"],
+            "auc_intuicao_ic": metricas[uf]["auc_intuicao_ic95"],
+            "amostra_pequena": metricas[uf]["amostra_pequena"],
             "vence": metricas[uf]["modelo_vence"],
             # [rank, nome, score, taxa23, taxa24, meta, gap, resultado_real]
             "m": [[l["rank_uf"], l["nome_municipio"], l["score_risco"],
@@ -193,14 +197,66 @@ td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:righ
 footer.note{margin-top:2rem;padding-top:1.2rem;border-top:1px solid var(--line);font-size:.83rem;color:var(--muted);max-width:76ch}
 footer.note p{margin:0 0 .5rem}
 footer.note code{font-family:var(--mono);font-size:.9em}
+
+.lead{font-family:var(--prose);font-size:1.05rem;line-height:1.55;color:var(--ink-2);max-width:68ch;margin:1.3rem 0 1rem}
+.lead strong{color:var(--ink)}
+
+.gterms{display:flex;flex-wrap:wrap;align-items:flex-start;gap:.5rem;margin-bottom:1.5rem}
+.gterms details{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.4rem .7rem;max-width:260px}
+.gterms summary{cursor:pointer;font-family:var(--mono);font-size:.78rem;color:var(--primary);list-style:none;display:flex;align-items:center;gap:.4rem}
+.gterms summary::-webkit-details-marker,.gterms summary::marker{display:none}
+.gterms summary::after{content:"o que é?";font-family:var(--ui);font-size:.72rem;color:var(--muted)}
+.gterms details[open] summary::after{content:"fechar"}
+.gterms p{font-family:var(--prose);font-size:.86rem;color:var(--ink-2);margin:.5rem 0 .1rem}
+
+.auc-compare{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.95rem 1.1rem 1.1rem;margin-bottom:.7rem}
+.auc-note{font-family:var(--prose);font-size:.86rem;color:var(--ink-2);margin:0;max-width:68ch}
+.auc-track{position:relative;height:6px;background:var(--line-2);border-radius:99px;margin:1.7rem .4rem 1.9rem}
+.auc-tick{position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:1px;height:16px;background:var(--muted);opacity:.55}
+.auc-tick label{position:absolute;top:18px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.64rem;color:var(--muted);white-space:nowrap}
+.auc-end{position:absolute;top:14px;font-family:var(--mono);font-size:.64rem;color:var(--muted)}
+.auc-end.left{left:0}
+.auc-end.right{right:0}
+.auc-ci{position:absolute;top:50%;height:4px;transform:translateY(-50%);border-radius:99px;opacity:.32}
+.auc-ci.intuicao{background:var(--warn)}
+.auc-ci.modelo{background:var(--primary)}
+.auc-mark{position:absolute;top:50%;width:13px;height:13px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid var(--surface)}
+.auc-mark.intuicao{background:var(--warn)}
+.auc-mark.modelo{background:var(--primary)}
+.auc-legend{display:flex;flex-wrap:wrap;gap:.4rem 1.3rem;font-size:.82rem;color:var(--ink-2)}
+.auc-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:.4rem}
+.auc-legend .dot.intuicao{background:var(--warn)}
+.auc-legend .dot.modelo{background:var(--primary)}
+.auc-legend b{font-family:var(--mono);color:var(--ink)}
+.auc-legend .ic{font-family:var(--mono);color:var(--muted);font-size:.9em}
+.auc-small{font-family:var(--mono);font-size:.72rem;color:var(--warn);margin:.7rem 0 0}
+
+.method{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.9rem 1.1rem;margin-bottom:1.2rem}
+.method summary{cursor:pointer;font-weight:500;font-size:.9rem;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+.method summary::-webkit-details-marker,.method summary::marker{display:none}
+.method summary .mchev{font-family:var(--mono);color:var(--muted);font-size:.75rem;transition:transform .15s}
+.method[open] summary .mchev{transform:rotate(180deg)}
+.method ol{font-family:var(--prose);font-size:.9rem;color:var(--ink-2);margin:.9rem 0 0;padding-left:1.2rem}
+.method li{margin-bottom:.55rem}
+.method li:last-child{margin-bottom:0}
+.method code{font-family:var(--mono);font-size:.85em}
 </style>
 
 <div class="wrap">
   <header class="top">
     <div class="kicker">Compromisso Nacional Criança Alfabetizada &middot; ciclo 2024</div>
     <h1>Quais municípios do meu estado não vão atingir a meta?</h1>
-    <p class="sub">Risco previsto de o município ficar abaixo da meta do PDE, ordenado dentro de cada estado. Modelo treinado por UF, com predições out-of-fold.</p>
+    <p class="sub">Risco previsto de o município ficar abaixo da meta do PDE, ordenado dentro de cada estado — um modelo separado para cada UF.</p>
   </header>
+
+  <p class="lead">Este painel estima, <strong>antes do resultado sair</strong>, quais municípios têm mais chance de não bater a meta de alfabetização — para ajudar a decidir onde priorizar apoio primeiro. A estimativa vem de um modelo treinado separadamente para cada estado; não existe um ranking nacional único, pelo motivo explicado no aviso abaixo.</p>
+
+  <div class="gterms">
+    <details><summary>Risco previsto</summary><p>Probabilidade estimada (0 a 1) de o município ficar abaixo da meta em 2024, calculada só com dado disponível até 2023 — sem espiar o resultado real.</p></details>
+    <details><summary>Meta do PDE</summary><p>Meta de alfabetização de cada município, definida pelo Plano de Metas do Compromisso Nacional Criança Alfabetizada. Ela sobe a cada ano, então comparar direto com a taxa de 2023 engana.</p></details>
+    <details><summary>AUC</summary><p>Métrica de 0 a 1 que mede se um critério separa bem quem vai ficar abaixo da meta de quem vai atingir. 0,5 é o mesmo que sortear; 1,0 seria acerto perfeito.</p></details>
+    <details><summary>IC95%</summary><p>Faixa onde o AUC verdadeiro provavelmente está, calculada repetindo o cálculo em milhares de reamostras dos municípios do estado. Estado com poucos municípios tem faixa mais larga — o número sozinho esconde essa incerteza.</p></details>
+  </div>
 
   <div class="warn">
     <span class="ic">!</span>
@@ -218,6 +274,20 @@ footer.note code{font-family:var(--mono);font-size:.9em}
 
   <div class="stats" id="stats"></div>
   <div id="trust"></div>
+
+  <details class="method">
+    <summary>Como este modelo foi construído <span class="mchev">&#9662;</span></summary>
+    <ol>
+      <li><strong>Dado:</strong> taxa de alfabetização por município (2023 e 2024), meta do PDE por município e porte populacional — Indicador Criança Alfabetizada (INEP).</li>
+      <li><strong>Um modelo por estado, não um modelo nacional.</strong> Testamos primeiro um modelo único para o Brasil inteiro: fora da amostra (Leave-One-UF-Out) ele caiu para AUC 0,48 — pior que sortear. Cada estado aplica sua própria prova e sua própria meta; misturar todos numa régua só esconde esse efeito, não neutraliza.</li>
+      <li><strong>Validação:</strong> dentro de cada estado, as predições mostradas são <em>out-of-fold</em> — nenhum município foi avaliado por um modelo que o viu durante o treino. O número de dobras é adaptativo (2 a 5, conforme o tamanho do estado) para não deixar dobra pequena sem as duas classes — e por isso todo AUC vem com intervalo de confiança de 95% por bootstrap, não só o ponto.</li>
+      <li><strong>Piso de 40 municípios por UF.</strong> Abaixo disso nem dobra reduzida nem intervalo de confiança tornam o número confiável — é o caso só do Amapá (16 municípios no estado inteiro). Não é limitação deste painel: com 16 municípios, o gestor consegue olhar a lista inteira sem precisar de um modelo.</li>
+      <li><strong>3 estados de fora por falta de dado na fonte, não por limite de modelo:</strong> Acre, Distrito Federal e Roraima não têm taxa de alfabetização de 2023 (Acre e DF) ou de nenhum ano (Roraima) publicada pelo INEP para este indicador — confirmado até o nível estadual, não é falha de coleta deste projeto.</li>
+      <li><strong>Comparação:</strong> AUC do modelo contra a AUC da intuição (“priorize quem tinha a menor taxa em 2023”), mesmo método de intervalo de confiança nos dois lados.</li>
+      <li><strong>Limite conhecido:</strong> em <span id="mResumo">algumas</span> UFs o modelo não supera a intuição — em estados pequenos isso às vezes é ruído de amostra, não um limite real do método (repare no intervalo de confiança largo). O painel mostra isso estado a estado — não esconde atrás de uma média nacional.</li>
+    </ol>
+    <p>Decisões completas em <code>docs/adr/0002-modelo-final-validacao-temporal-e-tratamento-caderno.md</code> e no Cap. 16 de <code>docs/HANDOFF_RENAN.md</code>.</p>
+  </details>
 
   <div class="toolbar">
     <input class="search" id="search" type="search" placeholder="Buscar município…" aria-label="Buscar município">
@@ -238,8 +308,7 @@ footer.note code{font-family:var(--mono);font-size:.9em}
   </div>
 
   <footer class="note">
-    <p><strong>Como ler.</strong> O <em>risco previsto</em> é a probabilidade estimada de o município ficar abaixo da meta, calculada a partir da taxa de 2023, das metas do PDE e do porte populacional — sem usar o resultado de 2024. As colunas de 2024 aparecem para conferência: são o que de fato aconteceu.</p>
-    <p><strong>Por que não priorizar simplesmente quem estava pior.</strong> A intuição corrente — “comece pelos municípios com a menor taxa” — tem desempenho <em>abaixo do sorteio aleatório</em> (AUC 0,40). Por regressão à média e porque a meta do PDE é progressiva, municípios com taxa baixa em 2023 tendem a melhorar mais e a bater a meta com mais frequência.</p>
+    <p><strong>Como ler a tabela.</strong> “Taxa 2023” e “Meta 2024” são o que já se sabia antes do resultado — é o que o modelo usa para prever. “Taxa 2024” e “Resultado real” são o que de fato aconteceu, mostrados só para conferência.</p>
     <p>Gerado por <code>src/visualization/01_gerar_painel_intra_uf.py</code> a partir de <code>reports/ranking_intra_uf.json</code>. Fonte: microdados do Indicador Criança Alfabetizada (INEP) e metas do PDE.</p>
   </footer>
 </div>
@@ -268,6 +337,46 @@ function montarChips(){
     b.addEventListener("click", () => { atual = b.dataset.uf; filtro=""; el("search").value=""; render(); }));
 }
 
+function montarResumoMetodologia(){
+  const r = DATA.resumo;
+  const perde = r.ufs - r.ufs_modelo_vence;
+  el("mResumo").textContent = `${perde} de ${r.ufs}`;
+}
+
+function renderTrust(d){
+  const aucLabel = v => v.toFixed(3).replace(".", ",");
+  const clamp = v => Math.max(1, Math.min(99, v * 100));
+  const posModelo = clamp(d.auc);
+  const posIntuicao = clamp(d.auc_intuicao);
+  const [loM, hiM] = d.auc_ic.map(clamp);
+  const [loI, hiI] = d.auc_intuicao_ic.map(clamp);
+  const piorQueSorteio = d.auc_intuicao < 0.5 ? " — pior que sortear" : "";
+  const avisoAmostra = d.amostra_pequena
+    ? `<p class="auc-small">Amostra pequena (${d.n} municípios) — intervalo de confiança mais largo. Trate como referência mais fraca do que nos estados maiores.</p>`
+    : "";
+  return `
+    <div class="auc-compare">
+      <p class="auc-note">Duas formas de decidir por onde começar, comparadas: a intuição comum (priorizar quem tinha a menor taxa em 2023) contra o modelo treinado só com dado deste estado. Quanto mais à direita, melhor o critério separa quem vai ficar abaixo da meta de quem vai atingir. As barras claras são o intervalo de confiança de 95% — quanto mais curtas, mais o número é confiável.</p>
+      <div class="auc-track">
+        <span class="auc-tick"><label>sorteio aleatório</label></span>
+        <span class="auc-end left">0,0</span>
+        <span class="auc-end right">1,0</span>
+        <span class="auc-ci intuicao" style="left:${loI}%;width:${hiI - loI}%"></span>
+        <span class="auc-ci modelo" style="left:${loM}%;width:${hiM - loM}%"></span>
+        <span class="auc-mark intuicao" style="left:${posIntuicao}%"></span>
+        <span class="auc-mark modelo" style="left:${posModelo}%"></span>
+      </div>
+      <div class="auc-legend">
+        <span><i class="dot intuicao"></i>intuição (menor taxa primeiro) — <b>${aucLabel(d.auc_intuicao)}</b> <span class="ic">(${aucLabel(d.auc_intuicao_ic[0])}–${aucLabel(d.auc_intuicao_ic[1])})</span>${piorQueSorteio}</span>
+        <span><i class="dot modelo"></i>modelo treinado neste estado — <b>${aucLabel(d.auc)}</b> <span class="ic">(${aucLabel(d.auc_ic[0])}–${aucLabel(d.auc_ic[1])})</span></span>
+      </div>
+      ${avisoAmostra}
+    </div>
+    <div class="trust ${d.vence ? "good" : "bad"}">${d.vence
+      ? "✓ Neste estado o modelo ajuda de verdade — use o ranking abaixo."
+      : "⚠ Neste estado o modelo não supera o achismo — trate o ranking como referência fraca."}</div>`;
+}
+
 function render(){
   const d = DATA.ufs[atual];
   el("chips").querySelectorAll(".chip").forEach(b =>
@@ -281,13 +390,11 @@ function render(){
       <div class="v" style="color:${d.taxa_falha>=.5?'var(--r4)':'var(--ink)'}">${pct(d.taxa_falha)}</div>
       <div class="d">observado em 2024</div></div>
     <div class="stat"><div class="k">AUC do modelo</div><div class="v">${d.auc.toFixed(3).replace(".",",")}</div>
-      <div class="d">predições out-of-fold</div></div>
+      <div class="d">nunca viu esse município no treino</div></div>
     <div class="stat"><div class="k">AUC da intuição</div><div class="v">${d.auc_intuicao.toFixed(3).replace(".",",")}</div>
       <div class="d">“priorize quem estava pior”</div></div>`;
 
-  el("trust").innerHTML = d.vence
-    ? `<div class="trust good">✓ Neste estado o modelo <b>supera</b> a intuição corrente (${d.auc.toFixed(3).replace(".",",")} contra ${d.auc_intuicao.toFixed(3).replace(".",",")}). Use o ranking abaixo.</div>`
-    : `<div class="trust bad">⚠ Neste estado o modelo <b>não supera</b> a intuição corrente (${d.auc.toFixed(3).replace(".",",")} contra ${d.auc_intuicao.toFixed(3).replace(".",",")}). Trate o ranking como referência fraca — aqui a priorização precisa de outro critério.</div>`;
+  el("trust").innerHTML = renderTrust(d);
 
   const termo = filtro.trim().toLowerCase();
   const linhas = d.m.filter(r => !termo || r[1].toLowerCase().includes(termo));
@@ -316,6 +423,7 @@ function render(){
 
 el("search").addEventListener("input", e => { filtro = e.target.value; render(); });
 montarChips();
+montarResumoMetodologia();
 render();
 </script>
 """

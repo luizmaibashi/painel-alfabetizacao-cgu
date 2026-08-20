@@ -9,8 +9,11 @@ Três formulações foram testadas e duas morreram:
   2. Modelo município NACIONAL     -> Leave-One-UF-Out em 0,4800, abaixo do
                                       acaso: o "sinal" era a régua estadual
                                       (Cap. 16.3)
-  3. Modelo município INTRA-UF     -> 0,6496 contra 0,4015 do baseline
-                                      intuitivo, vencendo em 14 de 17 UFs
+  3. Modelo município INTRA-UF     -> 0,6478 contra 0,4032 do baseline
+                                      intuitivo, vencendo em 18 de 23 UFs
+                                      (piso de 40 municipios/UF, dobras
+                                      adaptativas + IC95% bootstrap desde
+                                      2026-08-20 -- ver ADR-0002 addendum)
 
 Este script produtiza a nº 3. Ele NÃO é o experimento (esse é
 `03_experimento_municipio_meta.py`, que mede e compara): aqui o objetivo é
@@ -27,11 +30,12 @@ nacionalmente sem ver a advertência.
 
 O BASELINE QUE ESTE MODELO DERRUBA
 ----------------------------------
-A intuição corrente — "priorize quem estava pior em 2023" — tem AUC 0,4015,
-ou seja, é PIOR que sortear. Regressão à média somada à meta progressiva do
-PDE faz municípios com taxa baixa melhorarem mais e baterem a meta com mais
-frequência. É o principal valor prático do modelo: ele corrige um erro que a
-priorização por intuição cometeria sistematicamente.
+A intuição corrente — "priorize quem estava pior em 2023" — tem AUC 0,4032
+(média ponderada), ou seja, é PIOR que sortear. Regressão à média somada à
+meta progressiva do PDE faz municípios com taxa baixa melhorarem mais e
+baterem a meta com mais frequência. É o principal valor prático do modelo:
+ele corrige um erro que a priorização por intuição cometeria
+sistematicamente.
 
 SAÍDA
 -----
@@ -77,10 +81,36 @@ TERRITORIO = BASE / "data" / "territorio_local.parquet"
 IBGE_MUNICIPIOS = "https://servicodados.ibge.gov.br/api/v1/localidades/municipios"
 
 RANDOM_STATE = 42
-N_FOLDS = 5
-MIN_MUNICIPIOS_POR_UF = 100   # abaixo disso o k-fold interno não é confiável
+N_FOLDS_MAX = 5
+N_BOOT = 1000
+# Piso absoluto (2026-08-20, decisao registrada no ADR-0002 addendum): abaixo
+# disso nem dobra reduzida nem IC bootstrap tornam o AUC informativo. AP tem
+# 16 municipios no Brasil inteiro -- e o unico excluido por este piso; os
+# outros 6 que ficavam de fora do piso antigo (100) agora entram com dobras
+# adaptativas + IC bootstrap explicito (ver `amostra_pequena` na saida).
+MIN_MUNICIPIOS_POR_UF = 40
 FEATURES = ["taxa23", "meta_alfabetizacao_2024", "meta_alfabetizacao_2025",
             "populacao_total"]
+
+
+def bootstrap_ic_auc(y: np.ndarray, score: np.ndarray, n_boot: int = N_BOOT,
+                      seed: int = RANDOM_STATE) -> list[float]:
+    """
+    IC95% do AUC por bootstrap (reamostra municipios com reposicao). Existe
+    pra nao reportar um AUC pontual de estado pequeno como se tivesse a mesma
+    confianca de um estado grande -- o numero sozinho nao mostra isso, o
+    intervalo mostra.
+    """
+    rng = np.random.default_rng(seed)
+    n = len(y)
+    aucs = []
+    for _ in range(n_boot):
+        idx = rng.integers(0, n, n)
+        if len(np.unique(y[idx])) < 2:
+            continue
+        aucs.append(roc_auc_score(y[idx], score[idx]))
+    lo, hi = np.percentile(aucs, [2.5, 97.5])
+    return [round(float(lo), 4), round(float(hi), 4)]
 
 AVISO_VALIDADE = (
     "Este ranking so e valido DENTRO de cada UF. As avaliacoes do Compromisso "
@@ -165,8 +195,16 @@ def treinar_por_uf(m: pd.DataFrame) -> tuple[pd.DataFrame, list[dict]]:
             continue
         g = g.copy().reset_index(drop=True)
         X, y = g[FEATURES], g.y.values
+
+        # Validacao adaptativa: estado grande mantem 5-fold (piso antigo,
+        # inalterado); estado pequeno reduz dobras pra nao deixar fold sem
+        # as duas classes nem com meia duzia de casos. O preco da amostra
+        # pequena aparece no IC bootstrap abaixo, nao e escondido.
+        classe_minoritaria = int(np.bincount(y).min())
+        n_folds = max(2, min(N_FOLDS_MAX, len(g) // 20, classe_minoritaria))
+
         oof = np.zeros(len(g))
-        for tr, te in StratifiedKFold(N_FOLDS, shuffle=True,
+        for tr, te in StratifiedKFold(n_folds, shuffle=True,
                                        random_state=RANDOM_STATE).split(X, y):
             if len(np.unique(y[tr])) < 2:
                 continue
@@ -178,18 +216,25 @@ def treinar_por_uf(m: pd.DataFrame) -> tuple[pd.DataFrame, list[dict]]:
         g["rank_uf"] = g.score_risco.rank(ascending=False, method="first").astype(int)
         auc_modelo = float(roc_auc_score(y, oof))
         # baseline que o produto precisa derrubar: "priorize quem estava pior"
-        auc_intuicao = float(roc_auc_score(y, -g.taxa23.values))
+        score_intuicao = -g.taxa23.values
+        auc_intuicao = float(roc_auc_score(y, score_intuicao))
+        ic_modelo = bootstrap_ic_auc(y, oof)
+        ic_intuicao = bootstrap_ic_auc(y, score_intuicao)
 
         saidas.append(g)
         metricas.append({
-            "uf": uf, "n_municipios": int(len(g)),
+            "uf": uf, "n_municipios": int(len(g)), "n_folds": n_folds,
+            "amostra_pequena": bool(len(g) < 100),
             "taxa_falha_observada": round(float(g.y.mean()), 4),
             "auc_modelo": round(auc_modelo, 4),
+            "auc_modelo_ic95": ic_modelo,
             "auc_baseline_intuicao": round(auc_intuicao, 4),
+            "auc_intuicao_ic95": ic_intuicao,
             "ganho_sobre_intuicao": round(auc_modelo - auc_intuicao, 4),
             "modelo_vence": bool(auc_modelo > auc_intuicao),
         })
-        print(f"  {uf}  n={len(g):>3}  AUC modelo {auc_modelo:.4f}  "
+        print(f"  {uf}  n={len(g):>3}  folds={n_folds}  "
+              f"AUC modelo {auc_modelo:.4f} [{ic_modelo[0]:.3f},{ic_modelo[1]:.3f}]  "
               f"vs intuicao {auc_intuicao:.4f}  "
               f"{'OK' if auc_modelo > auc_intuicao else 'PERDE'}")
 
@@ -203,7 +248,8 @@ def main():
     m = montar_dataset()
     print(f"\nDataset: {len(m):,} municipios com taxa medida em 2023 e 2024"
           .replace(",", "."))
-    print(f"UFs com n >= {MIN_MUNICIPIOS_POR_UF}: treinando um modelo por estado\n")
+    print(f"UFs com n >= {MIN_MUNICIPIOS_POR_UF}: treinando um modelo por estado "
+          f"(dobras adaptativas, IC95% por bootstrap)\n")
 
     ranked, metricas = treinar_por_uf(m)
     dfm = pd.DataFrame(metricas)
@@ -232,8 +278,10 @@ def main():
         "desenho": {
             "alvo": "taxa_alfabetizacao_2024 < meta_alfabetizacao_2024",
             "features": FEATURES,
-            "predicoes": "out-of-fold (StratifiedKFold 5), um modelo por UF",
+            "predicoes": "out-of-fold (StratifiedKFold adaptativo, 2 a 5 dobras "
+                         "conforme n da UF), um modelo por UF",
             "min_municipios_por_uf": MIN_MUNICIPIOS_POR_UF,
+            "intervalo_confianca": "bootstrap 95%, 1000 reamostragens",
         },
         "resumo": {
             "ufs": int(len(dfm)),
