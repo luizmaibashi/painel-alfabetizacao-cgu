@@ -7,7 +7,6 @@
     "n_alunos_hist_escola_t1",
     "n_alunos_hist_municipio_t1",
     "populacao_total",
-    "gasto_por_habitante_educacao",
     "meta_alfabetizacao_2024_imputada",
     "caderno",
     "rede",
@@ -16,5 +15,18 @@
     "possui_hist_municipio_t1",
     "meta_is_imputada"
   ],
-  "achados": []
+  "achados": [
+    {
+      "coluna": "meta_alfabetizacao_2024_imputada",
+      "teste": "B_valor_isola_target",
+      "gravidade": "MEDIA",
+      "detalhe": "grupo `(79.33, 80.0]` tem 4192 linhas com alvo 'risco' em 14.0% (pureza 86.0%). 1 grupo(s) acima do limiar."
+    },
+    {
+      "coluna": "sigla_uf",
+      "teste": "B_valor_isola_target",
+      "gravidade": "MEDIA",
+      "detalhe": "grupo `CE` tem 2712 linhas com alvo 'risco' em 14.8% (pureza 85.2%). 1 grupo(s) acima do limiar."
+    }
+  ]
 }

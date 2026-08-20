@@ -2,10 +2,21 @@
 
 > Modelo supervisionado que prevê se um **aluno** será considerado
 > alfabetizado, testado contra o próprio critério de sucesso que o projeto
-> definiu antes de treinar qualquer coisa. **Veredito: o modelo não supera o
-> melhor baseline municipal.** Este README existe para mostrar como
-> chegamos lá, por que isso é o resultado certo a reportar, e o que fazer
-> com ele.
+> definiu antes de treinar qualquer coisa. **Veredito: o modelo aluno-nível
+> não supera o melhor baseline municipal** — e a investigação de por quê
+> levou a um segundo entregável que funciona.
+
+## O que este projeto entrega
+
+| # | Entregável | Resultado |
+|---|---|---|
+| 1 | **Modelo supervisionado aluno-nível** (exigência do enunciado) | Executado com rigor e **reprovado no próprio critério de falsificação**: 0,6013 contra 0,6331 da meta do PDE aplicada uniformemente, IC95% [−0,0374, −0,0261]. Resultado negativo, medido e documentado |
+| 2 | **Modelo de priorização municipal intra-UF** | AUC **0,6496** contra **0,4014** da intuição corrente, vencendo em **14 de 17** estados. Responde a pergunta de negócio nº 4 do enunciado, a única sem resposta |
+| 3 | **Advertência de validade sobre comparação entre estados** | Ranking nacional de municípios compara réguas de avaliação distintas — inclusive nos marts da nossa Fase 2 |
+| 4 | **Painel de priorização** (`reports/painel_intra_uf.html`) | 4.794 municípios pontuados, particionado por UF por decisão de projeto, com a advertência embutida na interface |
+
+A narrativa curta: **testamos onde o enunciado mandou testar, provamos com
+rigor que não funciona, e achamos onde funciona.**
 
 ---
 
@@ -31,11 +42,11 @@ município disfarçada de individual".
 
 ## 2. Objetivo analítico
 
-Desenvolver um modelo supervisionado que prevê se um aluno será
-`alfabetizado` (Sim/Não) — corte oficial de 743 pontos na escala do exame —
-usando variáveis educacionais, territoriais e socioeconômicas disponíveis
-**antes** do resultado do próprio aluno, para alimentar ação de busca ativa
-na ponta escolar.
+**Objetivo primário (o que o enunciado pede).** Desenvolver um modelo
+supervisionado que prevê se um aluno será `alfabetizado` (Sim/Não) — corte
+oficial de 743 pontos na escala do exame — usando variáveis educacionais,
+territoriais e socioeconômicas disponíveis **antes** do resultado do próprio
+aluno, para alimentar ação de busca ativa na ponta escolar.
 
 **Critério de sucesso definido antes de qualquer treino** ([`ADR-0001`](../../docs/wayfinder/tech_challenge_fase3/adr/0001-pipeline-sklearn-snapshot-e-politica-leakage.md) §5):
 o modelo aluno-nível só se justifica se **superar** o baseline trivial de
@@ -45,6 +56,18 @@ reproduzindo, com mais complexidade e mais risco de erro, uma informação
 que já existia pronta. Essa é a pergunta que decide o projeto — não "o
 modelo prevê bem?", mas "o modelo prevê melhor do que eu não fazer nada de
 novo?".
+
+**Objetivo secundário (derivado do resultado do primário).** Quando o modelo
+aluno-nível reprovou e o teste de resíduo mostrou que não há sinal individual
+a extrair (§8), a pergunta passou a ser se o problema era o **alvo**, não o
+algoritmo. Daí o segundo objetivo: prever, no grão em que o dado nasce,
+**quais municípios não atingirão a meta do PDE no ciclo seguinte** — que é
+literalmente a pergunta de negócio nº 4 do enunciado, a única das cinco que
+seguia sem resposta.
+
+Os dois objetivos usam o mesmo rigor e o mesmo critério: nenhum modelo entra
+como entregável sem superar um baseline trivial explícito, com intervalo de
+confiança.
 
 ## 3. Descrição da base utilizada
 
@@ -122,6 +145,24 @@ Pipeline scikit-learn completa, com pré-processamento integrado ao modelo
    ADR-0001 §5.
 7. **Teste de falsificação** (`src/evaluation/02_teste_falsificacao.py`) — o
    script que decide se o projeto se justifica (§7 e §8 abaixo).
+8. **Teste de resíduo** (`src/evaluation/03_teste_residuo.py`) — dá o baseline
+   ao modelo *como feature* e mede o incremento. É o método correto para
+   "sobra sinal individual?", e a resposta foi não (§8).
+
+### Pipeline do segundo entregável — priorização municipal intra-UF
+
+9. **Experimento de reformulação** (`src/modeling/03_experimento_municipio_meta.py`)
+   — 5 etapas em ordem deliberada: tournament binário vs contínuo, ablação,
+   falsificação contra lookup de UF, **Leave-One-UF-Out** e modelo dentro de
+   cada UF. A etapa 4 é a que decide: as três primeiras produzem um resultado
+   que parece vitória (AUC 0,77) e a quarta mostra que ela dependia de
+   informação contemporânea do estado.
+10. **Modelo produtizado** (`src/modeling/04_ranking_intra_uf.py`) — um modelo
+    por UF, predições **out-of-fold** (cada município pontuado por um modelo
+    que não o viu no treino), nome do município via API pública do IBGE.
+    Saída: `reports/ranking_intra_uf.{json,csv}`, 4.794 municípios.
+11. **Painel** (`src/visualization/01_gerar_painel_intra_uf.py`) — gera
+    `reports/painel_intra_uf.html`, autocontido, particionado por UF.
 
 ### Tratamento de data leakage
 
@@ -145,6 +186,8 @@ mudou o Recall do baseline em 1,6 pontos percentuais com o mesmo seed.
 
 ## 5. Escolha do algoritmo
 
+### 5.1 Modelo aluno-nível
+
 Três candidatos comparados no mesmo split e mesmo k-fold: Regressão
 Logística, Random Forest e XGBoost.
 
@@ -167,6 +210,27 @@ esse achado permanece no relatório em vez de ser omitido.
 negativo — aluno em risco não identificado — é o erro caro para busca
 ativa; Precision entra como contrapeso para não degenerar em marcar todo
 mundo como risco.
+
+### 5.2 Modelo municipal intra-UF
+
+Duas decisões separadas aqui — **formulação do alvo** e **algoritmo**.
+
+**Formulação**: binária (`atinge a meta? sim/não`) vs contínua (gap em pontos
+percentuais até a meta). Empate técnico — melhor binária 0,7738 contra melhor
+contínua 0,7673 de AUC equivalente, com R² de 0,36 no contínuo. Escolhemos
+**binária**, não pela métrica (que empata), mas pelo uso: a decisão do gestor
+é "entra ou não na lista de prioridade", e um score de probabilidade é mais
+direto de ordenar e explicar que uma magnitude em pp.
+
+**Algoritmo**: Random Forest, `n_estimators=200`, `max_depth=6`. Com quatro
+features e amostras pequenas por estado (n de 102 a 801), profundidade curta e
+ensemble moderado importam mais que capacidade — XGBoost não ganhou nada aqui,
+e Logística não capta a não-linearidade da regressão à média que é justamente o
+sinal do problema.
+
+**Predições out-of-fold, sempre.** No produto, cada município é pontuado por
+um modelo que não o viu no treino. Um ranking gerado com predições in-sample
+pareceria melhor e enganaria quem o usasse.
 
 ## 6. Métricas de avaliação
 
@@ -257,7 +321,7 @@ sem nenhuma feature de aluno — supera o modelo completo de 12 features. Não
 teto); é limitação do que os dados atualmente disponíveis conseguem
 diferenciar dentro de um mesmo município.
 
-### 8.4 A reformulação do alvo, e o achado de maior valor do projeto
+### A reformulação do alvo, e o achado de maior valor do projeto
 
 Com o modelo aluno-nível reprovado, testamos se o problema era o **alvo**, não
 o algoritmo — atacando a única das cinco perguntas de negócio do enunciado
@@ -348,6 +412,24 @@ intervalo de confiança:**
    corrente ("priorizar quem estava pior") tem desempenho **abaixo do acaso**
    neste alvo.
 
+### O painel de priorização
+
+A recomendação 2 não fica em prosa: `reports/painel_intra_uf.html` é uma
+página autocontida onde o gestor escolhe o estado e vê os municípios ordenados
+por risco previsto — 4.794 municípios, 17 estados, com taxa de 2023, meta,
+resultado real e busca por nome.
+
+Três decisões de produto que valem registro:
+
+- **Não existe visão nacional, de propósito.** Se a interface permitisse
+  ordenar municípios de estados diferentes, ela convidaria exatamente o erro
+  descrito em §9. A restrição vive na ferramenta, não no rodapé.
+- **Cada estado declara se o modelo ajuda ali.** Em AL, CE e PE o modelo perde
+  para a intuição corrente, e o painel mostra isso com destaque em vez de
+  esconder atrás da média nacional de 0,6496.
+- **Predições out-of-fold.** O número que o gestor vê é o que o modelo
+  entregaria para um município que ele não conhece.
+
 Isso não diminui o valor da Fase 3 — o projeto define um critério de sucesso
 antes de medir, executa o teste, desconfia do próprio resultado quando ele
 parece bom demais, corrige a régua e reporta o resultado desfavorável com
@@ -383,24 +465,39 @@ tech-challenge-fase3-alfabetizacao/
 ├── docs/
 │   └── HANDOFF_RENAN.md     Documento vivo — narrativa completa capítulo a capítulo
 ├── images/                  Gráficos SHAP
-├── reports/                 EDA, dicionário, métricas, proveniência
+├── reports/                 EDA, dicionário, métricas, proveniência,
+│                            ranking intra-UF e o painel HTML
 ├── src/
 │   ├── preprocessing/       Extração, guarda de leakage, pipeline, território
-│   ├── modeling/            Baseline, tournament
-│   └── evaluation/          SHAP, teste de falsificação
+│   ├── modeling/            Baseline, tournament, experimento municipal, ranking
+│   ├── evaluation/          SHAP, falsificação, teste de resíduo
+│   └── visualization/       Geração do painel de priorização
 ├── requirements.txt
 └── README.md                Este arquivo
 ```
 
 ## Reprodutibilidade
 
+**Entregável 1 — modelo aluno-nível** (resultado negativo, §7):
+
 ```bash
 pip install -r requirements.txt
-python src/preprocessing/03_guarda_leakage.py       # gate: falha se houver vazamento
+python src/preprocessing/05_montar_territorio.py             # IBGE + metas, 1 requisição
+python src/preprocessing/02_extrair_snapshot.py --full --silver data/territorio_local.parquet
+python src/preprocessing/03_guarda_leakage.py                # gate: falha se houver vazamento
 python src/preprocessing/01_eda_alunos.py --dataset snapshot
 python src/modeling/02_tournament_modelos.py --temporal
 python src/evaluation/01_shap_interpretabilidade.py
-python src/evaluation/02_teste_falsificacao.py      # o teste que decide o projeto
+python src/evaluation/02_teste_falsificacao.py               # o teste que decide o projeto
+python src/evaluation/03_teste_residuo.py                    # sobra sinal individual?
+```
+
+**Entregável 2 — priorização municipal intra-UF** (§8 e §10):
+
+```bash
+python src/modeling/03_experimento_municipio_meta.py    # 5 etapas, a 4ª é a que decide
+python src/modeling/04_ranking_intra_uf.py              # modelo produtizado
+python src/visualization/01_gerar_painel_intra_uf.py    # gera reports/painel_intra_uf.html
 ```
 
 Decisões técnicas completas, incluindo a sequência de correções (vazamentos
