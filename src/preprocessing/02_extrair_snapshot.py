@@ -1,6 +1,6 @@
 """
 Extração do snapshot de modelagem: Alunos x território/socioeconômico x
-histórico t-1. Ver ADR-0001 (docs/wayfinder/tech_challenge_fase3/adr/) para
+histórico t-1. Ver ADR-0001 (docs/adr/) para
 o racional completo da política de leakage e da decisão de arquitetura.
 
 IMPORTANTE (achado de 2026-08-10, corrige a premissa original do ADR-0001):

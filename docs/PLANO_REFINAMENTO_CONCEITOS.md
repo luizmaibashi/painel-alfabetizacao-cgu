@@ -90,7 +90,7 @@ Decisão 3: Como tratar `caderno=12`?
 
 **Recursos:**
 - `HANDOFF_RENAN.md` (já tem decisões documentadas)
-- `docs/wayfinder/tech_challenge_fase3/adr/0001-*.md` (ADR existente)
+- `docs/adr/0001-*.md` (ADR existente)
 - `.claude/rules/dados.md` (gates)
 
 ---

@@ -48,7 +48,7 @@ oficial de 743 pontos na escala do exame — usando variáveis educacionais,
 territoriais e socioeconômicas disponíveis **antes** do resultado do próprio
 aluno, para alimentar ação de busca ativa na ponta escolar.
 
-**Critério de sucesso definido antes de qualquer treino** ([`ADR-0001`](../../docs/wayfinder/tech_challenge_fase3/adr/0001-pipeline-sklearn-snapshot-e-politica-leakage.md) §5):
+**Critério de sucesso definido antes de qualquer treino** ([`ADR-0001`](docs/adr/0001-pipeline-sklearn-snapshot-e-politica-leakage.md) §5):
 o modelo aluno-nível só se justifica se **superar** o baseline trivial de
 aplicar um risco já calculado por município (Fase 2) igualmente a todos os
 alunos daquele município. Um modelo que não bate esse baseline está apenas
@@ -82,7 +82,7 @@ das duas versões, tem grão de aluno**. Todos são `groupBy` em
 município/UF/rede/ano, inclusive o único que usa Machine Learning
 (`agg_vulnerabilidade_ml`, K-Means, que agrega para município antes de
 clusterizar). Detalhe completo, com citação de linha de código, em
-[`ADR-0003`](../../docs/wayfinder/tech_challenge_fase3/adr/0003-gold-vs-silver-fonte-de-dados.md).
+[`ADR-0003`](docs/adr/0003-gold-vs-silver-fonte-de-dados.md).
 
 Não é uma lacuna de extração desta fase — é uma característica de como a
 Gold foi desenhada na Fase 2, para consumo de BI município-nível. Usar a
@@ -387,7 +387,7 @@ omitido.
   resolvida por análise de dados própria (crosstab), não por documentação
   externa.
 - **Sem dado de 2025** — o modelo nunca foi validado contra o ano de uso
-  real. Decisão registrada em [`ADR-0002`](../../docs/wayfinder/tech_challenge_fase3/adr/0002-modelo-final-validacao-temporal-e-tratamento-caderno.md):
+  real. Decisão registrada em [`ADR-0002`](docs/adr/0002-modelo-final-validacao-temporal-e-tratamento-caderno.md):
   documentar como limitação, não construir infraestrutura de monitoramento
   que o enunciado não exige.
 - **SICONFI** (`gasto_por_habitante_educacao`, ~9 mil requisições a API
@@ -516,6 +516,5 @@ mostrar um número que o código não produz mais.
 Decisões técnicas completas, incluindo a sequência de correções (vazamentos
 achados, escala corrigida, régua de teste recalibrada), em
 [`docs/HANDOFF_RENAN.md`](docs/HANDOFF_RENAN.md) e nos ADRs em
-[`docs/wayfinder/tech_challenge_fase3/adr/`](../../docs/wayfinder/tech_challenge_fase3/adr/)
-(migração para `docs/adr/` deste repositório pendente — ver Cap. 15 do
-documento vivo).
+[`docs/adr/`](docs/adr/) (migrados de `docs/wayfinder/tech_challenge_fase3/adr/`
+em 2026-08-20 — ver Cap. 15 do documento vivo).

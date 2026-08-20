@@ -46,7 +46,7 @@ estadual, não por sinal municipal (Cap. 16).
 Este documento cobre os microdados do Indicador Criança Alfabetizada / Alfabetiza
 Brasil (INEP) e as features derivadas do snapshot de modelagem. Ancorado em
 `docs/wayfinder/tech_challenge_fase3/SPEC_FINAL.md` e
-`docs/wayfinder/tech_challenge_fase3/adr/0001-pipeline-sklearn-snapshot-e-politica-leakage.md`.
+`docs/adr/0001-pipeline-sklearn-snapshot-e-politica-leakage.md`.
 
 ## Conexão com objetivo de negócio
 

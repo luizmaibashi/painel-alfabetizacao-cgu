@@ -106,5 +106,5 @@ Quando chegar:
 
 **Artefatos relacionados:**
 - `docs/wayfinder/tech_challenge_fase3/SPEC_FINAL.md` — spec completa
-- `docs/wayfinder/tech_challenge_fase3/adr/0001-*.md` — decisões de leakage
+- `docs/adr/0001-*.md` — decisões de leakage
 - `HANDOFF_RENAN.md` — brief pra Renan (atualizado em tempo real)
