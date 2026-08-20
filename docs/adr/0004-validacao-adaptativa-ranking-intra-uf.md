@@ -1,5 +1,12 @@
 # ADR-0004: Validação adaptativa e piso de amostra no ranking intra-UF
 
+> ⚠️ **Manchete superseded pelo [ADR-0005](0005-correcao-da-regua-do-baseline-intra-uf.md)
+> (mesma data).** A decisão deste ADR — piso de 40 municípios/UF e dobras
+> adaptativas — **segue válida**. O que cai são os números de desempenho
+> reportados aqui ("0,6478 contra 0,4032", "vence em 18 de 23 UFs"): eles
+> comparavam o modelo contra a regra trivial **na direção errada**. Contra o
+> baseline honesto o ganho é **+0,027**, e o modelo vence em **3 de 23**.
+
 **Data**: 2026-08-20
 **Status**: Accepted (decisão técnica com resultado verificado — script rodado, números conferidos, painel republicado)
 **Proposto por**: Luiz Maibashi

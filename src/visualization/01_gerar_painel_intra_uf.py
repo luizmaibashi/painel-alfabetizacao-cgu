@@ -20,10 +20,15 @@ municípios de estados diferentes compara réguas de avaliação distintas. Se a
 interface permitisse ordenar nacionalmente, ela convidaria exatamente o erro
 que o projeto descobriu. A restrição está na ferramenta, não só no rodapé.
 
-Cada estado também mostra se o modelo **de fato ajuda ali**: em 5 das 23 UFs
-(AL, AM, CE, ES, PE) ele perde para a intuição corrente, e o painel diz isso
-na cara em vez de esconder atrás da média nacional. Piso e dobras adaptativas
-desde 2026-08-20 (ADR-0004) — antes eram 17 UFs com piso fixo de 100.
+Cada estado mostra o veredito honesto em TRÊS estados possíveis, não dois
+(ADR-0005): o modelo vence a regra simples com significância em 3 UFs
+(PR, RJ, RS), perde em 3 (MG, RN, TO) e empata nas outras 17 — e o painel diz
+isso na cara, inclusive recomendando a regra simples onde ela é melhor.
+
+O painel também nomeia, por estado, QUAL direção da regra simples funciona
+ali — porque ela inverte: "quem estava melhor falha mais" vale em 16 UFs,
+o oposto em 7. Piso e dobras adaptativas: ADR-0004 (antes eram 17 UFs com
+piso fixo de 100). Correção da régua do baseline: ADR-0005.
 
 SAÍDA
 -----
@@ -64,10 +69,13 @@ def compactar(dados: dict) -> dict:
             "taxa_falha": metricas[uf]["taxa_falha_observada"],
             "auc": metricas[uf]["auc_modelo"],
             "auc_ic": metricas[uf]["auc_modelo_ic95"],
-            "auc_intuicao": metricas[uf]["auc_baseline_intuicao"],
-            "auc_intuicao_ic": metricas[uf]["auc_intuicao_ic95"],
+            "auc_base": metricas[uf]["auc_baseline_honesto"],
+            "ganho": metricas[uf]["ganho_sobre_baseline"],
+            "ganho_ic": metricas[uf]["ganho_ic95"],
+            "veredito": metricas[uf]["veredito"],
+            "direcao": metricas[uf]["direcao_real"],
+            "direcao_previsivel": metricas[uf]["direcao_previsivel"],
             "amostra_pequena": metricas[uf]["amostra_pequena"],
-            "vence": metricas[uf]["modelo_vence"],
             # [rank, nome, score, taxa23, taxa24, meta, gap, resultado_real]
             "m": [[l["rank_uf"], l["nome_municipio"], l["score_risco"],
                     l["taxa23"], l["taxa24"], l["meta_alfabetizacao_2024"],
@@ -89,7 +97,9 @@ def main():
     kb = len(html.encode("utf-8")) / 1024
     print(f"Painel gerado: {SAIDA}")
     print(f"  {len(compacto)} UFs | {resumo['municipios']} municipios | {kb:.0f} KB")
-    print(f"  UFs em que o modelo vence a intuicao: {resumo['ufs_modelo_vence']}/{resumo['ufs']}")
+    print(f"  vs baseline honesto: vence {resumo['ufs_modelo_vence']}, "
+          f"empata {resumo['ufs_inconclusivo']}, perde {resumo['ufs_modelo_perde']} "
+          f"(de {resumo['ufs']} UFs)")
 
 
 TEMPLATE = r"""<title>Priorização da Alfabetização</title>
@@ -169,6 +179,7 @@ h1{font-size:clamp(1.6rem,3.4vw,2.2rem);font-weight:700;letter-spacing:-.02em;li
 .trust{display:flex;align-items:center;gap:.5rem;padding:.55rem .85rem;border-radius:8px;font-size:.87rem;margin-bottom:1.1rem}
 .trust.good{background:var(--ok-soft);color:var(--ok)}
 .trust.bad{background:var(--warn-soft);color:var(--warn)}
+.trust.warn{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
 .trust b{font-family:var(--mono);font-variant-numeric:tabular-nums}
 
 .toolbar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-bottom:.8rem}
@@ -283,8 +294,9 @@ footer.note code{font-family:var(--mono);font-size:.9em}
       <li><strong>Validação:</strong> dentro de cada estado, as predições mostradas são <em>out-of-fold</em> — nenhum município foi avaliado por um modelo que o viu durante o treino. O número de dobras é adaptativo (2 a 5, conforme o tamanho do estado) para não deixar dobra pequena sem as duas classes — e por isso todo AUC vem com intervalo de confiança de 95% por bootstrap, não só o ponto.</li>
       <li><strong>Piso de 40 municípios por UF.</strong> Abaixo disso nem dobra reduzida nem intervalo de confiança tornam o número confiável — é o caso só do Amapá (16 municípios no estado inteiro). Não é limitação deste painel: com 16 municípios, o gestor consegue olhar a lista inteira sem precisar de um modelo.</li>
       <li><strong>3 estados de fora por falta de dado na fonte, não por limite de modelo:</strong> Acre, Distrito Federal e Roraima não têm taxa de alfabetização de 2023 (Acre e DF) ou de nenhum ano (Roraima) publicada pelo INEP para este indicador — confirmado até o nível estadual, não é falha de coleta deste projeto.</li>
-      <li><strong>Comparação:</strong> AUC do modelo contra a AUC da intuição (“priorize quem tinha a menor taxa em 2023”), mesmo método de intervalo de confiança nos dois lados.</li>
-      <li><strong>Limite conhecido:</strong> em <span id="mResumo">algumas</span> UFs o modelo não supera a intuição — em estados pequenos isso às vezes é ruído de amostra, não um limite real do método (repare no intervalo de confiança largo). O painel mostra isso estado a estado — não esconde atrás de uma média nacional.</li>
+      <li><strong>A direção da regra simples inverte entre estados — e esse é o achado principal.</strong> Em 16 estados quem ia <em>melhor</em> em 2023 falha mais a meta (a meta acompanha o município, e a regressão à média derruba quem estava no topo). Em 7 estados é o contrário, porque a meta satura em 80,0 e blinda quem já está muito acima dela. Não existe uma regra nacional única.</li>
+      <li><strong>Comparação honesta:</strong> o modelo é medido contra a regra simples <em>na direção certa daquele estado</em>, sendo que essa direção é prevista a partir dos <em>outros</em> estados — nunca olhando o resultado do próprio. Diferença com IC95% por bootstrap pareado.</li>
+      <li><strong>O que o modelo de fato entrega:</strong> ele não ranqueia melhor — ele dispensa saber a direção de antemão. No conjunto ele supera a regra simples por <strong>+0,027</strong> (IC95% +0,007 a +0,048), e essa vantagem vem quase toda dos <span id="mResumo">7</span> estados em que a direção não é previsível de fora. Nos demais, empata.</li>
     </ol>
     <p>Decisões completas em <code>docs/adr/0002-modelo-final-validacao-temporal-e-tratamento-caderno.md</code> e no Cap. 16 de <code>docs/HANDOFF_RENAN.md</code>.</p>
   </details>
@@ -339,42 +351,45 @@ function montarChips(){
 
 function montarResumoMetodologia(){
   const r = DATA.resumo;
-  const perde = r.ufs - r.ufs_modelo_vence;
-  el("mResumo").textContent = `${perde} de ${r.ufs}`;
+  el("mResumo").textContent = `${r.ufs - r.ufs_direcao_previsivel}`;
 }
 
 function renderTrust(d){
-  const aucLabel = v => v.toFixed(3).replace(".", ",");
+  const n3 = v => v.toFixed(3).replace(".", ",");
   const clamp = v => Math.max(1, Math.min(99, v * 100));
-  const posModelo = clamp(d.auc);
-  const posIntuicao = clamp(d.auc_intuicao);
   const [loM, hiM] = d.auc_ic.map(clamp);
-  const [loI, hiI] = d.auc_intuicao_ic.map(clamp);
-  const piorQueSorteio = d.auc_intuicao < 0.5 ? " — pior que sortear" : "";
+  const regra = d.direcao === "melhor_primeiro"
+    ? "priorizar quem tinha a <b>maior</b> taxa em 2023"
+    : "priorizar quem tinha a <b>menor</b> taxa em 2023";
   const avisoAmostra = d.amostra_pequena
     ? `<p class="auc-small">Amostra pequena (${d.n} municípios) — intervalo de confiança mais largo. Trate como referência mais fraca do que nos estados maiores.</p>`
     : "";
+  const cls = {modelo_vence:"good", modelo_perde:"bad", inconclusivo:"warn"}[d.veredito];
+  const txt = {
+    modelo_vence: "✓ Aqui o modelo <b>supera</b> a regra simples, com significância estatística. Use o ranking abaixo.",
+    modelo_perde: "⚠ Aqui o modelo <b>fica atrás</b> da regra simples. Prefira ordenar por " +
+                  (d.direcao === "melhor_primeiro" ? "maior" : "menor") + " taxa de 2023.",
+    inconclusivo: "≈ Aqui modelo e regra simples <b>empatam</b> — a diferença não é estatisticamente distinguível. Qualquer um dos dois serve."
+  }[d.veredito];
   return `
     <div class="auc-compare">
-      <p class="auc-note">Duas formas de decidir por onde começar, comparadas: a intuição comum (priorizar quem tinha a menor taxa em 2023) contra o modelo treinado só com dado deste estado. Quanto mais à direita, melhor o critério separa quem vai ficar abaixo da meta de quem vai atingir. As barras claras são o intervalo de confiança de 95% — quanto mais curtas, mais o número é confiável.</p>
+      <p class="auc-note">Neste estado, a regra simples que funciona é <b>${regra}</b> — e ela não é a mesma em todo lugar: a direção se inverte entre estados${d.direcao_previsivel ? "" : ", e <b>este é um dos estados em que ela não dá para adivinhar de fora</b>"}. O modelo só se justifica se superar essa regra.</p>
       <div class="auc-track">
         <span class="auc-tick"><label>sorteio aleatório</label></span>
         <span class="auc-end left">0,0</span>
         <span class="auc-end right">1,0</span>
-        <span class="auc-ci intuicao" style="left:${loI}%;width:${hiI - loI}%"></span>
         <span class="auc-ci modelo" style="left:${loM}%;width:${hiM - loM}%"></span>
-        <span class="auc-mark intuicao" style="left:${posIntuicao}%"></span>
-        <span class="auc-mark modelo" style="left:${posModelo}%"></span>
+        <span class="auc-mark intuicao" style="left:${clamp(d.auc_base)}%"></span>
+        <span class="auc-mark modelo" style="left:${clamp(d.auc)}%"></span>
       </div>
       <div class="auc-legend">
-        <span><i class="dot intuicao"></i>intuição (menor taxa primeiro) — <b>${aucLabel(d.auc_intuicao)}</b> <span class="ic">(${aucLabel(d.auc_intuicao_ic[0])}–${aucLabel(d.auc_intuicao_ic[1])})</span>${piorQueSorteio}</span>
-        <span><i class="dot modelo"></i>modelo treinado neste estado — <b>${aucLabel(d.auc)}</b> <span class="ic">(${aucLabel(d.auc_ic[0])}–${aucLabel(d.auc_ic[1])})</span></span>
+        <span><i class="dot intuicao"></i>regra simples — <b>${n3(d.auc_base)}</b></span>
+        <span><i class="dot modelo"></i>modelo — <b>${n3(d.auc)}</b> <span class="ic">(${n3(d.auc_ic[0])}–${n3(d.auc_ic[1])})</span></span>
+        <span>diferença <b>${d.ganho >= 0 ? "+" : ""}${n3(d.ganho)}</b> <span class="ic">IC95% ${n3(d.ganho_ic[0])} a ${n3(d.ganho_ic[1])}</span></span>
       </div>
       ${avisoAmostra}
     </div>
-    <div class="trust ${d.vence ? "good" : "bad"}">${d.vence
-      ? "✓ Neste estado o modelo ajuda de verdade — use o ranking abaixo."
-      : "⚠ Neste estado o modelo não supera o achismo — trate o ranking como referência fraca."}</div>`;
+    <div class="trust ${cls}">${txt}</div>`;
 }
 
 function render(){
@@ -391,8 +406,8 @@ function render(){
       <div class="d">observado em 2024</div></div>
     <div class="stat"><div class="k">AUC do modelo</div><div class="v">${d.auc.toFixed(3).replace(".",",")}</div>
       <div class="d">nunca viu esse município no treino</div></div>
-    <div class="stat"><div class="k">AUC da intuição</div><div class="v">${d.auc_intuicao.toFixed(3).replace(".",",")}</div>
-      <div class="d">“priorize quem estava pior”</div></div>`;
+    <div class="stat"><div class="k">AUC da regra simples</div><div class="v">${d.auc_base.toFixed(3).replace(".",",")}</div>
+      <div class="d">${d.direcao === "melhor_primeiro" ? "“priorize quem estava melhor”" : "“priorize quem estava pior”"}</div></div>`;
 
   el("trust").innerHTML = renderTrust(d);
 

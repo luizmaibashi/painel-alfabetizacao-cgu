@@ -358,7 +358,7 @@ footer.close{
       <li><a class="sub" href="#municipio">7.2 A vitória aparente</a></li>
       <li><a class="sub" href="#colapso">7.3 O colapso</a></li>
       <li><a class="sub" href="#regua">7.4 Cada estado, sua régua</a></li>
-      <li><a class="sub" href="#funciona">7.5 O que funciona e está publicado</a></li>
+      <li><a class="sub" href="#funciona">7.5 A régua invertida e o achado</a></li>
       <li><a class="top-link" href="#valor"><span class="n">08</span>Valor gerado pro negócio</a></li>
       <li><a class="top-link" href="#limitacoes"><span class="n">09</span>Limitações</a></li>
       <li><a class="top-link" href="#agora"><span class="n">10</span>Onde isso deixa o projeto — e o que preciso de você</a></li>
@@ -655,13 +655,67 @@ footer.close{
         <p>Os marts <code>agg_municipio_ranking</code> e <code>agg_priorizacao</code>, da <strong>Fase 2, em produção</strong>, ordenam municípios <strong>nacionalmente</strong>. Se cada estado aplica sua própria prova e a variação estadual chega a ±20pp em um ano, comparar um município do RS com um de MG nessa escala <strong>não é comparação válida</strong> — um gestor mandaria recursos para o RS ("90% falharam") quando boa parte do efeito é a régua do estado, não a política municipal.</p>
       </div>
 
-      <h3 id="funciona">O que funciona: ranking dentro do estado</h3>
-      <div class="evidence">
-        <div class="card"><div class="k">Modelo, dentro da UF</div><div class="v ok">0,6478</div><div class="d">média ponderada, 23 UFs</div></div>
-        <div class="card"><div class="k">Baseline intuitivo</div><div class="v danger">0,4032</div><div class="d">"quem estava pior falha mais"</div></div>
-        <div class="card"><div class="k">UFs em que o modelo vence</div><div class="v ok">18 / 23</div></div>
+      <h3 id="funciona">7.5 &nbsp;A régua que estava invertida — e o achado que apareceu</h3>
+
+      <div class="finding leak">
+        <span class="finding-label">Correção de 2026-08-20 — ADR-0005</span>
+        <p>Até esta data, este dossiê afirmava que o modelo fazia <strong>0,6478 contra 0,4032</strong> da intuição, vencendo em <strong>18 de 23</strong> estados. <strong>Aquela comparação era inválida.</strong> AUC é antissimétrica — <code>AUC(−s) = 1 − AUC(s)</code> — então uma regra que vale 0,4032 é uma regra que vale <strong>0,5968 lida ao contrário</strong>, de graça. Um baseline "abaixo do acaso" não é fraco: é forte e está apontado para trás. É <em>exatamente</em> o erro narrado em §4.6, que o projeto pegou uma vez no modelo aluno-nível e não aplicou aqui.</p>
       </div>
-      <p>Dois pontos: <strong>há sinal legítimo dentro do estado</strong> — controlada a régua estadual, características municipais preveem quem fica para trás. E <strong>o baseline intuitivo é ativamente errado</strong> (0,40, abaixo do acaso): por regressão à média e pela meta progressiva do PDE, municípios com taxa baixa em 2023 <em>melhoram mais</em> e batem a meta com mais frequência. Um gestor que priorizasse pela intuição erraria sistematicamente.</p>
+
+      <p>O baseline honesto é a mesma regra trivial, mas com a <strong>direção prevista para cada estado a partir dos outros</strong> (leave-one-UF-out sobre a folga em relação à meta) — nunca olhando o resultado do próprio estado:</p>
+
+      <div class="compare">
+        <div class="compare-row">
+          <span class="lbl">"pior primeiro" <em>(régua inválida)</em></span>
+          <span class="compare-track"><span class="compare-fill model" style="width:40.3%"></span></span>
+          <span class="val">0,403</span>
+        </div>
+        <div class="compare-row">
+          <span class="lbl">"melhor primeiro" <em>(a mesma, invertida)</em></span>
+          <span class="compare-track"><span class="compare-fill base" style="width:59.7%"></span></span>
+          <span class="val">0,597</span>
+        </div>
+        <div class="compare-row">
+          <span class="lbl strong">baseline honesto (direção por LOO)</span>
+          <span class="compare-track"><span class="compare-fill base" style="width:62.1%"></span></span>
+          <span class="val">0,621</span>
+        </div>
+        <div class="compare-row">
+          <span class="lbl strong">modelo intra-UF</span>
+          <span class="compare-track"><span class="compare-fill chance" style="width:64.8%"></span></span>
+          <span class="val">0,648</span>
+        </div>
+      </div>
+
+      <p>Ganho real: <strong>+0,027</strong>, IC95% <strong>[+0,007, +0,048]</strong> — positivo e significativo, mas dez vezes menor que os +0,245 que a régua invertida sugeria. Por UF, com IC pareado: o modelo <strong>vence em 3</strong> (PR, RJ, RS), <strong>perde em 3</strong> (MG, RN, TO) e <strong>empata em 17</strong>.</p>
+
+      <div class="finding note">
+        <span class="finding-label">O achado que sobra — e vale mais que o modelo</span>
+        <p><strong>A direção da relação inverte entre estados.</strong> "Quem estava melhor em 2023 falha mais a meta" vale em <strong>16 UFs</strong>; o oposto vale em <strong>7</strong>. A média nacional de 0,4032 era esses dois grupos <em>se cancelando</em> — não um erro sistemático único. É a terceira manifestação do efeito de régua estadual, e a primeira que entrega o mecanismo:</p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>UF</th><th>quartil pior de 2023</th><th>quartil melhor</th><th>mecanismo</th></tr></thead>
+          <tbody>
+            <tr><td class="strong">MG</td><td class="ok">subiu +23,9pp → passou</td><td class="danger">caiu −2,4pp → falhou</td><td>meta acompanha o município; regressão à média derruba o topo</td></tr>
+            <tr><td class="strong">CE</td><td class="danger">34% falharam</td><td class="ok">0% falharam</td><td>meta satura em 80,0 (82% dos municípios); os melhores já estão +19,1pp acima</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>O valor real do modelo, redefinido</h4>
+      <p>Ele não ranqueia melhor — ele <strong>dispensa saber a direção de antemão</strong>. Toda a vantagem, com significância, está nos 7 estados em que a direção não é previsível de fora:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Grupo</th><th>regra trivial</th><th>modelo</th><th>diferença</th></tr></thead>
+          <tbody>
+            <tr><td>16 UFs com direção previsível</td><td>0,6736</td><td>0,6638</td><td>−0,010 &nbsp;<em>(IC cruza zero: empate)</em></td></tr>
+            <tr><td class="strong">7 UFs com direção imprevisível</td><td>0,4378</td><td class="strong">0,5922</td><td class="ok"><strong>+0,155</strong> &nbsp;[+0,082, +0,226]</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="pull">O modelo é um seguro contra errar a direção, não um ranqueador superior. É uma afirmação menor — e é a única que sobrevive aos testes.</p>
       <p>Produtizado em <code>reports/painel_intra_uf.html</code> — o gestor escolhe o estado e vê os 5.216 municípios ordenados por risco, particionado por UF de propósito (sem visão nacional, pelo motivo do bloco anterior). Cobertura de 23 dos 27 estados: 4 ficam de fora — 3 por ausência real de dado na fonte do INEP (AC, DF, RR — confirmado até o nível estadual, não é bug de coleta) e 1 (AP, 16 municípios no estado inteiro) por ser pequeno demais mesmo com validação adaptativa. Toda UF reporta intervalo de confiança de 95% ao lado do AUC — em 2 dos 6 estados que a validação adaptativa incluiu (AM, ES), o resultado é honesto: o modelo <strong>não</strong> supera a intuição ali. Decisão registrada no <code>ADR-0004</code>.</p>
     </section>
 
@@ -710,7 +764,8 @@ footer.close{
     <section id="agora">
       <span class="section-num">10</span>
       <h2>Onde isso deixa o projeto agora</h2>
-      <p>O corpo técnico está fechado e é chão firme: pipeline sklearn completa, cinco vazamentos fechados com guarda automatizado, k-fold + teste tocado uma vez, SHAP funcional, teste de falsificação executado e corrigido — duas vezes, uma pro modelo aluno-nível e outra pro município nacional — e o ranking intra-UF produtizado com validação adaptativa e IC95% por bootstrap. README com as 11 seções do enunciado, 4 ADRs formalizando as decisões arquiteturais.</p>
+      <p>O corpo técnico está fechado e é chão firme: pipeline sklearn completa, cinco vazamentos fechados com guarda automatizado, k-fold + teste tocado uma vez, SHAP funcional, e <strong>três</strong> testes de falsificação executados — o do modelo aluno-nível, o do município nacional, e o do próprio ranking intra-UF, que obrigou a corrigir a régua do baseline (§7.5) e reduziu o ganho declarado de +0,245 para +0,027. README com as 11 seções do enunciado, 5 ADRs formalizando as decisões.</p>
+      <p>Vale registrar o padrão: <strong>as três formulações do projeto foram derrubadas ou reduzidas pelo próprio método</strong>, não por um revisor externo. A terceira correção veio depois do entregável já estar publicado — o que é desconfortável e é exatamente o que o projeto diz fazer.</p>
       <div class="evidence">
         <div class="card"><div class="k">Corpo analítico</div><div class="v ok">fechado</div></div>
         <div class="card"><div class="k">Painel + notebook</div><div class="v ok">publicados</div></div>
@@ -722,6 +777,7 @@ footer.close{
         <span class="tag">ADR-0002 · modelo final/caderno</span>
         <span class="tag">ADR-0003 · Gold vs Silver</span>
         <span class="tag">ADR-0004 · validação adaptativa intra-UF</span>
+        <span class="tag">ADR-0005 · correção da régua do baseline</span>
       </div>
 
       <div class="finding watch">

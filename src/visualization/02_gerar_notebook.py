@@ -301,11 +301,11 @@ fig, ax = plt.subplots(figsize=(7.2, 5.6))
 y = np.arange(len(met))
 
 # haste ligando os dois valores — o que importa é a DISTÂNCIA entre eles
-for yi, (a, b) in enumerate(zip(met.auc_baseline_intuicao, met.auc_modelo)):
+for yi, (a, b) in enumerate(zip(met.auc_baseline_honesto, met.auc_modelo)):
     ax.plot([a, b], [yi, yi], color=GRID, lw=1.6, zorder=1, solid_capstyle="round")
 
-ax.scatter(met.auc_baseline_intuicao, y, s=52, color=AMBAR, zorder=3,
-           label="intuição: “priorize quem estava pior”", edgecolor="white", linewidth=1.4)
+ax.scatter(met.auc_baseline_honesto, y, s=52, color=AMBAR, zorder=3,
+           label="regra simples (direção prevista por LOO)", edgecolor="white", linewidth=1.4)
 ax.scatter(met.auc_modelo, y, s=52, color=TEAL, zorder=3,
            label="modelo intra-UF", edgecolor="white", linewidth=1.4)
 
@@ -315,8 +315,8 @@ ax.text(0.5, len(met) - 0.45, " acaso", fontsize=8, color=MUTED, va="top")
 
 ax.set_yticks(y, met.uf)
 ax.set_xlabel("ROC-AUC (predições out-of-fold)")
-ax.set_title("Onde o modelo ajuda — e onde não ajuda\\n"
-             "A intuição corrente fica abaixo do acaso na maioria dos estados",
+ax.set_title("O modelo contra o baseline honesto\\n"
+             "Empate na maioria dos estados; a vantagem vem de poucos",
              loc="left", fontweight="bold", color=INK)
 ax.grid(axis="x", color=GRID, lw=0.7, zorder=0)
 ax.set_axisbelow(True)
@@ -327,16 +327,19 @@ fig.savefig(IMAGES / "modelo_vs_intuicao_por_uf.png", bbox_inches="tight", facec
 plt.show()
 
 res = rk["resumo"]
-print(f"  AUC do modelo (média ponderada):  {res['auc_modelo_ponderado']:.4f}")
-print(f"  AUC da intuição corrente:         {res['auc_intuicao_ponderado']:.4f}  (abaixo do acaso)")
-print(f"  UFs em que o modelo vence:        {res['ufs_modelo_vence']} de {res['ufs']}")
-print(f"  Municípios pontuados:             {res['municipios']:,}".replace(",", "."))
+print("  AS TRÊS BARRAS (média ponderada):")
+print(f"    regra trivial 'pior primeiro'      {res['auc_dir_pior_ponderado']:.4f}  <- régua INVÁLIDA (ADR-0005)")
+print(f"    regra trivial 'melhor primeiro'    {res['auc_dir_melhor_ponderado']:.4f}  (a mesma regra, invertida)")
+print(f"    baseline HONESTO (direção por LOO) {res['auc_baseline_honesto_ponderado']:.4f}  <- a comparação válida")
+print(f"    MODELO                             {res['auc_modelo_ponderado']:.4f}  ({res['ganho_sobre_baseline']:+.4f})")
 print()
-perdedores = ", ".join(m["uf"] for m in rk["metricas_por_uf"] if not m["modelo_vence"])
-print(f"  Os estados em que o modelo perde ({perdedores}) aparecem no painel")
-print("  com alerta explícito — não escondidos atrás da média nacional. Em")
-print("  estados pequenos (validação adaptativa, ADR-0004) o IC95% costuma")
-print("  ser largo o bastante pra 'perde' ser inconclusivo, não uma derrota clara.")"""),
+print(f"  Municípios pontuados: {res['municipios']:,}".replace(",", "."))
+print(f"  Veredito por UF (IC95% pareado): vence {res['ufs_modelo_vence']}, "
+      f"empata {res['ufs_inconclusivo']}, perde {res['ufs_modelo_perde']}")
+print()
+print(f"  A DIREÇÃO INVERTE: 'melhor primeiro' vale em {res['ufs_direcao_melhor_primeiro']} UFs,")
+print(f"  'pior primeiro' em {res['ufs_direcao_pior_primeiro']}. A média de {res['auc_dir_pior_ponderado']:.4f} era")
+print("  esses dois grupos se cancelando — não um erro sistemático único.")"""),
 
 (MD, """## 7. O que sai disso
 
@@ -346,8 +349,11 @@ print("  ser largo o bastante pra 'perde' ser inconclusivo, não uma derrota cla
    modelo aluno-nível. Mais simples, mais barata, e estatisticamente mais
    eficaz com os dados disponíveis.
 2. **Priorização entre municípios** → comparar **dentro do estado**, nunca
-   entre estados, usando o modelo intra-UF — porque a intuição corrente tem
-   desempenho abaixo do acaso.
+   entre estados — e **checar a direção antes de ordenar**: em 16 UFs quem
+   estava melhor em 2023 falha mais; em 7 é o contrário. Uma regra nacional
+   fixa erra sistematicamente em um dos dois grupos. Onde a direção não é
+   previsível, o modelo intra-UF protege contra escolher o lado errado
+   (+0,027 sobre o baseline honesto, IC95% [+0,007, +0,048] — ADR-0005).
 
 A recomendação 2 não fica em prosa: `reports/painel_intra_uf.html` é a
 ferramenta, com 5.216 municípios e a advertência de validade embutida na

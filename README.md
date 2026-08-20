@@ -11,9 +11,10 @@
 | # | Entregável | Resultado |
 |---|---|---|
 | 1 | **Modelo supervisionado aluno-nível** (exigência do enunciado) | Executado com rigor e **reprovado no próprio critério de falsificação**: 0,6013 contra 0,6331 da meta do PDE aplicada uniformemente, IC95% [−0,0374, −0,0261]. Resultado negativo, medido e documentado |
-| 2 | **Modelo de priorização municipal intra-UF** | AUC **0,6478** contra **0,4032** da intuição corrente, vencendo em **18 de 23** estados (validação adaptativa + IC95% por bootstrap, ADR-0004). Responde a pergunta de negócio nº 4 do enunciado, a única sem resposta |
-| 3 | **Advertência de validade sobre comparação entre estados** | Ranking nacional de municípios compara réguas de avaliação distintas — inclusive nos marts da nossa Fase 2 |
-| 4 | **Painel de priorização** (`reports/painel_intra_uf.html`) | 5.216 municípios pontuados, particionado por UF por decisão de projeto, com a advertência embutida na interface |
+| 2 | **A inversão de direção entre estados** | "Quem estava melhor em 2023 falha mais a meta" vale em **16 UFs**; o **oposto** vale em 7. Dois mecanismos medidos: regressão à média onde a meta acompanha o município (MG), e teto de 80,0 que blinda os melhores onde a meta satura (CE). Responde a pergunta de negócio nº 4 do enunciado, a única sem resposta |
+| 3 | **Modelo de priorização municipal intra-UF** | AUC **0,6478** contra **0,6209** do baseline honesto — ganho de **+0,027**, IC95% [+0,007, +0,048]. O valor não é ranquear melhor: é **não precisar saber a direção de antemão**. Toda a vantagem vem das 7 UFs onde a direção é imprevisível (ADR-0005) |
+| 4 | **Advertência de validade sobre comparação entre estados** | Ranking nacional de municípios compara réguas de avaliação distintas — inclusive nos marts da nossa Fase 2 |
+| 5 | **Painel de priorização** (`reports/painel_intra_uf.html`) | 5.216 municípios, particionado por UF, com veredito honesto de 3 estados por UF — inclusive **recomendando a regra simples** nos 3 estados onde ela vence o modelo |
 
 A narrativa curta: **testamos onde o enunciado mandou testar, provamos com
 rigor que não funciona, e achamos onde funciona.**
@@ -355,13 +356,30 @@ nível de 2023 (−0,431) — não é artefato mecânico da fórmula da meta, é
 do ano. Uma variação de ±20pp em um ano não é aprendizado real: é mudança de
 régua na aplicação da prova.
 
-**O que funciona:** rodando o modelo dentro de cada UF (23 estados com n≥40,
-dobras adaptativas — ADR-0004), AUC **0,6478** contra **0,4032** do baseline
-intuitivo, vencendo em **18 de 23** UFs. E o baseline intuitivo —
-*"quem estava pior em 2023 falha mais"* — é
-**ativamente errado** (abaixo do acaso): por regressão à média e pela meta
-progressiva do PDE, municípios com taxa baixa melhoram mais e batem a meta com
-mais frequência.
+**O que funciona — e a correção de régua do ADR-0005.** Até 2026-08-20 este
+README comparava o modelo contra *"priorize quem estava pior em 2023"*
+(AUC 0,4032) e reportava vitória de +0,245 em 18 de 23 UFs. **Essa comparação
+era inválida:** AUC é antissimétrica, então 0,4032 significa que a mesma regra
+**invertida** vale 0,5968 — de graça. Era o mesmo erro do Cap. 4.6, corrigido
+no modelo aluno-nível e não aplicado aqui.
+
+Contra o baseline honesto — a regra trivial com a **direção prevista a partir
+das outras UFs** (leave-one-UF-out, sem olhar o resultado do próprio estado):
+
+| | AUC ponderado |
+|---|---|
+| regra trivial "pior primeiro" | 0,4032 *(a régua inválida)* |
+| regra trivial "melhor primeiro" | 0,5968 *(a mesma regra, invertida)* |
+| **baseline honesto (direção por LOO)** | **0,6209** |
+| **modelo** | **0,6478** — ganho **+0,027**, IC95% [+0,007, +0,048] |
+
+Veredito por UF com IC95% pareado: o modelo **vence em 3** (PR, RJ, RS),
+**perde em 3** (MG, RN, TO) e **empata em 17**.
+
+**De onde vem a vantagem:** das 7 UFs onde a direção *não* é previsível de
+fora (+0,155, IC95% [+0,082, +0,226]). Nas 16 previsíveis, empate técnico
+(−0,010, IC cruza zero). O modelo é um **seguro contra errar a direção**, não
+um ranqueador superior.
 
 ## 9. Limitações do projeto
 
@@ -409,9 +427,11 @@ intervalo de confiança:**
    explicar, mais barata de manter (nenhum pipeline de ML em produção), e
    estatisticamente mais eficaz com os dados disponíveis.
 2. **Para priorização entre municípios**, comparar **dentro do estado**, nunca
-   entre estados — e usar o modelo intra-UF (AUC 0,6478), porque a intuição
-   corrente ("priorizar quem estava pior") tem desempenho **abaixo do acaso**
-   neste alvo.
+   entre estados — e **checar a direção antes de ordenar**: em 16 UFs quem
+   estava melhor em 2023 falha mais; em 7 é o contrário. Uma regra fixa
+   nacional erra sistematicamente em um dos dois grupos. Onde a direção é
+   conhecida, a regra simples já resolve; onde não é, o modelo intra-UF
+   (AUC 0,6478) protege contra escolher o lado errado.
 
 ### O painel de priorização
 
@@ -425,12 +445,15 @@ Três decisões de produto que valem registro:
 - **Não existe visão nacional, de propósito.** Se a interface permitisse
   ordenar municípios de estados diferentes, ela convidaria exatamente o erro
   descrito em §9. A restrição vive na ferramenta, não no rodapé.
-- **Cada estado declara se o modelo ajuda ali.** Em AL, AM, CE, ES e PE o
-  modelo perde para a intuição corrente, e o painel mostra isso com destaque
-  em vez de esconder atrás da média nacional de 0,6478. Em AM e ES (estados
-  pequenos, incluídos via validação adaptativa — ADR-0004) o intervalo de
-  confiança é largo o bastante pra o resultado ser inconclusivo, não uma
-  derrota clara do modelo.
+- **Cada estado declara se o modelo ajuda ali — em três estados, não dois.**
+  O painel mostra `vence` (PR, RJ, RS), `perde` (MG, RN, TO) ou `empata` (as
+  outras 17), pelo IC95% pareado contra a regra simples. Nos 3 estados em que
+  perde, ele **recomenda a regra simples** em vez de si mesmo. Um painel que
+  só soubesse dizer "vence/perde" esconderia que a maioria dos casos é empate.
+- **Cada estado declara qual direção vale ali.** Antes de qualquer ranking, o
+  painel diz se a regra que funciona naquele estado é "priorize quem estava
+  melhor" ou "quem estava pior" — e avisa quando é um dos 7 estados em que
+  essa direção não dá para adivinhar de fora.
 - **Predições out-of-fold.** O número que o gestor vê é o que o modelo
   entregaria para um município que ele não conhece.
 
