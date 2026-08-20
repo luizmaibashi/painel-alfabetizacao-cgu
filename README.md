@@ -464,14 +464,16 @@ tech-challenge-fase3-alfabetizacao/
 ├── data/                    Snapshots processados (território local, etc.)
 ├── docs/
 │   └── HANDOFF_RENAN.md     Documento vivo — narrativa completa capítulo a capítulo
-├── images/                  Gráficos SHAP
+├── images/                  Gráficos SHAP e diagnósticos
+├── notebooks/
+│   └── 01_analise_completa.ipynb   Narrativa analítica, gerada e executada por script
 ├── reports/                 EDA, dicionário, métricas, proveniência,
 │                            ranking intra-UF e o painel HTML
 ├── src/
 │   ├── preprocessing/       Extração, guarda de leakage, pipeline, território
 │   ├── modeling/            Baseline, tournament, experimento municipal, ranking
 │   ├── evaluation/          SHAP, falsificação, teste de resíduo
-│   └── visualization/       Geração do painel de priorização
+│   └── visualization/       Geração do painel e do notebook
 ├── requirements.txt
 └── README.md                Este arquivo
 ```
@@ -499,6 +501,17 @@ python src/modeling/03_experimento_municipio_meta.py    # 5 etapas, a 4ª é a q
 python src/modeling/04_ranking_intra_uf.py              # modelo produtizado
 python src/visualization/01_gerar_painel_intra_uf.py    # gera reports/painel_intra_uf.html
 ```
+
+**Notebook da narrativa analítica:**
+
+```bash
+python src/visualization/02_gerar_notebook.py   # constrói E executa o notebook
+```
+
+O notebook é **gerado por script, não escrito à mão** — assim as saídas
+gravadas são sempre as do código atual. Notebook escrito à mão apodrece:
+alguém roda uma célula fora de ordem, salva, e o arquivo versionado passa a
+mostrar um número que o código não produz mais.
 
 Decisões técnicas completas, incluindo a sequência de correções (vazamentos
 achados, escala corrigida, régua de teste recalibrada), em
