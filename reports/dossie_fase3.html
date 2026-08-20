@@ -1,0 +1,740 @@
+<title>Dossiê Fase 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg: #EDEFF3;
+  --bg-raised: #F7F8FA;
+  --ink: #1B2430;
+  --ink-soft: #3B4453;
+  --muted: #5B6472;
+  --line: #C9CFD9;
+  --line-soft: #DBDFE6;
+  --accent: #A9781E;
+  --accent-soft: #F1E6CE;
+  --danger: #A23B3B;
+  --danger-soft: #F4E2E0;
+  --ok: #2F6F5E;
+  --ok-soft: #DEEBE6;
+  --warn: #8A6A1E;
+  --warn-soft: #F1E9D0;
+  --shadow: 0 1px 2px rgba(27,36,48,0.06), 0 8px 24px -12px rgba(27,36,48,0.18);
+  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", serif;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "Consolas", monospace;
+}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg: #12161D;
+    --bg-raised: #191F28;
+    --ink: #E9EAE6;
+    --ink-soft: #C7CAD1;
+    --muted: #8E96A3;
+    --line: #313A47;
+    --line-soft: #262E39;
+    --accent: #D9A44C;
+    --accent-soft: #2E2717;
+    --danger: #E08585;
+    --danger-soft: #34201F;
+    --ok: #6FBBA3;
+    --ok-soft: #1B2D28;
+    --warn: #D9BB6C;
+    --warn-soft: #2E2817;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -12px rgba(0,0,0,0.6);
+  }
+}
+
+:root[data-theme="dark"]{
+  --bg: #12161D;
+  --bg-raised: #191F28;
+  --ink: #E9EAE6;
+  --ink-soft: #C7CAD1;
+  --muted: #8E96A3;
+  --line: #313A47;
+  --line-soft: #262E39;
+  --accent: #D9A44C;
+  --accent-soft: #2E2717;
+  --danger: #E08585;
+  --danger-soft: #34201F;
+  --ok: #6FBBA3;
+  --ok-soft: #1B2D28;
+  --warn: #D9BB6C;
+  --warn-soft: #2E2817;
+  --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -12px rgba(0,0,0,0.6);
+}
+
+*{ box-sizing: border-box; }
+html{ scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce){ html{ scroll-behavior: auto; } *{ animation: none !important; transition: none !important; } }
+
+body{
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection{ background: var(--accent-soft); color: var(--ink); }
+
+a{ color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible, .toc a:focus-visible{
+  outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px;
+}
+
+/* ---------- masthead ---------- */
+.masthead{
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-raised);
+  padding: clamp(2.25rem, 5vw, 3.5rem) clamp(1.25rem, 5vw, 3rem) 2.5rem;
+}
+.masthead-inner{ max-width: 920px; margin: 0 auto; }
+.eyebrow{
+  display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 1.1rem;
+}
+.eyebrow .dot{ width: 6px; height: 6px; border-radius: 50%; background: var(--danger); flex: none; }
+.eyebrow .sep{ opacity: .5; }
+h1.title{
+  font-family: var(--font-display); font-weight: 600; font-style: normal;
+  font-size: clamp(2.1rem, 4.4vw, 3rem); line-height: 1.08; letter-spacing: -0.01em;
+  margin: 0 0 .9rem; text-wrap: balance; color: var(--ink);
+}
+h1.title em{ font-style: italic; font-weight: 500; color: var(--ink-soft); }
+.dek{
+  font-size: 1.14rem; color: var(--ink-soft); max-width: 64ch; margin: 0 0 1.6rem; text-wrap: pretty;
+}
+.verdict-strip{
+  display: flex; flex-wrap: wrap; gap: .55rem;
+  font-family: var(--font-mono); font-size: .82rem;
+}
+.chip{
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .32rem .7rem; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--ink-soft);
+}
+.chip b{ color: var(--ink); font-weight: 600; }
+.chip.danger{ background: var(--danger-soft); border-color: transparent; color: var(--danger); }
+.chip.danger b{ color: var(--danger); }
+.chip.ok{ background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+.chip.ok b{ color: var(--ok); }
+
+/* ---------- shell / rail ---------- */
+.shell{
+  max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: 240px minmax(0,1fr); gap: clamp(1.5rem,4vw,3.5rem);
+  padding: clamp(2rem,5vw,3rem) clamp(1.25rem, 5vw, 3rem) 5rem;
+}
+@media (max-width: 880px){ .shell{ grid-template-columns: 1fr; } .rail{ display:none; } }
+
+.rail{ position: sticky; top: 1.75rem; align-self: start; max-height: calc(100vh - 3.5rem); overflow-y: auto; }
+.rail-label{
+  font-family: var(--font-mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 .9rem;
+}
+.toc{ list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--line); }
+.toc li{ margin: 0; }
+.toc a{
+  display: block; padding: .34rem 0 .34rem .95rem; margin-left: -1px; border-left: 1px solid transparent;
+  color: var(--muted); text-decoration: none; font-size: .87rem; line-height: 1.35;
+}
+.toc a:hover{ color: var(--ink); border-left-color: var(--line); }
+.toc .n{ font-family: var(--font-mono); font-size: .76rem; color: var(--accent); margin-right: .5rem; }
+.toc .top-link{ font-weight: 600; color: var(--ink-soft); }
+.toc .sub{ padding-left: 1.9rem; font-size: .82rem; }
+
+/* ---------- article ---------- */
+article{ min-width: 0; max-width: 720px; }
+section{ margin: 0 0 3.6rem; }
+section:last-of-type{ margin-bottom: 0; }
+
+.section-num{
+  font-family: var(--font-mono); font-size: .78rem; color: var(--accent); letter-spacing: .04em;
+  display: block; margin-bottom: .5rem;
+}
+h2{
+  font-family: var(--font-display); font-weight: 600; font-size: clamp(1.5rem, 2.6vw, 1.85rem);
+  line-height: 1.2; margin: 0 0 1rem; text-wrap: balance; color: var(--ink);
+}
+h3{
+  font-family: var(--font-display); font-weight: 600; font-size: 1.22rem;
+  margin: 2rem 0 .8rem; color: var(--ink); text-wrap: balance;
+}
+h4{
+  font-family: var(--font-body); font-weight: 700; font-size: .95rem;
+  margin: 1.4rem 0 .6rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em;
+}
+p{ margin: 0 0 1.05rem; max-width: 68ch; color: var(--ink-soft); }
+p strong{ color: var(--ink); font-weight: 600; }
+p em{ color: var(--ink); }
+.lede{ font-size: 1.08rem; color: var(--ink); }
+
+ul, ol{ margin: 0 0 1.05rem; padding-left: 1.3rem; color: var(--ink-soft); }
+li{ margin-bottom: .4rem; max-width: 64ch; }
+li::marker{ color: var(--accent); }
+
+code{
+  font-family: var(--font-mono); font-size: .87em; background: var(--bg-raised);
+  border: 1px solid var(--line-soft); border-radius: 4px; padding: .1em .35em; color: var(--ink);
+}
+
+/* finding boxes: semantic status, separate from accent */
+.finding{
+  border-left: 3px solid var(--line); background: var(--bg-raised);
+  border-radius: 0 8px 8px 0; padding: 1rem 1.25rem; margin: 1.3rem 0;
+  box-shadow: var(--shadow);
+}
+.finding-label{
+  font-family: var(--font-mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+  display: block; margin-bottom: .45rem;
+}
+.finding p:last-child{ margin-bottom: 0; }
+.finding.leak{ border-left-color: var(--danger); }
+.finding.leak .finding-label{ color: var(--danger); }
+.finding.fix{ border-left-color: var(--ok); }
+.finding.fix .finding-label{ color: var(--ok); }
+.finding.watch{ border-left-color: var(--warn); }
+.finding.watch .finding-label{ color: var(--warn); }
+.finding.note{ border-left-color: var(--accent); }
+.finding.note .finding-label{ color: var(--accent); }
+
+/* evidence cards: tabular metric callouts */
+.evidence{
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
+  gap: .8rem; margin: 1.4rem 0;
+}
+.card{
+  border: 1px solid var(--line); border-radius: 10px; padding: .95rem 1.05rem;
+  background: var(--bg-raised);
+}
+.card .k{ font-size: .74rem; color: var(--muted); margin-bottom: .35rem; }
+.card .v{
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 1.35rem;
+  font-weight: 600; color: var(--ink); line-height: 1;
+}
+.card .v.danger{ color: var(--danger); }
+.card .v.ok{ color: var(--ok); }
+.card .d{ font-size: .78rem; color: var(--muted); margin-top: .35rem; }
+
+/* business value row — distinct from technical evidence cards */
+.value-row{
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr));
+  gap: 1rem; margin: 1.5rem 0 1.8rem;
+}
+.value-card{
+  border: 1px solid var(--line); border-radius: 12px; padding: 1.15rem 1.25rem;
+  background: linear-gradient(180deg, var(--bg-raised), var(--bg));
+}
+.value-card .label{
+  font-family: var(--font-mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: .5rem;
+}
+.value-card .headline{
+  font-family: var(--font-display); font-weight: 600; font-size: 1.28rem; color: var(--ink);
+  line-height: 1.25; margin-bottom: .4rem;
+}
+.value-card .sub{ font-size: .85rem; color: var(--muted); }
+
+/* comparison bars for baseline vs model */
+.compare{ margin: 1.4rem 0 1.8rem; display: flex; flex-direction: column; gap: .7rem; }
+.compare-row{ display: grid; grid-template-columns: 168px 1fr 62px; align-items: center; gap: .7rem; }
+.compare-row .lbl{ font-size: .85rem; color: var(--ink-soft); text-align: right; }
+.compare-row .lbl.strong{ color: var(--ink); font-weight: 600; }
+.compare-track{ height: 10px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
+.compare-fill{ height: 100%; border-radius: 999px; }
+.compare-fill.model{ background: var(--danger); }
+.compare-fill.base{ background: var(--ok); }
+.compare-fill.chance{ background: var(--muted); opacity: .5; }
+.compare-row .val{
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: .88rem;
+  color: var(--ink); font-weight: 600;
+}
+
+/* pipeline steps */
+.pipeline{ display: flex; flex-direction: column; margin: 1.4rem 0; }
+.pipe-step{
+  display: grid; grid-template-columns: 28px 1fr; gap: .9rem;
+  padding-bottom: 1.3rem; position: relative;
+}
+.pipe-step:last-child{ padding-bottom: 0; }
+.pipe-step::before{
+  content: ""; position: absolute; left: 13px; top: 24px; bottom: 0; width: 1px; background: var(--line);
+}
+.pipe-step:last-child::before{ display: none; }
+.pipe-num{
+  width: 26px; height: 26px; border-radius: 50%; background: var(--ink-soft); color: var(--bg);
+  display: flex; align-items: center; justify-content: center; font-family: var(--font-mono);
+  font-size: .78rem; font-weight: 600; flex: none; z-index: 1;
+}
+.pipe-body h4{ margin: .05rem 0 .3rem; font-size: .95rem; }
+.pipe-body p{ margin-bottom: 0; font-size: .93rem; }
+.pipe-body code{ font-size: .82em; }
+
+/* tables */
+.table-wrap{ overflow-x: auto; margin: 1.3rem 0; border: 1px solid var(--line); border-radius: 10px; }
+table{ border-collapse: collapse; width: 100%; min-width: 460px; font-size: .89rem; background: var(--bg-raised); }
+th, td{ text-align: left; padding: .6rem .85rem; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+th{
+  font-family: var(--font-mono); font-size: .7rem; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); font-weight: 500; background: var(--bg);
+}
+td{ color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+td.strong{ color: var(--ink); font-weight: 600; }
+tr:last-child td{ border-bottom: none; }
+td.danger{ color: var(--danger); font-weight: 600; }
+td.ok{ color: var(--ok); font-weight: 600; }
+
+hr.divider{ border: none; border-top: 1px dashed var(--line); margin: 2.8rem 0; }
+
+blockquote{
+  margin: 1.4rem 0; padding: .2rem 0 .2rem 1.1rem; border-left: 2px solid var(--accent);
+  font-family: var(--font-display); font-style: italic; font-size: 1.08rem; color: var(--ink);
+  max-width: 60ch;
+}
+
+.pull{
+  font-family: var(--font-display); font-style: italic; font-weight: 500;
+  font-size: 1.3rem; line-height: 1.4; color: var(--ink); max-width: 58ch;
+  margin: 1.6rem 0; text-wrap: balance;
+}
+
+.tag-row{ display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 1.6rem; }
+.tag{
+  font-family: var(--font-mono); font-size: .74rem; padding: .28rem .6rem; border-radius: 6px;
+  background: var(--bg-raised); border: 1px solid var(--line); color: var(--ink-soft);
+}
+
+footer.close{
+  border-top: 1px solid var(--line); margin-top: 3.5rem; padding-top: 1.6rem;
+  font-size: .85rem; color: var(--muted); font-family: var(--font-mono);
+}
+</style>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow">
+      <span class="dot"></span>
+      <span>Tech Challenge · Fase 3</span>
+      <span class="sep">/</span>
+      <span>Predição de Alfabetização</span>
+      <span class="sep">/</span>
+      <span>Estudo de caso completo</span>
+    </div>
+    <h1 class="title">Como construímos, derrubamos e provamos um modelo <em>que não deveria existir</em></h1>
+    <p class="dek">Do problema de negócio ao veredito final: a história completa de ponta a ponta de um projeto de ciência de dados — base, arquitetura, modelagem, cinco vazamentos, um teste de falsificação corrigido, e o valor que sobra quando a resposta honesta é "o modelo perde".</p>
+    <div class="verdict-strip">
+      <span class="chip">57.781 alunos · população oficial INEP</span>
+      <span class="chip">3 modelos testados · k-fold + teste único</span>
+      <span class="chip danger">veredito <b>modelo perde</b> · IC95% [−0,037, −0,026]</span>
+      <span class="chip ok">recomendação de política pública <b>entregue</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="rail" aria-label="Sumário">
+    <p class="rail-label">Sumário</p>
+    <ul class="toc">
+      <li><a class="top-link" href="#negocio"><span class="n">01</span>O problema de negócio</a></li>
+      <li><a class="top-link" href="#dados"><span class="n">02</span>A base de dados</a></li>
+      <li><a class="top-link" href="#teste"><span class="n">03</span>O teste que decide tudo</a></li>
+      <li><a class="top-link" href="#jornada"><span class="n">04</span>A investigação</a></li>
+      <li><a class="sub" href="#peso-aluno">4.1 O número que era mentira</a></li>
+      <li><a class="sub" href="#cinco-portas">4.2 Cinco portas, um vazamento</a></li>
+      <li><a class="sub" href="#oito-por-cento">4.3 8,7% dos dados</a></li>
+      <li><a class="sub" href="#populacao">4.4 A população errada</a></li>
+      <li><a class="sub" href="#territorio">4.5 O território "impossível"</a></li>
+      <li><a class="sub" href="#vitoria">4.6 A vitória boa demais</a></li>
+      <li><a class="top-link" href="#modelagem"><span class="n">05</span>Modelagem e algoritmo</a></li>
+      <li><a class="top-link" href="#resultado"><span class="n">06</span>Resultado e interpretação</a></li>
+      <li><a class="top-link" href="#reformular"><span class="n">07</span>Reformulando o alvo</a></li>
+      <li><a class="sub" href="#saidas-faceis">7.1 Fechando as saídas fáceis</a></li>
+      <li><a class="sub" href="#municipio">7.2 A vitória aparente</a></li>
+      <li><a class="sub" href="#colapso">7.3 O colapso</a></li>
+      <li><a class="sub" href="#regua">7.4 Cada estado, sua régua</a></li>
+      <li><a class="sub" href="#funciona">7.5 O que funciona e está publicado</a></li>
+      <li><a class="top-link" href="#valor"><span class="n">08</span>Valor gerado pro negócio</a></li>
+      <li><a class="top-link" href="#limitacoes"><span class="n">09</span>Limitações</a></li>
+      <li><a class="top-link" href="#agora"><span class="n">10</span>Onde isso deixa o projeto — e o que preciso de você</a></li>
+    </ul>
+  </nav>
+
+  <article>
+
+    <section id="negocio">
+      <span class="section-num">01</span>
+      <h2>O problema de negócio, antes de qualquer fórmula</h2>
+      <p class="lede">A Fase 2 entregou um painel que fala de <strong>município</strong>: "esse município está em risco, priorize ele na busca ativa." Bom para o Secretário de Educação, que decide onde alocar orçamento.</p>
+      <p>A Fase 3 muda o cliente. Agora é o <strong>Diretor / Coordenador Pedagógico</strong>, que já sabe em qual escola está — o que ele precisa é saber <em>qual aluno</em> dentro da escola vai precisar de intervenção. Isso não é o mesmo problema em escala menor. É um problema estruturalmente diferente: prever o comportamento de um indivíduo, não de uma população.</p>
+      <p><strong>Objetivo analítico:</strong> desenvolver um modelo supervisionado que prevê se um aluno será <code>alfabetizado</code> (corte oficial de 743 pontos na escala do exame), usando variáveis educacionais, territoriais e socioeconômicas disponíveis <em>antes</em> do resultado do próprio aluno — para alimentar ação de busca ativa na ponta escolar.</p>
+      <p class="pull">Quase todo erro cometido — e toda correção feita — é alguma variação de "isso parece informação do aluno, mas é informação do município disfarçada" ou "isso parece sinal, mas é ausência disfarçada."</p>
+    </section>
+
+    <section id="dados">
+      <span class="section-num">02</span>
+      <h2>A base de dados — e por que não é a Gold</h2>
+      <p>O enunciado pede dados "provenientes da camada Gold" da Fase 2 — duas vezes, no texto. Auditamos os dois geradores de Gold que existem: o script local de desenvolvimento e o script que roda de fato no GCP (Dataproc/GCS/BigQuery), 15 marts no total. <strong>Nenhum tem grão de aluno.</strong> Todos são agregados de município/UF/rede/ano — inclusive o único que usa Machine Learning (K-Means), que agrega para município antes de clusterizar.</p>
+      <div class="finding note">
+        <span class="finding-label">Decisão de arquitetura — ADR-0003</span>
+        <p>Não é lacuna de extração — é como a Gold foi desenhada, para consumo de BI município-nível. Usar a Gold para o problema aluno-nível exigiria juntar agregados que são <strong>funções do próprio desempenho dos alunos sendo preditos</strong> — vazamento circular por construção do mart, não escolha de modelagem.</p>
+      </div>
+      <p>Usamos, em vez disso, os microdados originais (<code>Alunos.csv</code>, grão individual) mais território via Silver e APIs públicas:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fonte</th><th>O que traz</th></tr></thead>
+          <tbody>
+            <tr><td class="strong">Microdados <code>Alunos.csv</code></td><td>57.781 alunos, 2023–2024, grão individual</td></tr>
+            <tr><td class="strong">Silver — metas imputadas</td><td>Meta do PDE por município (KNN, herdado da Fase 2)</td></tr>
+            <tr><td class="strong">IBGE SIDRA (API pública)</td><td>População total por município — 1 requisição, sem custo</td></tr>
+            <tr><td class="strong">Metas do PDE (arquivo local)</td><td>Meta oficial 2024 por município/rede</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Alunos <strong>ausentes</strong> à prova têm rótulo por convenção ("não fez ⇒ não alfabetizado"), não por medição — validado contra a própria metodologia oficial do INEP, já implementada na Fase 2. Saíram da população de modelagem: <strong>57.782 → 48.055 alunos avaliados.</strong></p>
+    </section>
+
+    <section id="teste">
+      <span class="section-num">03</span>
+      <h2>O teste que decide se o projeto vale a pena</h2>
+      <p>Antes de treinar qualquer coisa, o <code>ADR-0001 §5</code> registrou um critério de sucesso: <strong>o modelo aluno-nível só se justifica se superar um baseline trivial</strong> — pegar o risco já calculado por município na Fase 2 e aplicar o mesmo número a todos os alunos daquele município, sem individualizar nada.</p>
+      <p>Um modelo pode ter métrica ótima e ainda assim não agregar nada — se está apenas reproduzindo, com mais trabalho e mais risco de erro, uma informação que já existia de graça na Fase 2. A pergunta real não é "o modelo prevê bem?" — é <em>"o modelo prevê melhor do que eu não fazer nada de novo?"</em></p>
+      <div class="finding note">
+        <span class="finding-label">Método — Teste de Falsificação</span>
+        <p>Definir, <strong>antes</strong> de olhar o resultado, o que provaria a hipótese errada. A maioria dos projetos de ML mede acurácia, sente-se bem, entrega. Definir a régua antes de medir é o que separa ciência de storytelling.</p>
+      </div>
+    </section>
+
+    <section id="jornada">
+      <span class="section-num">04</span>
+      <h2>A investigação — vazamentos, população, escala</h2>
+      <p class="lede">Seis capítulos, na ordem em que aconteceram — cada correção só apareceu porque a anterior tinha sido levada longe demais.</p>
+
+      <h3 id="peso-aluno">4.1 &nbsp;O primeiro número bonito era mentira</h3>
+      <p>SHAP — a técnica que abre a caixa preta e diz "isso pesou X% na decisão" — mostrou que <code>peso_aluno</code> (o peso amostral, usado para a amostra representar a população) concentrava <strong>70% da influência</strong> do modelo.</p>
+      <p>A explicação certa apareceu olhando os <strong>nulos</strong> da coluna — os 835 valores faltantes eram exatamente os alunos que faltaram à prova, e quem falta é sempre marcado "não alfabetizado" por convenção do dado.</p>
+      <div class="finding leak">
+        <span class="finding-label">Vazamento</span>
+        <p>O modelo não aprendia "quem vai mal na alfabetização". Aprendia <strong>"quem faltou à prova"</strong> — escondido atrás de um peso amostral com cara de feature legítima.</p>
+      </div>
+      <p>Checklist normal pergunta "quantos nulos essa coluna tem?" e para. A pergunta certa: <strong>a ausência de valor prediz o alvo?</strong> Virou item novo, promovido para a regra permanente da base de conhecimento.</p>
+
+      <h3 id="cinco-portas">4.2 &nbsp;A mesma trapaça, achada mais quatro vezes</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Coluna</th><th>Como vazava</th></tr></thead>
+          <tbody>
+            <tr><td class="strong">1</td><td><code>proficiencia</code></td><td>define o próprio rótulo</td></tr>
+            <tr><td class="strong">2</td><td><code>presenca</code></td><td>100% de quem faltou = "Não"</td></tr>
+            <tr><td class="strong">3</td><td><code>preenchimento_caderno</code></td><td>834/835 coincidem com faltosos</td></tr>
+            <tr><td class="strong">4</td><td><code>peso_aluno</code></td><td>vazava pela nulidade, não pelo valor</td></tr>
+            <tr><td class="strong">5</td><td><code>caderno=12</code></td><td>79,7% de ausentes disfarçados de "sinal"</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>O item 5 é o mais instrutivo: três buscas na documentação oficial do INEP tentando entender por que <code>caderno=12</code> parecia prever risco. Um <code>crosstab</code> de duas colunas resolveu em cinco minutos.</p>
+      <blockquote>A resposta estava no dado, não na documentação externa.</blockquote>
+      <p>Porque o mesmo erro passou cinco vezes por EDA, dicionário, ADR, tournament e SHAP sem ser visto, nasceu um <strong>guarda automatizado</strong> (<code>03_guarda_leakage.py</code>): testa toda coluna em três frentes — nulidade prediz o alvo, valor isola o alvo, poder isolado suspeito — e falha a execução se achar vazamento. Vira gate de CI, portável pra outros projetos.</p>
+
+      <h3 id="oito-por-cento">4.3 &nbsp;O modelo rodava sobre 8,7% dos dados disponíveis</h3>
+      <p>Toda a modelagem tinha rodado sobre uma amostra de 5.000 alunos, seguindo uma regra herdada da Fase 2 — escrita para não estourar custo de processamento em nuvem. A base <strong>completa</strong>, 57.781 alunos, estava versionada no mesmo repositório. Ler um CSV de 7 MB com pandas não usa nuvem nenhuma.</p>
+      <div class="evidence">
+        <div class="card"><div class="k">Rodava sobre</div><div class="v danger">8,7%</div><div class="d">5.000 de 57.781 alunos</div></div>
+        <div class="card"><div class="k">Escolas c/ 1 aluno só</div><div class="v">≈43%</div><div class="d">torna taxa por escola inviável</div></div>
+        <div class="card"><div class="k">ROC-AUC amostra → completo</div><div class="v ok">0,53 → 0,577</div><div class="d">mais dado, sinal real</div></div>
+      </div>
+      <p class="pull">O que quebrou esse erro não foi ferramenta nenhuma. Foi uma pergunta: <em>"4.475 escolas para 5.000 alunos, tem certeza?"</em> — o mecanismo de correção mais barato do projeto.</p>
+      <p>Rodar na base completa revelou algo estrutural: é uma pesquisa <strong>amostral</strong> do INEP, ~2,37 alunos por escola. Uma "taxa de absenteísmo por escola" com um aluno só só pode dar 0% ou 100% — ruído travestido de métrica. Por <strong>município</strong> a cobertura funciona (65%).</p>
+
+      <h3 id="populacao">4.4 &nbsp;A população errada</h3>
+      <p>"Os alunos ausentes devem entrar no modelo?" vinha sendo tratada como escolha de gosto. Não era escolha — era <strong>fato verificável</strong>: conferir se o cálculo batia com a taxa oficial do INEP. A resposta já estava no código da própria Fase 2 — a metodologia oficial usa só quem fez a prova, ponderado.</p>
+      <div class="finding fix">
+        <span class="finding-label">Correção</span>
+        <p>Manter os ausentes não divergia de uma preferência — divergia da <strong>definição do próprio indicador</strong> que o modelo tentava prever. Cortar a raiz também apagou sozinho o alerta do <code>caderno=12</code>, porque a anomalia era inteiramente feita de ausência.</p>
+      </div>
+
+      <h3 id="territorio">4.5 &nbsp;O território "impossível" era grátis</h3>
+      <p>A peça que faltava desde o início — território, socioeconômico, meta municipal — parecia depender de credencial de nuvem (GCP). Investigando, isso também era falso: só o <strong>Parquet já processado</strong> está na nuvem; o dado em si (IBGE, metas do PDE) é API pública, sem autenticação.</p>
+      <p>Integrar território sem depender de credencial mudou o resultado de verdade: o modelo saiu de aleatório (0,507) para <strong>0,601</strong> — pela primeira vez, aprendeu algo real.</p>
+
+      <h3 id="vitoria">4.6 &nbsp;A vitória boa demais para ser verdade</h3>
+      <p>Por alguns minutos, o teste de falsificação <strong>passou</strong>: 0,601 contra 0,582. Investigando de onde vinha o ganho: quase inteiramente de uma única feature, a meta municipal do PDE — que correlaciona <strong>0,979</strong> com a taxa de alfabetização do próprio ano. Quase o próprio resultado, disfarçado de meta.</p>
+      <div class="finding watch">
+        <span class="finding-label">Régua recalibrada</span>
+        <p>Se a meta é tão forte no nível município, o teste justo é comparar contra <strong>a própria meta aplicada uniformemente</strong> — não contra a taxa bruta municipal, mais fraca. Sozinha, sem modelo nenhum, a meta chega a <strong>0,6331</strong>.</p>
+      </div>
+      <p>Corrigir a própria régua depois de "ganhar" foi a parte mais importante do trabalho, não a mais confortável.</p>
+    </section>
+
+    <hr class="divider">
+
+    <section id="modelagem">
+      <span class="section-num">05</span>
+      <h2>Modelagem e escolha do algoritmo</h2>
+      <p class="lede">Pipeline scikit-learn completa, pré-processamento integrado ao modelo — não etapas soltas coladas na mão.</p>
+
+      <div class="pipeline">
+        <div class="pipe-step">
+          <div class="pipe-num">1</div>
+          <div class="pipe-body">
+            <h4>Extração</h4>
+            <p>Junta microdados + histórico t-1 + território, em dois modos (<code>--local-only</code> / <code>--full</code>).</p>
+          </div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-num">2</div>
+          <div class="pipe-body">
+            <h4>Guarda de vazamento</h4>
+            <p>Testa toda feature candidata antes de treinar. Falha a execução se achar suspeita — gate, não sugestão.</p>
+          </div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-num">3</div>
+          <div class="pipe-body">
+            <h4>Pré-processamento</h4>
+            <p>Imputação por mediana, Robust Scaling, One-Hot — tudo dentro de um <code>ColumnTransformer</code> único, adaptativo às colunas disponíveis.</p>
+          </div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-num">4</div>
+          <div class="pipe-body">
+            <h4>Tournament — 3 candidatos</h4>
+            <p>Regressão Logística, Random Forest, XGBoost. <code>GridSearchCV</code> + <code>StratifiedKFold(5)</code> só dentro do treino; teste tocado uma única vez, no fim.</p>
+          </div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-num">5</div>
+          <div class="pipe-body">
+            <h4>Interpretabilidade — SHAP</h4>
+            <p>Abre a caixa preta do vencedor; gates automáticos derivam do critério de sucesso registrado antes do treino.</p>
+          </div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-num">6</div>
+          <div class="pipe-body">
+            <h4>Teste de falsificação</h4>
+            <p>O script que decide se o projeto se justifica — não uma métrica a mais no relatório.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3>O tournament</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Modelo</th><th>Recall</th><th>Precision</th><th>F1</th><th>ROC-AUC</th><th>gap treino-val</th></tr></thead>
+          <tbody>
+            <tr><td>Regressão Logística</td><td>0,694</td><td>0,433</td><td>0,533</td><td>0,533</td><td>+0,002</td></tr>
+            <tr><td>Random Forest</td><td>0,729</td><td>0,431</td><td>0,542</td><td>0,537</td><td>+0,013</td></tr>
+            <tr><td class="strong">XGBoost</td><td class="strong">0,725</td><td class="strong">0,441</td><td class="strong">0,548</td><td class="strong">0,554</td><td>+0,043</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><em>(Base completa, 48.055 alunos avaliados, sem território — número final com território no bloco 06.)</em> XGBoost lidera nas três métricas de decisão. A Regressão Logística — quase cega, ROC-AUC próximo de moeda — não é descartada por "ser ruim": é diagnóstico de que não há relação <strong>linear</strong> forte nos dados, e esse achado fica no relatório em vez de ser escondido.</p>
+      <p><strong>Métrica de decisão:</strong> Recall da classe "Não" (aluno em risco) — falso negativo é o erro caro pra busca ativa. Precision entra como contrapeso.</p>
+    </section>
+
+    <section id="resultado">
+      <span class="section-num">06</span>
+      <h2>Resultado final e interpretação</h2>
+
+      <h3>O que o modelo de fato usa (SHAP)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Bloco de features</th><th>Influência</th></tr></thead>
+          <tbody>
+            <tr><td class="strong">Histórico municipal (absenteísmo t-1 + contador + flag)</td><td class="strong">60,9%</td></tr>
+            <tr><td><code>rede</code></td><td>13,3%</td></tr>
+            <tr><td><code>caderno</code> (efeito residual, sem artefato de ausência)</td><td>11,6%</td></tr>
+            <tr><td>Histórico de escola (4 features)</td><td>14,2%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>O veredito, com intervalo de confiança</h3>
+      <div class="compare">
+        <div class="compare-row">
+          <span class="lbl">Aleatório (referência)</span>
+          <span class="compare-track"><span class="compare-fill chance" style="width:50%"></span></span>
+          <span class="val">0,500</span>
+        </div>
+        <div class="compare-row">
+          <span class="lbl">Baseline: taxa t-1 municipal</span>
+          <span class="compare-track"><span class="compare-fill base" style="width:58.2%"></span></span>
+          <span class="val">0,582</span>
+        </div>
+        <div class="compare-row">
+          <span class="lbl strong">Modelo aluno-nível (12 features)</span>
+          <span class="compare-track"><span class="compare-fill model" style="width:60.1%"></span></span>
+          <span class="val">0,601</span>
+        </div>
+        <div class="compare-row">
+          <span class="lbl strong">Baseline: meta do PDE, uniforme</span>
+          <span class="compare-track"><span class="compare-fill base" style="width:63.3%"></span></span>
+          <span class="val">0,633</span>
+        </div>
+      </div>
+      <p>Diferença modelo − melhor baseline: <strong>−0,0318</strong>, IC95% bootstrap pareado <strong>[−0,0374, −0,0261]</strong> — inteiramente negativo. O modelo perde em <strong>5 de 5</strong> orçamentos de busca ativa testados (5% a 50% dos alunos).</p>
+      <p>O modelo aprendeu algo real — saiu do acaso (0,507) para 0,601. Mas o sinal que capturou é fundamentalmente municipal. <strong>Usar esse sinal direto, sem passar por modelo nenhum, funciona melhor do que o modelo.</strong> É o cenário que o próprio ADR previu antes de qualquer treino — agora medido, não hipotético.</p>
+    </section>
+
+    <hr class="divider">
+
+    <section id="reformular">
+      <span class="section-num">07</span>
+      <h2>Reformulando o alvo — e o achado que vale mais que o modelo</h2>
+      <p class="lede">Com o modelo aluno-nível reprovado, a pergunta virou outra: e se o alvo estiver errado, não o algoritmo? Fomos testar a única das cinco perguntas de negócio do enunciado ainda sem resposta — <em>"como prever municípios que podem não atingir metas futuras?"</em></p>
+
+      <h3 id="saidas-faceis">7.1 &nbsp;Primeiro, fechando as saídas fáceis</h3>
+      <p>Antes de reformular, três hipóteses de "talvez faltasse dado" foram <strong>testadas e fechadas</strong>, não abandonadas por cansaço:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Hipótese</th><th>Teste</th><th>Resultado</th></tr></thead>
+          <tbody>
+            <tr><td>Falta questionário socioeconômico do aluno</td><td>5ª tentativa de acesso ao pacote INEP</td><td>Sem evidência de que exista</td></tr>
+            <tr><td>Enriquecer com Censo Escolar</td><td>ZIP real baixado, 215.545 escolas, cruzado com nossas 24.346</td><td class="danger">0% de cobertura</td></tr>
+            <tr><td>Sobra sinal de aluno após o baseline?</td><td>Baseline como <em>feature</em> + features de aluno</td><td class="danger">−0,0318 · IC95% [−0,037; −0,026]</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="finding leak">
+        <span class="finding-label">Censo Escolar — causa raiz</span>
+        <p>Nosso <code>id_escola</code> é <strong>sequencial</strong> (60000002–60042811). O <code>CO_ENTIDADE</code> real do INEP usa prefixo de UF (11–53). É <strong>identificador sintético</strong>, não o código oficial — sem tabela de correspondência, o join é estruturalmente impossível, não apenas "cobertura baixa".</p>
+      </div>
+      <p>O teste de resíduo é o método correto para "sobra algo?": em vez de comparar duas AUCs separadas, dá ao modelo o baseline de graça e mede o incremento. <strong>Adicionar features de aluno piora o resultado, com significância.</strong></p>
+
+      <h3 id="municipio">7.2 &nbsp;A vitória aparente</h3>
+      <p>Novo desenho: grão <strong>município</strong> (5.232 com taxa medida em 2023 e 2024), alvo = <code>taxa_2024 &lt; meta_2024</code>. Binário vs contínuo deu empate técnico (0,774 vs 0,767). E então, pela primeira vez no projeto, um modelo <strong>passou</strong> num teste de falsificação:</p>
+      <div class="evidence">
+        <div class="card"><div class="k">Modelo (k-fold aleatório)</div><div class="v ok">0,7709</div></div>
+        <div class="card"><div class="k">Baseline: lookup de UF</div><div class="v">0,7294</div></div>
+        <div class="card"><div class="k">Diferença</div><div class="v ok">+0,0415</div><div class="d">IC95% [+0,032; +0,052]</div></div>
+      </div>
+      <p>Antes de comemorar — lição do capítulo anterior — fomos medir <strong>de onde</strong> vinha o ganho:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Features</th><th>AUC</th></tr></thead>
+          <tbody>
+            <tr><td>só taxa 2023</td><td>0,5518</td></tr>
+            <tr><td>só meta 2024</td><td>0,5328</td></tr>
+            <tr><td>taxa 2023 + meta 2024</td><td>0,5537</td></tr>
+            <tr><td class="strong">+ UF</td><td class="strong">0,7675 &nbsp;← salto de +0,21</td></tr>
+            <tr><td>só contexto (população + UF)</td><td>0,7369</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="colapso">7.3 &nbsp;O colapso</h3>
+      <p>Praticamente todo o poder preditivo é a <strong>UF</strong>. E o k-fold aleatório deixa municípios da mesma UF no treino e no teste — o modelo aprende a taxa de falha do estado olhando vizinhos <em>do mesmo ano</em>, informação que uma previsão real jamais teria.</p>
+      <div class="finding leak">
+        <span class="finding-label">Leave-One-UF-Out — a UF de teste nunca vista</span>
+        <p><strong>AUC 0,4800</strong> — abaixo do acaso. Colapso total. É o mesmo padrão que derrubou o modelo aluno-nível, um nível de agregação acima: o "sinal" era a média do grupo, não característica da unidade.</p>
+      </div>
+
+      <h3 id="regua">7.4 &nbsp;Por que a UF domina: cada estado aplica sua própria prova</h3>
+      <p>As avaliações do CNCA são aplicadas <strong>pelos estados</strong>. Isso aparece no dado de forma brutal:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>UF</th><th>taxa 2023</th><th>taxa 2024</th><th>variação</th><th>% falhou a meta</th></tr></thead>
+          <tbody>
+            <tr><td class="strong">RS</td><td>73,1</td><td>53,1</td><td class="danger">−20,0</td><td class="danger">90,5%</td></tr>
+            <tr><td class="strong">BA</td><td>37,7</td><td>36,6</td><td>−1,0</td><td>81,0%</td></tr>
+            <tr><td class="strong">MG</td><td>62,8</td><td>75,1</td><td class="ok">+12,3</td><td>20,5%</td></tr>
+            <tr><td class="strong">CE</td><td>89,7</td><td>90,3</td><td>+0,6</td><td class="ok">8,7%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Correlação entre variação da UF e taxa de falha: <strong>−0,651</strong> — mais forte que a correlação com o nível de 2023 (−0,431). Não é artefato mecânico da fórmula da meta: é o <strong>choque do ano</strong>. Uma queda de 20 pontos em um ano não é perda de aprendizado real — é mudança de régua na aplicação da prova.</p>
+
+      <div class="finding note">
+        <span class="finding-label">O achado que vale — advertência de validade</span>
+        <p>Os marts <code>agg_municipio_ranking</code> e <code>agg_priorizacao</code>, da <strong>Fase 2, em produção</strong>, ordenam municípios <strong>nacionalmente</strong>. Se cada estado aplica sua própria prova e a variação estadual chega a ±20pp em um ano, comparar um município do RS com um de MG nessa escala <strong>não é comparação válida</strong> — um gestor mandaria recursos para o RS ("90% falharam") quando boa parte do efeito é a régua do estado, não a política municipal.</p>
+      </div>
+
+      <h3 id="funciona">O que funciona: ranking dentro do estado</h3>
+      <div class="evidence">
+        <div class="card"><div class="k">Modelo, dentro da UF</div><div class="v ok">0,6478</div><div class="d">média ponderada, 23 UFs</div></div>
+        <div class="card"><div class="k">Baseline intuitivo</div><div class="v danger">0,4032</div><div class="d">"quem estava pior falha mais"</div></div>
+        <div class="card"><div class="k">UFs em que o modelo vence</div><div class="v ok">18 / 23</div></div>
+      </div>
+      <p>Dois pontos: <strong>há sinal legítimo dentro do estado</strong> — controlada a régua estadual, características municipais preveem quem fica para trás. E <strong>o baseline intuitivo é ativamente errado</strong> (0,40, abaixo do acaso): por regressão à média e pela meta progressiva do PDE, municípios com taxa baixa em 2023 <em>melhoram mais</em> e batem a meta com mais frequência. Um gestor que priorizasse pela intuição erraria sistematicamente.</p>
+      <p>Produtizado em <code>reports/painel_intra_uf.html</code> — o gestor escolhe o estado e vê os 5.216 municípios ordenados por risco, particionado por UF de propósito (sem visão nacional, pelo motivo do bloco anterior). Cobertura de 23 dos 27 estados: 4 ficam de fora — 3 por ausência real de dado na fonte do INEP (AC, DF, RR — confirmado até o nível estadual, não é bug de coleta) e 1 (AP, 16 municípios no estado inteiro) por ser pequeno demais mesmo com validação adaptativa. Toda UF reporta intervalo de confiança de 95% ao lado do AUC — em 2 dos 6 estados que a validação adaptativa incluiu (AM, ES), o resultado é honesto: o modelo <strong>não</strong> supera a intuição ali. Decisão registrada no <code>ADR-0004</code>.</p>
+    </section>
+
+    <section id="valor">
+      <span class="section-num">08</span>
+      <h2>Valor gerado pro negócio</h2>
+      <p class="lede">Um projeto que "não deu certo" no sentido raso ainda pode entregar valor real — se o que ele prova for verdadeiro e acionável.</p>
+      <div class="value-row">
+        <div class="value-card">
+          <div class="label">Custo evitado</div>
+          <div class="headline">Nenhum modelo em produção</div>
+          <div class="sub">Sem pipeline de ML pra manter, monitorar e re-treinar — a meta do PDE já resolve melhor.</div>
+        </div>
+        <div class="value-card">
+          <div class="label">Decisão simplificada</div>
+          <div class="headline">1 número por município</div>
+          <div class="sub">Explicável a qualquer gestor sem precisar entender SHAP ou XGBoost.</div>
+        </div>
+        <div class="value-card">
+          <div class="label">Risco evitado</div>
+          <div class="headline">5 vazamentos que nunca chegaram à produção</div>
+          <div class="sub">Um modelo com ROC-AUC 0,669 inflado por vazamento teria sido implantado como "funciona" — e teria alocado recursos por endereço errado.</div>
+        </div>
+        <div class="value-card">
+          <div class="label">Reutilizável</div>
+          <div class="headline">Guarda de leakage como gate de CI</div>
+          <div class="sub"><code>03_guarda_leakage.py</code> é portável — protege qualquer próximo projeto de modelagem contra o mesmo padrão de erro.</div>
+        </div>
+      </div>
+      <p><strong>A recomendação de política pública, sustentada por evidência estatística com intervalo de confiança:</strong> para busca ativa de alunos em risco, usar a meta do PDE do município como critério de priorização, não um modelo aluno-nível. Mais simples de explicar a um gestor, mais barata de manter, e estatisticamente mais eficaz com os dados hoje disponíveis.</p>
+      <p class="pull">Definir um critério de sucesso antes de medir, executar o teste, desconfiar do próprio resultado quando ele parece bom demais, corrigir a régua e reportar o resultado desfavorável com significância estatística — isso é mais valioso pra quem toma a decisão do que um número inflado que ninguém checou.</p>
+    </section>
+
+    <section id="limitacoes">
+      <span class="section-num">09</span>
+      <h2>Limitações</h2>
+      <ul>
+        <li><strong>O modelo aluno-nível não supera o melhor baseline municipal</strong> — a limitação central, e a que mais deveria pesar em qualquer decisão de uso.</li>
+        <li><code>caderno</code> carrega um resíduo de influência (11,6%) sem explicação causal confirmada — três tentativas de acessar o dicionário oficial do INEP não resolveram a categoria 12.</li>
+        <li><strong>Sem dado de 2025</strong> — o modelo nunca foi validado contra o ano de uso real. Documentado como limitação, não infraestrutura de monitoramento que o enunciado não exige.</li>
+        <li><strong>SICONFI</strong> (gasto por habitante em educação, ~9 mil requisições) não foi buscado — o teste barato já mostrou que o problema é de grão, não de faltar mais uma feature municipal.</li>
+        <li>Nenhuma feature restante descreve o aluno em si — todas são metadado administrativo ou agregado de município/escola. Sem uma variável genuinamente individual, é improvável que qualquer modelo supere o baseline municipal.</li>
+      </ul>
+    </section>
+
+    <section id="agora">
+      <span class="section-num">10</span>
+      <h2>Onde isso deixa o projeto agora</h2>
+      <p>O corpo técnico está fechado e é chão firme: pipeline sklearn completa, cinco vazamentos fechados com guarda automatizado, k-fold + teste tocado uma vez, SHAP funcional, teste de falsificação executado e corrigido — duas vezes, uma pro modelo aluno-nível e outra pro município nacional — e o ranking intra-UF produtizado com validação adaptativa e IC95% por bootstrap. README com as 11 seções do enunciado, 4 ADRs formalizando as decisões arquiteturais.</p>
+      <div class="evidence">
+        <div class="card"><div class="k">Corpo analítico</div><div class="v ok">fechado</div></div>
+        <div class="card"><div class="k">Painel + notebook</div><div class="v ok">publicados</div></div>
+        <div class="card"><div class="k">Model Card + vídeo</div><div class="v danger">pendente</div></div>
+        <div class="card"><div class="k">Repo compartilhado + git flow</div><div class="v danger">pendente, sem data</div></div>
+      </div>
+      <div class="tag-row">
+        <span class="tag">ADR-0001 · arquitetura/leakage</span>
+        <span class="tag">ADR-0002 · modelo final/caderno</span>
+        <span class="tag">ADR-0003 · Gold vs Silver</span>
+        <span class="tag">ADR-0004 · validação adaptativa intra-UF</span>
+      </div>
+
+      <div class="finding watch">
+        <span class="finding-label">Antes de qualquer coisa — o que preciso do Renan</span>
+        <p><strong>O escopo mudou mais do que o combinado inicialmente, e isso não foi decidido a dois.</strong> Quando planejamos a Fase 3, "prever municípios que podem não atingir metas futuras" era explicitamente uma pergunta deixada de fora do escopo, como evolução futura. Depois que o modelo aluno-nível reprovou no próprio critério de falsificação, ela virou <em>o entregável principal</em> do projeto — sem essa mudança de direção ter sido combinada antes de acontecer.</p>
+        <p>Isso não invalida o trabalho — cada pivô tem teste e evidência atrás, não é palpite. Mas é uma decisão de <em>direção</em>, não só de técnica, e só um dos dois tomou. Preciso saber: essa é a linha que você imaginava pra Fase 3, ou você via outra coisa? E, à parte da resposta técnica: ainda não existe repositório compartilhado nem uma linha de git flow que você tenha tocado — o enunciado avalia isso, e sem data marcada pra você entrar, é um risco que não depende de mérito nenhum.</p>
+        <p>Se a resposta for "não é essa a linha", o know-how do que já foi investigado — os 5 vazamentos, o método do teste de falsificação, o porquê da Gold não servir pro grão aluno — continua valendo pra qualquer direção nova. Não é retrabalho, é ponto de partida melhor do que o que tínhamos no dia 10.</p>
+      </div>
+    </section>
+
+    <footer class="close">
+      Fonte: <code>docs/HANDOFF_RENAN.md</code> · <code>README.md</code> · <code>docs/adr/0001-0004</code> · Tech Challenge Fase 3 — Predição de Alfabetização
+    </footer>
+
+  </article>
+</div>
