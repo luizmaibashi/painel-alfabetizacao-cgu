@@ -1,0 +1,38 @@
+{
+  "desenho": {
+    "treino": "alunos de 2023",
+    "n_treino": 23550,
+    "teste": "alunos de 2024",
+    "n_teste": 24505,
+    "baseline_usado": "meta_pde",
+    "features_modelo_b": [
+      "absenteismo_hist_escola_t1",
+      "absenteismo_hist_municipio_t1",
+      "n_alunos_hist_escola_t1",
+      "n_alunos_hist_municipio_t1",
+      "populacao_total",
+      "meta_alfabetizacao_2024_imputada",
+      "caderno",
+      "rede",
+      "sigla_uf",
+      "possui_hist_escola_t1",
+      "possui_hist_municipio_t1",
+      "meta_is_imputada",
+      "_score_baseline"
+    ]
+  },
+  "roc_auc": {
+    "modelo_a_so_baseline": 0.6330826061326773,
+    "modelo_b_baseline_mais_features": 0.6012832091112034
+  },
+  "ic_diferenca_b_menos_a": {
+    "diferenca_observada": -0.03179939702147394,
+    "ic95_inferior": -0.037405511357064325,
+    "ic95_superior": -0.026074605952052552,
+    "n_teste": 24505,
+    "n_bootstrap": 2000,
+    "significativo": false
+  },
+  "veredito": "SEM RESIDUO — modelo B PERDE do baseline sozinho, com significancia",
+  "leitura": "Adicionar caderno/rede/historico de escola ao baseline nao so nao ajuda: PIORA a separacao. As features de aluno introduzem ruido que o XGBoost aprende a usar mal, sem sinal real por tras."
+}
