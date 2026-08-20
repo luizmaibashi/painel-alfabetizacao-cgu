@@ -7,8 +7,41 @@
 | `alunos` | `../tech-challenge-fase2-alfabetizacao/dados/Alunos.csv` | Base completa, 57.781 alunos. **É a base de trabalho desde 2026-08-18** |
 | `alunos_amostra` | `data/Alunos_amostra.csv` | Amostra aleatória de 5.000 (8,7%), cópia byte a byte de `dados_sample/Alunos.csv` da Fase 2. Foi a base de trabalho até 2026-08-18; mantida como referência histórica dos relatórios daquele período |
 | `snapshot_modelagem` | `data/snapshot_modelagem.parquet` | Saída de `02_extrair_snapshot.py`: alunos + histórico t-1 (dois níveis) + território/meta quando em `--full`. **É o que o modelo consome** |
+| `territorio_local` | `data/territorio_local.parquet` | Saída de `05_montar_territorio.py`: substituto local e reduzido da Silver da Fase 2, montado sem GCP (IBGE SIDRA + metas do disco + UF por prefixo). 10.704 linhas (município × ano × rede) |
 
 EDA de cada um em `reports/eda_<dataset>.md`.
+
+## Colunas (pós-limpeza) — `territorio_local`
+
+| Coluna | Tipo | Significado | Interpretação de negócio | Decisão de uso |
+|---|---|---|---|---|
+| `ano` | int | 2023 ou 2024 | Chave temporal do join | Chave, não feature |
+| `id_municipio` | str (zfill 7) | Código IBGE do município | Chave de join com os microdados | Chave — cast obrigatório para STRING (ADR-005 da Fase 2) |
+| `rede` | str | Rede de ensino | Só "Municipal" nesta fonte de metas | Chave do join; sem variância aqui |
+| `meta_alfabetizacao_2024` | float | Meta oficial do PDE para 2024 | Alvo de política pública definido externamente | Feature (via versão imputada) e **baseline do teste de falsificação** — sozinha vence o modelo aluno-nível (Cap. 14) |
+| `meta_alfabetizacao_2024_imputada` | float | Meta com nulos preenchidos por mediana de UF | Cobre as redes sem meta do PDE | Feature. ⚠️ **Não é o KNN da Fase 2** (ADR-004) — é substituto simplificado, declarado na coluna `_origem` |
+| `populacao_total` | float | População do município (IBGE SIDRA 2021) | Porte do município, contexto estrutural | Feature — não deriva de desempenho educacional |
+| `sigla_uf` | str | UF derivada do prefixo do código IBGE | Contexto territorial | Feature. 🔴 **Domina o alvo município-nível** (+0,21 de AUC) porque cada estado aplica sua própria prova — ver Cap. 16.4 do HANDOFF |
+| `_origem` | str | Declaração de procedência e do que falta | Auditoria de proveniência | ⚠️ Prefixo `_` = **nunca feature** |
+
+**Deixado de fora de propósito** (o arquivo de metas traz, mas não entram):
+`taxa_alfabetizacao` (desempenho do mesmo ano, circular) e
+`percentual_participacao` (ausência em nível municipal — o vazamento que custou
+cinco capítulos). Ver docstring de `05_montar_territorio.py`.
+
+## Conexão com objetivo de negócio — `territorio_local`
+
+Existe para responder à terceira dependência falsa do projeto (Cap. 14.1 do
+HANDOFF): o `--full` nunca precisou de credencial GCP, porque IBGE e metas do
+PDE são dado público. Ancorado no mesmo objetivo do dataset `alunos` (prever
+risco de não-alfabetização usando contexto, não desempenho próprio) e na
+hipótese de que contexto territorial/socioeconômico carregaria o sinal que as
+features de aluno não tinham.
+
+**Resultado da hipótese:** território de fato moveu o modelo de 0,507 para
+0,6013 — mas a meta do PDE aplicada sozinha chega a 0,6331 e vence o modelo
+(Cap. 14.5). E no grão município, `sigla_uf` domina por artefato de régua
+estadual, não por sinal municipal (Cap. 16).
 
 Este documento cobre os microdados do Indicador Criança Alfabetizada / Alfabetiza
 Brasil (INEP) e as features derivadas do snapshot de modelagem. Ancorado em
