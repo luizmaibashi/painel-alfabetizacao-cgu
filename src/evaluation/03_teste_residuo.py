@@ -24,8 +24,8 @@ DESENHO
 Modelo A: só o melhor baseline municipal (a mesma pontuação usada em
           02_teste_falsificacao.py), sem nenhuma feature de aluno.
 Modelo B: o mesmo baseline, ENTRE as features, mais tudo que já tínhamos
-          (caderno, rede, histórico escola/município, flags) — XGBoost com
-          os mesmos hiperparâmetros do tournament.
+          (caderno, rede, histórico escola/município, flags) — XGBoost forte
+          (800 árvores, depth 8, lambda 1.0).
 
 Comparação: IC95% bootstrap pareado da diferença de ROC-AUC (mesma função
 usada no teste de falsificação, para manter o método idêntico).
@@ -57,8 +57,10 @@ RANDOM_STATE = 42
 ANO_TREINO, ANO_TESTE = 2023, 2024
 
 PARAMS_XGB = dict(
-    n_estimators=400, max_depth=6, learning_rate=0.1,
-    random_state=RANDOM_STATE, eval_metric="logloss", tree_method="hist", n_jobs=-1,
+    n_estimators=800, max_depth=8, learning_rate=0.03,
+    subsample=0.8, colsample_bytree=0.8, min_child_weight=3,
+    reg_lambda=1.0, random_state=RANDOM_STATE, eval_metric="logloss",
+    tree_method="hist", n_jobs=-1,
 )
 
 
