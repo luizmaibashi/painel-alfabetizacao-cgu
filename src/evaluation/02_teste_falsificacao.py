@@ -40,7 +40,7 @@ sabia do ano passado), e o único em que o baseline municipal existe.
 
     treino:  alunos de 2023
     teste:   alunos de 2024
-    modelo:  XGBoost com os hiperparâmetros vencedores do tournament
+    modelo:  XGBoost forte (800 árvores, depth 8, regularização 1.0)
     baseline: taxa municipal de 2023, aplicada a todo aluno de 2024
 
 COMO SE COMPARA
@@ -73,8 +73,10 @@ ANO_TREINO, ANO_TESTE = 2023, 2024
 ORCAMENTOS = [0.05, 0.10, 0.20, 0.30, 0.50]  # fração dos alunos que dá para visitar
 
 PARAMS_XGB = dict(
-    n_estimators=400, max_depth=6, learning_rate=0.1,
-    random_state=RANDOM_STATE, eval_metric="logloss", tree_method="hist", n_jobs=-1,
+    n_estimators=800, max_depth=8, learning_rate=0.03,
+    subsample=0.8, colsample_bytree=0.8, min_child_weight=3,
+    reg_lambda=1.0, random_state=RANDOM_STATE, eval_metric="logloss",
+    tree_method="hist", n_jobs=-1,
 )
 
 
