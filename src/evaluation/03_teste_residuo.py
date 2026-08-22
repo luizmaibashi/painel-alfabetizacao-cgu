@@ -40,6 +40,9 @@ from sklearn.metrics import roc_auc_score
 from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 BASE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BASE / "src" / "preprocessing"))
 sys.path.insert(0, str(BASE / "src" / "evaluation"))
