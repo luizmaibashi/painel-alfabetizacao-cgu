@@ -62,12 +62,16 @@ RANDOM_STATE = 42
 TEST_SIZE = 0.2
 TOP_N = 5  # o "top-5" citado no checklist do ADR-0001 §5
 
-# Hiperparâmetros vencedores do tournament (reports/metrics_tournament.json).
-# Fixos aqui de propósito: este script explica o modelo ESCOLHIDO, não procura
-# um novo. Se o tournament for re-rodado (ex.: com --full), atualizar aqui.
+# Modelo forte validado em 00c_teste_residuo_modelo_forte.py, canônico pra
+# fase 3 do recomeço pedagógico (2026-08-22). Split temporal 2023/2024,
+# sem sinal incremental de features de aluno vs baseline municipal.
+# Se o tournament for re-rodado, este SHAP roda sobre o modelo forte de
+# referência, não o vencedor do tournament — mantém metodologia consistente.
 PARAMS_XGB = dict(
-    n_estimators=400, max_depth=3, learning_rate=0.1,
-    random_state=RANDOM_STATE, eval_metric="logloss", tree_method="hist", n_jobs=-1,
+    n_estimators=800, max_depth=8, learning_rate=0.03,
+    subsample=0.8, colsample_bytree=0.8, min_child_weight=3,
+    reg_lambda=1.0, random_state=RANDOM_STATE, eval_metric="logloss",
+    tree_method="hist", n_jobs=-1,
 )
 
 # Prefixos usados para classificar features nos gates do ADR-0001 §5.
