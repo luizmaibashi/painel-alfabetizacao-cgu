@@ -225,10 +225,12 @@ mundo como risco.
 **Nota de 2026-08-22 (recomeço pedagógico):** Os scripts de avaliação
 (`01_shap_interpretabilidade.py`, `02_teste_falsificacao.py`,
 `03_teste_residuo.py`) agora usam XGBoost com hiperparâmetros forte
-(800 árvores, depth 8, lambda 1.0), validado via `00c_teste_residuo_modelo_forte.py`
-com metodologia canônica (split temporal 2023/2024, baseline municipal, IC bootstrap).
+(800 árvores, depth 8, lambda 1.0), a mesma metodologia canônica (split
+temporal 2023/2024, baseline municipal, IC bootstrap) validada pela
+investigação registrada em [`ADR-0006`](docs/adr/0006-ceiling-analysis-como-gate-pre-treino.md).
 O veredito da ADR-0001 §5 mantém-se: modelo aluno-nível não supera o baseline,
-agora confirmado com modelo mais robusto.
+agora confirmado com modelo mais robusto (AUC 0,6026 vs 0,6331, IC95%
+[-0,0364, -0,0248]).
 
 ### 5.2 Modelo municipal intra-UF
 
