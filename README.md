@@ -11,13 +11,23 @@
 | # | Entregável | Resultado |
 |---|---|---|
 | 1 | **Modelo supervisionado aluno-nível** (exigência do enunciado) | Executado com rigor e **reprovado no próprio critério de falsificação**: 0,6013 contra 0,6331 da meta do PDE aplicada uniformemente, IC95% [−0,0374, −0,0261]. Resultado negativo, medido e documentado |
-| 2 | **A inversão de direção entre estados** | "Quem estava melhor em 2023 falha mais a meta" vale em **16 UFs**; o **oposto** vale em 7. Dois mecanismos medidos: regressão à média onde a meta acompanha o município (MG), e teto de 80,0 que blinda os melhores onde a meta satura (CE). Responde a pergunta de negócio nº 4 do enunciado, a única sem resposta |
+| 2 | **A inversão de direção entre estados** | "Quem estava melhor em 2023 falha mais a meta" vale em **16 UFs**; o **oposto** vale em 7. Dois mecanismos medidos: regressão à média onde a meta acompanha o município (MG), e teto de 80,0 que blinda os melhores onde a meta satura (CE). Responde a pergunta de negócio nº 4 do enunciado ("como prever municípios que podem não atingir metas futuras?"), a única sem resposta **desenvolvida nesta fase** |
 | 3 | **Modelo de priorização municipal intra-UF** | AUC **0,6478** contra **0,6209** do baseline honesto — ganho de **+0,027**, IC95% [+0,007, +0,048]. O valor não é ranquear melhor: é **não precisar saber a direção de antemão**. Toda a vantagem vem das 7 UFs onde a direção é imprevisível (ADR-0005) |
 | 4 | **Advertência de validade sobre comparação entre estados** | Ranking nacional de municípios compara réguas de avaliação distintas — inclusive nos marts da nossa Fase 2 |
 | 5 | **Painel de priorização** (`reports/painel_intra_uf.html`) | 5.216 municípios, particionado por UF, com veredito honesto de 3 estados por UF — inclusive **recomendando a regra simples** nos 3 estados onde ela vence o modelo |
 
 A narrativa curta: **testamos onde o enunciado mandou testar, provamos com
 rigor que não funciona, e achamos onde funciona.**
+
+### As 5 perguntas de negócio do enunciado
+
+| Pergunta | Onde está respondida |
+|---|---|
+| Quais fatores mais impactam a alfabetização? | §7.1 (SHAP) |
+| Quais municípios apresentam maior risco educacional? | Entregável 3 — modelo intra-UF + painel |
+| **Quais regiões possuem padrões semelhantes?** | **Herdada da Fase 2**: `agg_vulnerabilidade_ml` (K-Means, mart em produção) já responde isso a nível município. Não foi refeita nesta fase — a Fase 3 focou no eixo aluno-nível que a Fase 2 não cobria (§1); reutilizar o mart existente é a resposta honesta, não construir um clustering novo para dizer a mesma coisa |
+| Como prever municípios que podem não atingir metas futuras? | Entregável 2 — a resposta que a Fase 3 de fato desenvolveu |
+| Quais variáveis possuem maior influência nos modelos? | §7.1 (SHAP) |
 
 ---
 
@@ -211,6 +221,14 @@ esse achado permanece no relatório em vez de ser omitido.
 negativo — aluno em risco não identificado — é o erro caro para busca
 ativa; Precision entra como contrapeso para não degenerar em marcar todo
 mundo como risco.
+
+**Nota de 2026-08-22 (recomeço pedagógico):** Os scripts de avaliação
+(`01_shap_interpretabilidade.py`, `02_teste_falsificacao.py`,
+`03_teste_residuo.py`) agora usam XGBoost com hiperparâmetros forte
+(800 árvores, depth 8, lambda 1.0), validado via `00c_teste_residuo_modelo_forte.py`
+com metodologia canônica (split temporal 2023/2024, baseline municipal, IC bootstrap).
+O veredito da ADR-0001 §5 mantém-se: modelo aluno-nível não supera o baseline,
+agora confirmado com modelo mais robusto.
 
 ### 5.2 Modelo municipal intra-UF
 
