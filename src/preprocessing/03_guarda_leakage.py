@@ -97,9 +97,16 @@ def teste_b_valor(df: pd.DataFrame, col: str) -> dict | None:
     # escapava do `except` — o guarda MORRIA no snapshot `--full`, deixando a
     # execução mais importante do projeto sem checagem de vazamento nenhuma.
     if pd.api.types.is_numeric_dtype(serie) and serie.nunique() > 20:
+        # ValueError/TypeError sao as falhas ESPERADAS do qcut (poucos bins
+        # distintos, tipo incompativel apos coercao) -- coluna nao fatia bem,
+        # segue sem suspeita B. Qualquer OUTRA excecao (o proprio genero do
+        # ArrowNotImplementedError acima) PROPAGA: guarda silenciosa que
+        # engole erro nao previsto e o antipadrao que este script existe para
+        # nao repetir (ver AGENTS.md "guarda silenciosa").
         try:
             faixas = pd.qcut(serie, 10, duplicates="drop")
-        except Exception:
+        except (ValueError, TypeError) as e:
+            print(f"  [guarda] teste B pulou '{col}': qcut falhou ({e!r})")
             return None
         grupos = df.loc[serie.index].groupby(faixas, observed=True)["_y"]
     else:
