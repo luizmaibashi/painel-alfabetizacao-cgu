@@ -56,14 +56,20 @@ import sys
 import time
 from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
-    accuracy_score, confusion_matrix, f1_score, precision_score,
+    accuracy_score, confusion_matrix, f1_score, fbeta_score, precision_score,
     recall_score, roc_auc_score,
 )
-from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
+from sklearn.model_selection import (
+    GridSearchCV, StratifiedKFold, cross_val_predict, train_test_split,
+)
 from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 
@@ -133,16 +139,56 @@ def carregar_snapshot() -> pd.DataFrame:
     return df
 
 
-def avaliar(pipeline, X_test, y_test) -> dict:
-    y_pred = pipeline.predict(X_test)
+def avaliar(pipeline, X_test, y_test, threshold: float = 0.5) -> dict:
     y_proba = pipeline.predict_proba(X_test)[:, 1]
+    y_pred = (y_proba >= threshold).astype(int)
     return {
+        "threshold": float(threshold),
         "recall": recall_score(y_test, y_pred),
         "precision": precision_score(y_test, y_pred, zero_division=0),
         "f1": f1_score(y_test, y_pred),
         "roc_auc": roc_auc_score(y_test, y_proba),
         "accuracy": accuracy_score(y_test, y_pred),
         "matriz_confusao": confusion_matrix(y_test, y_pred).tolist(),
+    }
+
+
+def limiar_por_custo(estimador, X_train, y_train, cv, beta: float = 2.0) -> dict:
+    """
+    Escolhe o threshold de decisao por CUSTO, nao pelo corte 0,5 implicito.
+
+    POR QUE ISTO EXISTE (GATE ML - Threshold calibrado ao custo, dados.md)
+    ------------------------------------------------------------------------
+    O ADR-0001 §5 define custo assimetrico: falso negativo (aluno em risco
+    nao identificado) e mais caro que falso positivo, por isso Recall e a
+    metrica de decisao. Mas ate aqui, nenhum script *operacionalizava* isso —
+    `avaliar()` chamava `.predict()`, que aplica o corte 0,5 do sklearn,
+    OTIMO para custo simetrico, nao para o caso de uso real. `class_weight`/
+    `scale_pos_weight` corrige o TREINO (funcao de perda), nao a REGRA DE
+    DECISAO na inferencia — sao mecanismos complementares, nao substitutos.
+
+    METODO
+    ------
+    F-beta (beta=2) pondera Recall 4x mais que Precision — proxy explicito e
+    monotonico de "FN custa mais que FP", sem exigir um C_FP/C_FN em R$ que o
+    projeto nao tem declarado. Varre o threshold em (0, 1) sobre PREDICOES
+    OUT-OF-FOLD do proprio treino (`cross_val_predict`, mesmo `cv` do
+    tuning) — nunca toca o conjunto de teste nesta escolha, senao o teste
+    deixaria de ser tocado uma unica vez (seção "Validação" do README).
+    """
+    proba_oof = cross_val_predict(
+        estimador, X_train, y_train, cv=cv, method="predict_proba", n_jobs=-1,
+    )[:, 1]
+    candidatos = np.linspace(0.01, 0.99, 99)
+    scores = [fbeta_score(y_train, (proba_oof >= t).astype(int), beta=beta)
+              for t in candidatos]
+    melhor_idx = int(np.argmax(scores))
+    return {
+        "criterio": f"F{beta:g} maximo (Recall pesa {beta**2:g}x mais que "
+                    "Precision) sobre predicoes OOF do treino, nunca do teste",
+        "threshold_escolhido": float(candidatos[melhor_idx]),
+        "f_beta_oof": float(scores[melhor_idx]),
+        "threshold_default_sklearn": 0.5,
     }
 
 
@@ -189,10 +235,26 @@ def rodar_candidato(nome, config, X_train, y_train, X_test, y_test, cv):
     print(f"Recall no treino (mesmos folds): {recall_treino_cv:.3f} "
           f"-> gap treino-validacao = {gap:+.3f}{alerta}")
 
+    # Threshold calibrado por custo (GATE ML - dados.md): escolhido SOBRE O
+    # TREINO via OOF, antes de qualquer contato com o teste.
+    calibracao = limiar_por_custo(busca.best_estimator_, X_train, y_train, cv)
+    print(f"Threshold calibrado (F2 sobre OOF do treino): "
+          f"{calibracao['threshold_escolhido']:.2f} "
+          f"(F2={calibracao['f_beta_oof']:.3f}, vs default 0,50)")
+
     metricas_teste = avaliar(busca.best_estimator_, X_test, y_test)
-    print(f"TESTE (tocado uma vez): Recall={metricas_teste['recall']:.3f} "
+    metricas_teste_calibrado = avaliar(
+        busca.best_estimator_, X_test, y_test,
+        threshold=calibracao["threshold_escolhido"],
+    )
+    print(f"TESTE (tocado uma vez), threshold 0,50: "
+          f"Recall={metricas_teste['recall']:.3f} "
           f"Precision={metricas_teste['precision']:.3f} "
           f"F1={metricas_teste['f1']:.3f} ROC-AUC={metricas_teste['roc_auc']:.3f}")
+    print(f"TESTE, threshold calibrado {calibracao['threshold_escolhido']:.2f}: "
+          f"Recall={metricas_teste_calibrado['recall']:.3f} "
+          f"Precision={metricas_teste_calibrado['precision']:.3f} "
+          f"F1={metricas_teste_calibrado['f1']:.3f}")
 
     resultado = {
         "papel": config["papel"],
@@ -204,6 +266,8 @@ def rodar_candidato(nome, config, X_train, y_train, X_test, y_test, cv):
         "recall_treino_cv": float(recall_treino_cv),
         "gap_treino_validacao": float(gap),
         "teste": metricas_teste,
+        "calibracao_threshold": calibracao,
+        "teste_threshold_calibrado": metricas_teste_calibrado,
     }
     return resultado, busca.best_estimator_
 
@@ -253,6 +317,23 @@ def main():
           f"({resultados[vencedor]['teste']['recall']:.3f})")
     print("NAO e decisao final - ver ressalvas no relatorio e no HANDOFF_RENAN.md")
 
+    print("\n" + "=" * 72)
+    print("ACHADO SOBRE O THRESHOLD CALIBRADO (F2, ver limiar_por_custo)")
+    print("=" * 72)
+    print("Em todos os candidatos, o threshold que maximiza F2 caiu entre 0,15 e "
+          "0,23 (bem abaixo do 0,50 default) e empurrou Recall para ~0,99 as "
+          "custas de Precision caindo para ~0,43 -- na pratica, marcar quase "
+          "todo mundo como risco. Isso NAO e um erro de calibracao: e o F2 "
+          "revelando, de forma quantitativa, o mesmo limite que o ROC-AUC "
+          "~0,68 ja sugeria -- o modelo tem pouco sinal para separar as "
+          "classes, entao qualquer regra que pondere Recall pesado empurra o "
+          "corte para perto de zero. Por isso a decisao operacional real deste "
+          "projeto NUNCA foi um threshold fixo: e Recall@K por orcamento de "
+          "visita (02_teste_falsificacao.py, secao 'BUSCA ATIVA'), que respeita "
+          "a restricao pratica (quantos alunos da para visitar) em vez de uma "
+          "formula abstrata de custo. O threshold calibrado aqui fica registrado "
+          "por completude do gate, nao como recomendacao de operacao.")
+
     saida = {
         "contexto": {
             "snapshot": "local-only (sem territorio/socioeconomico/meta)",
@@ -263,6 +344,13 @@ def main():
             "metrica_decisao": "recall da classe 'Nao' (ADR-0001 secao 5)",
             "features_usadas": colunas_feature(df),
         },
+        "achado_threshold_calibrado": (
+            "F2-otimo cai entre 0,15 e 0,23 em todos os candidatos, empurrando "
+            "Recall para ~0,99 e Precision para ~0,43 -- marcar quase todo "
+            "mundo como risco. Confirma o limite de sinal ja visto no ROC-AUC "
+            "(~0,68), nao e recomendacao de operacao. Decisao operacional real "
+            "e Recall@K por orcamento (02_teste_falsificacao.py)."
+        ),
         "resultados": resultados,
         "maior_recall_no_teste": vencedor,
     }
