@@ -4,3 +4,11 @@ __pycache__/
 *.pyc
 *.parquet
 *.crc
+
+# Material do curso (nao redistribuir)
+# Colchetes escapados: em sintaxe .gitignore, [IAST] sem escape e uma classe
+# de caracteres (casa I, A, S ou T sozinho), nao colchetes literais -- sem
+# o escape, este padrao NUNCA ignorava o arquivo (git check-ignore confirmava
+# nao-match). Aspas tambem removidas: nao tem funcao de escape em .gitignore,
+# viravam parte literal (porem inofensiva) do padrao.
+\[IAST\] - Tech Challenge - Fase 3.pdf
