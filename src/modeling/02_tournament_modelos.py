@@ -63,9 +63,10 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import (
-    accuracy_score, confusion_matrix, f1_score, fbeta_score, precision_score,
-    recall_score, roc_auc_score,
+    accuracy_score, brier_score_loss, confusion_matrix, f1_score, fbeta_score,
+    precision_score, recall_score, roc_auc_score,
 )
 from sklearn.model_selection import (
     GridSearchCV, StratifiedKFold, cross_val_predict, train_test_split,
@@ -153,7 +154,7 @@ def avaliar(pipeline, X_test, y_test, threshold: float = 0.5) -> dict:
     }
 
 
-def limiar_por_custo(estimador, X_train, y_train, cv, beta: float = 2.0) -> dict:
+def limiar_por_custo(proba_oof: np.ndarray, y_train, beta: float = 2.0) -> dict:
     """
     Escolhe o threshold de decisao por CUSTO, nao pelo corte 0,5 implicito.
 
@@ -171,14 +172,12 @@ def limiar_por_custo(estimador, X_train, y_train, cv, beta: float = 2.0) -> dict
     ------
     F-beta (beta=2) pondera Recall 4x mais que Precision — proxy explicito e
     monotonico de "FN custa mais que FP", sem exigir um C_FP/C_FN em R$ que o
-    projeto nao tem declarado. Varre o threshold em (0, 1) sobre PREDICOES
-    OUT-OF-FOLD do proprio treino (`cross_val_predict`, mesmo `cv` do
-    tuning) — nunca toca o conjunto de teste nesta escolha, senao o teste
-    deixaria de ser tocado uma unica vez (seção "Validação" do README).
+    projeto nao tem declarado. Varre o threshold em (0, 1) sobre
+    `proba_oof` — PREDICOES OUT-OF-FOLD do proprio treino, calculadas pelo
+    chamador via `cross_val_predict` (mesmo `cv` do tuning) — nunca toca o
+    conjunto de teste nesta escolha, senao o teste deixaria de ser tocado
+    uma unica vez (seção "Validação" do README).
     """
-    proba_oof = cross_val_predict(
-        estimador, X_train, y_train, cv=cv, method="predict_proba", n_jobs=-1,
-    )[:, 1]
     candidatos = np.linspace(0.01, 0.99, 99)
     scores = [fbeta_score(y_train, (proba_oof >= t).astype(int), beta=beta)
               for t in candidatos]
@@ -189,6 +188,48 @@ def limiar_por_custo(estimador, X_train, y_train, cv, beta: float = 2.0) -> dict
         "threshold_escolhido": float(candidatos[melhor_idx]),
         "f_beta_oof": float(scores[melhor_idx]),
         "threshold_default_sklearn": 0.5,
+    }
+
+
+def medir_calibracao(estimador, X_train, y_train, proba_crua_oof: np.ndarray,
+                      cv_interno: int = 3) -> dict:
+    """
+    GATE ML - class_weight/scale_pos_weight sem recalibracao (dados.md).
+
+    `class_weight="balanced"`/`scale_pos_weight` reescalam a funcao de perda
+    pela proporcao INVERSA das classes -- isso desloca `predict_proba()` para
+    longe de P(y=1|x) real (o modelo passa a "achar" a classe minoritaria
+    mais provavel do que ela e de fato, de proposito, para compensar o
+    desbalanceamento no treino). Threshold tuning sobre essas probabilidades
+    ainda funciona para ESCOLHER O PONTO DE OPERACAO (o argmax de F-beta e
+    invariante a transformacoes monotonicas), mas a probabilidade em si nao
+    pode ser lida como "risco real em %" sem calibrar.
+
+    Mede Brier score (erro quadratico da probabilidade contra o rotulo, menor
+    e melhor) ANTES e DEPOIS de `CalibratedClassifierCV` (isotonic), sobre
+    predicoes OOF do treino -- nunca toca o teste aqui.
+
+    `proba_crua_oof` e reaproveitado de `limiar_por_custo` (mesmo calculo,
+    evita rodar `cross_val_predict` duas vezes so pra ter a versao crua).
+    A parte calibrada usa `cv_interno` (3, nao os 5 do tuning) tanto no
+    `cross_val_predict` externo quanto dentro do `CalibratedClassifierCV`
+    (3x3=9 fits) -- deliberadamente mais barato que o CV de 5 folds do
+    tuning principal, por ser medicao pontual de diagnostico.
+    """
+    brier_cru = float(brier_score_loss(y_train, proba_crua_oof))
+
+    calibrado = CalibratedClassifierCV(estimador, method="isotonic", cv=cv_interno)
+    proba_calibrada = cross_val_predict(
+        calibrado, X_train, y_train, cv=cv_interno, method="predict_proba", n_jobs=-1,
+    )[:, 1]
+    brier_calibrado = float(brier_score_loss(y_train, proba_calibrada))
+
+    melhora = brier_cru - brier_calibrado  # positivo = calibracao ajudou
+    return {
+        "brier_score_cru": round(brier_cru, 4),
+        "brier_score_calibrado_isotonic": round(brier_calibrado, 4),
+        "melhora_absoluta": round(melhora, 4),
+        "calibracao_ajuda": bool(melhora > 0.001),  # limiar pequeno, nao ruido
     }
 
 
@@ -235,9 +276,26 @@ def rodar_candidato(nome, config, X_train, y_train, X_test, y_test, cv):
     print(f"Recall no treino (mesmos folds): {recall_treino_cv:.3f} "
           f"-> gap treino-validacao = {gap:+.3f}{alerta}")
 
+    # OOF do treino, calculado UMA vez e reaproveitado pelas duas checagens
+    # abaixo (calibracao de probabilidade + threshold por custo).
+    proba_oof = cross_val_predict(
+        busca.best_estimator_, X_train, y_train, cv=cv,
+        method="predict_proba", n_jobs=-1,
+    )[:, 1]
+
+    # class_weight/scale_pos_weight desloca predict_proba() de P(y=1|x) real
+    # (GATE ML - dados.md). Mede se recalibrar (isotonic) ajuda ESTE modelo.
+    calib_proba = medir_calibracao(busca.best_estimator_, X_train, y_train, proba_oof)
+    veredito_calib = ("ajuda" if calib_proba["calibracao_ajuda"] else
+                       "nao ajuda (ou piora)")
+    print(f"Calibracao de probabilidade (Brier, menor=melhor): cru="
+          f"{calib_proba['brier_score_cru']:.4f} -> isotonic="
+          f"{calib_proba['brier_score_calibrado_isotonic']:.4f} "
+          f"({veredito_calib})")
+
     # Threshold calibrado por custo (GATE ML - dados.md): escolhido SOBRE O
     # TREINO via OOF, antes de qualquer contato com o teste.
-    calibracao = limiar_por_custo(busca.best_estimator_, X_train, y_train, cv)
+    calibracao = limiar_por_custo(proba_oof, y_train)
     print(f"Threshold calibrado (F2 sobre OOF do treino): "
           f"{calibracao['threshold_escolhido']:.2f} "
           f"(F2={calibracao['f_beta_oof']:.3f}, vs default 0,50)")
@@ -266,6 +324,7 @@ def rodar_candidato(nome, config, X_train, y_train, X_test, y_test, cv):
         "recall_treino_cv": float(recall_treino_cv),
         "gap_treino_validacao": float(gap),
         "teste": metricas_teste,
+        "calibracao_probabilidade": calib_proba,
         "calibracao_threshold": calibracao,
         "teste_threshold_calibrado": metricas_teste_calibrado,
     }
