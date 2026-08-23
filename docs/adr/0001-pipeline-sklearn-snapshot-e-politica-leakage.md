@@ -9,7 +9,8 @@ cruzado, mesmo contrato do AGENTS.md da Fase 2, regra 1)
 alfabetização por aluno. Migrado em 2026-08-20 de `docs/wayfinder/
 tech_challenge_fase3/adr/` (local provisório, ver ticket 0004) para este
 `docs/adr/` do projeto; repositório GitHub próprio da Fase 3 (org
-`alfabetizacao-datateam`) segue não criado (ticket 0004, ação pendente que
+`alfabetizacao-datateam`) tem `.git` local criado em 2026-08-22 (commit
+`d3e05da`, import inicial); remoto/push ainda pendente (ticket 0004, ação que
 afeta espaço compartilhado da org).
 
 ---
@@ -119,8 +120,8 @@ feature de histórico t-1 fica ausente para ~metade da base. Decisão: **não
 descartar o cohort** (cortaria a base pela metade e destruiria a única
 janela de validação temporal). Tratar como dado faltante genuíno — o próprio
 enunciado já exige imputação de numéricas: imputar (mediana da UF) + adicionar
-flag binária `possui_historico_t1` (não é leakage, só informa disponibilidade
-de dado).
+flags binárias `possui_hist_escola_t1`/`possui_hist_municipio_t1` (não é
+leakage, só informa disponibilidade de dado).
 
 ### 2.4 Estratégia de validação dupla
 Split aleatório estratificado por município como validação principal + split
@@ -156,9 +157,10 @@ inteiro (2 anos) aproveitado sem sacrificar volume nem validação temporal."
   ex.: `is_imputado` no KNN de metas).
 
 **Negativas (Custo/Risco):**
-- `possui_historico_t1` pode virar, ele mesmo, uma feature de alto peso no
-  SHAP por artefato de dado (indica "é cohort 2023"), não sinal real —
-  precisa checagem explícita no relatório de interpretabilidade.
+- `possui_hist_escola_t1`/`possui_hist_municipio_t1` podem virar, elas
+  mesmas, feature de alto peso no SHAP por artefato de dado (indica "é
+  cohort 2023"), não sinal real — precisa checagem explícita no relatório
+  de interpretabilidade.
 - Split temporal secundário tem viés conhecido (treino majoritariamente
   imputado vs. teste real) — resultado dessa checagem deve ser lido com
   cautela, não como validação forte isolada.
@@ -202,15 +204,17 @@ inteiro (2 anos) aproveitado sem sacrificar volume nem validação temporal."
    municipal disfarçado, sem valor aluno-nível real.
 2. Métrica boa no split aleatório, ruim no split temporal (2023→2024) →
    modelo memorizou o cohort, não aprendeu padrão generalizável.
-3. `possui_historico_t1` aparece como feature de alto peso no SHAP → modelo
-   está detectando o artefato de imputação, não um sinal real do aluno.
+3. `possui_hist_escola_t1`/`possui_hist_municipio_t1` aparecem como feature
+   de alto peso no SHAP → modelo está detectando o artefato de imputação,
+   não um sinal real do aluno.
 
-**Monitoramento (a implementar no relatório de EDA/avaliação):**
+**Monitoramento (implementado em `src/evaluation/01_shap_interpretabilidade.py`,
+gates `flags_de_imputacao_sem_influencia_relevante` e demais):**
 ```
 - checar: recall_classe_nao >= baseline_municipio (agg_priorizacao aplicado por aluno)
 - checar: shap_top_features não dominadas só por território/socioeconômico
 - checar: metric(split_temporal) não muito abaixo de metric(split_aleatorio)
-- checar: possui_historico_t1 fora do top-5 SHAP
+- checar: possui_hist_escola_t1/possui_hist_municipio_t1 sem influência relevante no SHAP
 ```
 
 ---

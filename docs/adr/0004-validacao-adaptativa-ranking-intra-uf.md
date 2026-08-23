@@ -141,7 +141,8 @@ desde a Fase 3."
 **Métrica de sucesso (como sabemos que funcionou):**
 - UFs cobertas: 17 → 23 (confirmado, saída do script).
 - Todo UF com IC95% no JSON e visível no painel: confirmado
-  (`auc_ic`, `auc_intuicao_ic` em `reports/ranking_intra_uf.json`).
+  (`auc_modelo_ic95` em `reports/ranking_intra_uf.json`, mapeado para
+  `auc_ic` no painel — `src/visualization/01_gerar_painel_intra_uf.py`).
 - Painel republicado e conferido: bloco de metodologia lista o piso de 40 e
   os 3 UFs de fonte ausente.
 

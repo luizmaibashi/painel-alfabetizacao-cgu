@@ -121,10 +121,13 @@ município a partir de proxies.
 
 ## 5. IMPACTO ROI
 
-- **Métrica de sucesso:** o gate está implementado e produz o identificador
-  `auc_oof` em `reports/ceiling_analysis.md`, comparado contra
-  `AUC_BASELINE_PDE` (0,6331) e `AUC_MODELO_RODADA1` (0,6013), ambos
-  constantes citáveis em `src/evaluation/00_ceiling_analysis.py`.
+- **Métrica de sucesso (histórico, ver §7 para a versão vigente):** o gate
+  original comparava o teto OOF contra o baseline municipal (AUC 0,6331) e o
+  modelo real da rodada 1 (AUC 0,6013) — números de referência, não mais
+  identificadores de código: o script que os produzia (`00_ceiling_analysis.py`)
+  foi removido após a correção da §7, que apontou defeito de método no teto
+  por tupla discreta. A comparação vigente hoje roda em
+  `src/evaluation/02_teste_falsificacao.py` e `03_teste_residuo.py`.
 - **Resultado medido nesta sessão:** teto OOF do snapshot de modelagem
   (12 features) = **0,6017** — folga de **+0,0004** sobre o modelo real da
   rodada 1 (XGBoost + tournament), e **abaixo** do baseline municipal

@@ -140,7 +140,7 @@ Essa é a única afirmação de valor que sobrevive aos testes.
 |---|---|
 | Outras regras triviais óbvias (gap até a meta, meta sozinha, população) | modelo bate todas (melhor delas: `meta` 0,6064) |
 | Baseline com direito de escolher a regra por LOO | 0,6064 — pior que o preditor de direção |
-| **LOO aninhado** (seleção de feature dentro do fold, elimina vazamento de seleção) | **idêntico: +0,0270** — e escolhe `t23_media` (14×) / `pct_teto` (8×), não a feature que eu havia escolhido a olho |
+| **LOO aninhado** (seleção de feature dentro do fold, elimina vazamento de seleção) | **idêntico: +0,0270** — e escolhe, nesta rodada específica de análise exploratória (não uma feature persistida no pipeline), a taxa de 2023 (14×) e a folga até o teto (8×), não a feature que eu havia escolhido a olho |
 | Integridade do out-of-fold | **zero folds pulados**; os 102 scores 0,0 do CE são predições confiantes corretas, não bug |
 | Estabilidade (5 sementes) | +0,0267 a +0,0278; todos os IC inteiramente positivos |
 | Significância por grupo | 7 UFs: +0,155 [+0,082, +0,226] · 16 UFs: −0,010, **inconclusivo** |
