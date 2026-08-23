@@ -13,6 +13,17 @@ tech_challenge_fase3/adr/` (local provisório, ver ticket 0004) para este
 `d3e05da`, import inicial); remoto/push ainda pendente (ticket 0004, ação que
 afeta espaço compartilhado da org).
 
+**Decisão de workflow (2026-08-23):** todo o trabalho de código desta sessão
+(upgrade de modelo, 5 gates ML fechados) foi commitado só na base de
+conhecimento — o `.git` local do projeto ficou parado em `d3e05da`,
+desatualizado. Decisão: **não sincronizar os dois `.git` a cada sessão**
+(exigiria disciplina dobrada e reintroduz risco de drift, o mesmo problema
+que gerou este achado). Em vez disso, **regenerar o `.git` do projeto do
+zero a partir do estado atual da base**, só no momento em que o push pro
+GitHub for de fato decidido — histórico de "import inicial" não tinha valor
+a preservar. Até lá, a base de conhecimento é a fonte de verdade única deste
+projeto; ignorar o `.git` local ao avaliar "o que já foi feito".
+
 ---
 
 ## 🤔 1. CONTEXTO (O QUÊ?)
