@@ -19,3 +19,16 @@
 **1 débito estrutural genuinamente novo** (Cap. 10.1) — diferente dos outros dois projetos minerados, o pos_tech não tinha lista de débito numerada; o HANDOFF (documento de handoff, não backlog) já tinha sido fonte de 6 gates diretamente, então a maior parte do que sobrou pra minerar já é conhecida. O achado novo é de uma classe diferente dos anteriores: não é "declaração sem código" (Lei da Travessia clássica) — é o **inverso**: código seguindo declaração cegamente, sem revalidar se o motivo dela ainda vale no novo contexto. Custo medido: meses de modelagem em 8,7% dos dados disponíveis.
 
 **3 rodadas completas** (stable-treasury 0 novo, payflow 2 novos, pos_tech 1 novo) — total 4 gates manuais escritos nesta sub-frente, todos sem sinal automático testado ainda.
+
+## Teste de aplicação (2026-08-24) — diferente de mineração
+
+Não é mineração de débito novo: é rodar os 4 gates manuais já escritos direto contra `src/` (14 arquivos, fora `.venv/`), pra ver se pegam algo no código atual. Contraste com o mesmo teste rodado contra `shadow_fx_terminal` em 2026-08-22 (0 achados, 0 falso positivo) — este projeto é a origem de um dos 4 gates, então era esperado achar algo aqui e não lá.
+
+| Gate | Resultado |
+|---|---|
+| Guarda silenciosa | **Achado real**: `src/preprocessing/05_montar_territorio.py:127-132` — imputação em cascata (mediana UF → mediana global) de `meta_alfabetizacao_2024_imputada` sem logar `n` afetado por fallback. O mesmo projeto já corrigiu esse exato padrão em `02_extrair_snapshot.py:198-210` (loga `n_imp`/total/origem) — a correção existe, não foi replicada aqui. **Não corrigido nesta sessão** — fica pendente pra próxima sessão pos_tech. |
+| Lista de cobertura fail-open | **Achado real**: `src/preprocessing/pipeline_preprocessamento.py:121-136` — `colunas_ignoradas()` existe no comentário pra evitar "coluna nova descartada em silêncio", mas só reporta em log (`descrever_features`), nunca bloqueia; zero teste chama a função. Coluna nova fora de `TODAS_CANDIDATAS` é excluída do modelo sem forçar ninguém a notar. **Não corrigido nesta sessão** — fica pendente. |
+| Saída não-determinística como ground truth | Não se aplica — projeto não usa saída de LLM como rótulo. |
+| Regra herdada sem revalidar motivo | Sem achado novo — já corrigido corretamente. `02_extrair_snapshot.py:35-37` documenta o motivo original (custo GCP) e por que não se aplica a CSV local de 7,3MB. Exemplo do padrão bem aplicado. |
+
+**Decisão do Luiz**: registrar os 2 achados e corrigir na próxima sessão de trabalho no pos_tech, não nesta sessão (que era sobre `base_conhecimento`).
