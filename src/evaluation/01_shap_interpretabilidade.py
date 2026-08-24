@@ -59,6 +59,7 @@ BASE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BASE / "src" / "preprocessing"))
 from pipeline_preprocessamento import (  # noqa: E402
     COLUNA_TARGET, colunas_feature, construir_preprocessador, descrever_features,
+    validar_cobertura_colunas,
 )
 
 RANDOM_STATE = 42
@@ -85,6 +86,8 @@ FEATURES_ARTEFATO = ("possui_hist_escola_t1", "possui_hist_municipio_t1",
 
 def carregar_snapshot() -> pd.DataFrame:
     df = pd.read_parquet(BASE / "data" / "snapshot_modelagem.parquet")
+    # Coluna nova no snapshot para aqui, em vez de sair do modelo em silêncio.
+    validar_cobertura_colunas(df)
     df[COLUNA_TARGET] = (df[COLUNA_TARGET] == "Não").astype(int)  # 1 = risco
     return df
 

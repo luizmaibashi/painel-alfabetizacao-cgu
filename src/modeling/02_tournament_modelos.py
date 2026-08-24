@@ -78,6 +78,7 @@ BASE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BASE / "src" / "preprocessing"))
 from pipeline_preprocessamento import (  # noqa: E402
     COLUNA_TARGET, colunas_feature, construir_preprocessador, descrever_features,
+    validar_cobertura_colunas,
 )
 
 RANDOM_STATE = 42
@@ -133,6 +134,8 @@ CANDIDATOS = {
 
 def carregar_snapshot() -> pd.DataFrame:
     df = pd.read_parquet(BASE / "data" / "snapshot_modelagem.parquet")
+    # Coluna nova no snapshot para aqui, em vez de sair do modelo em silêncio.
+    validar_cobertura_colunas(df)
     # 1 = "Não" (classe de risco, a que o Recall precisa capturar - ADR-0001 §5).
     # Inverter isso por engano faria o Recall medir a classe errada sem nenhum
     # erro visível: a métrica roda normal, só mede a coisa errada.

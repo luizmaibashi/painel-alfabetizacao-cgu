@@ -26,9 +26,58 @@ Não é mineração de débito novo: é rodar os 4 gates manuais já escritos di
 
 | Gate | Resultado |
 |---|---|
-| Guarda silenciosa | **Achado real**: `src/preprocessing/05_montar_territorio.py:127-132` — imputação em cascata (mediana UF → mediana global) de `meta_alfabetizacao_2024_imputada` sem logar `n` afetado por fallback. O mesmo projeto já corrigiu esse exato padrão em `02_extrair_snapshot.py:198-210` (loga `n_imp`/total/origem) — a correção existe, não foi replicada aqui. **Não corrigido nesta sessão** — fica pendente pra próxima sessão pos_tech. |
-| Lista de cobertura fail-open | **Achado real**: `src/preprocessing/pipeline_preprocessamento.py:121-136` — `colunas_ignoradas()` existe no comentário pra evitar "coluna nova descartada em silêncio", mas só reporta em log (`descrever_features`), nunca bloqueia; zero teste chama a função. Coluna nova fora de `TODAS_CANDIDATAS` é excluída do modelo sem forçar ninguém a notar. **Não corrigido nesta sessão** — fica pendente. |
+| Guarda silenciosa | **Achado real**: `src/preprocessing/05_montar_territorio.py:127-132` — imputação em cascata (mediana UF → mediana global) de `meta_alfabetizacao_2024_imputada` sem logar `n` afetado por fallback. O mesmo projeto já corrigiu esse exato padrão em `02_extrair_snapshot.py:198-210` (loga `n_imp`/total/origem) — a correção existe, não foi replicada aqui. ✅ **Corrigido em 2026-08-24** (ver abaixo). |
+| Lista de cobertura fail-open | **Achado real**: `src/preprocessing/pipeline_preprocessamento.py:121-136` — `colunas_ignoradas()` existe no comentário pra evitar "coluna nova descartada em silêncio", mas só reporta em log (`descrever_features`), nunca bloqueia; zero teste chama a função. Coluna nova fora de `TODAS_CANDIDATAS` é excluída do modelo sem forçar ninguém a notar. ✅ **Corrigido em 2026-08-24** (ver abaixo). |
 | Saída não-determinística como ground truth | Não se aplica — projeto não usa saída de LLM como rótulo. |
 | Regra herdada sem revalidar motivo | Sem achado novo — já corrigido corretamente. `02_extrair_snapshot.py:35-37` documenta o motivo original (custo GCP) e por que não se aplica a CSV local de 7,3MB. Exemplo do padrão bem aplicado. |
 
 **Decisão do Luiz**: registrar os 2 achados e corrigir na próxima sessão de trabalho no pos_tech, não nesta sessão (que era sobre `base_conhecimento`).
+
+## Correção dos 2 achados (2026-08-24)
+
+### 1. Guarda silenciosa — `05_montar_territorio.py`
+
+Cascata extraída para `imputar_meta(df)`, função testável, que agora loga o `n`
+de **cada degrau separadamente**. O total sozinho não serviria: os dois degraus
+não têm o mesmo risco — cair na mediana da própria UF é razoável, cair na
+mediana **global** significa que a UF inteira estava sem meta.
+
+Números reais que estavam invisíveis: **240 de 10.704** imputadas (2,2%), sendo
+**196 pela mediana da UF** e **44 pela mediana global**.
+
+Acrescentado também um `raise` para o caso de a coluna vir 100% nula — aí a
+mediana global também é `NaN` e a cascata entregaria uma feature inteiramente
+nula ao modelo sem quebrar nada. É dado ausente, não dado imputado.
+
+**A imputação não mudou de valor.** Verificado contra a lógica antiga e contra
+o Parquet já em disco: `equals() == True`, diferença máxima absoluta `0.0`. A
+mudança é observabilidade pura — o modelo canônico já validado continua
+treinando sobre exatamente os mesmos números.
+
+### 2. Lista fail-open — `pipeline_preprocessamento.py`
+
+`colunas_ignoradas()` continua sendo a consulta pura (não quebra
+`descrever_features` nem `04_ensaio_full.py`). O bloqueio veio numa função
+nova, `validar_cobertura_colunas(df, permitidas=())`, que levanta
+`ColunaNaoDeclaradaError` — default **restritivo**, invertendo o fail-open.
+
+Ligada no carregamento do snapshot dos 5 scripts que o consomem
+(`01_treinar_baseline`, `02_tournament_modelos`, `01_shap_interpretabilidade`,
+`02_teste_falsificacao`, `03_teste_residuo`).
+
+**Por que no carregamento e não em `construir_preprocessador`**: aquele ponto
+recebe o frame já fatiado, e `03_teste_residuo.py:95` passa
+`colunas_feature(df) + ["_score_baseline"]` — coluna de apoio criada dentro do
+próprio script, que não é "coluna nova que apareceu no snapshot". Validar ali
+quebraria o script e o gate viraria falso positivo, removido na primeira vez
+que atrapalhasse.
+
+### Verificação
+
+- **32 testes passando** (17 antes, +15 novos em `tests/test_montar_territorio.py`
+  e `tests/test_pipeline_preprocessamento.py`).
+- Gate tem dentes: coluna fictícia injetada no snapshot real é **bloqueada**;
+  antes o treino seguia com 12 features, descartando-a em silêncio.
+- Snapshot real de hoje passa sem levantar — nenhum pipeline existente quebrou.
+- `scripts/check_gates_ml.py --project tech-challenge-fase3-alfabetizacao`:
+  nenhum achado.

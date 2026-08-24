@@ -24,6 +24,13 @@ Agora as colunas são resolvidas a partir do que o snapshot realmente contém:
 Colunas declaradas mas ausentes são ignoradas; colunas presentes mas não
 declaradas são REPORTADAS (`colunas_ignoradas`), para nunca mais uma feature
 entrar no snapshot e sumir sem ninguém ver.
+
+FAIL-CLOSED NO CARREGAMENTO (correção de 2026-08-24)
+-----------------------------------------------------
+Reportar não bastava: o resultado de `colunas_ignoradas` só ia para um log que
+ninguém era obrigado a ler, então uma coluna nova continuava saindo do modelo
+em silêncio. `validar_cobertura_colunas(df)` levanta erro nesse caso e é
+chamada no `carregar_snapshot()` de cada script de treino/avaliação.
 """
 import pandas as pd
 from sklearn.compose import ColumnTransformer
@@ -124,16 +131,60 @@ def colunas_feature(df: pd.DataFrame) -> list[str]:
     return tipos["numericas"] + tipos["categoricas"] + tipos["passthrough"]
 
 
+class ColunaNaoDeclaradaError(RuntimeError):
+    """Snapshot trouxe coluna que nenhuma lista deste módulo declara."""
+
+
 def colunas_ignoradas(df: pd.DataFrame) -> list[str]:
     """
     Colunas do snapshot que NÃO são feature, target nem identificador.
 
-    Existe para tornar visível o erro que esta refatoração corrigiu: uma coluna
-    nova entrar no snapshot e ser descartada em silêncio. Quem treina deve
-    imprimir isso e conferir que cada nome ali é descarte intencional.
+    Consulta pura: só RESPONDE quais são. Quem precisa que a presença delas
+    interrompa o trabalho chama `validar_cobertura_colunas` — ver a docstring
+    de lá para por que reportar não bastava.
     """
     conhecidas = set(TODAS_CANDIDATAS) | set(COLUNAS_ID) | {COLUNA_TARGET}
     return [c for c in df.columns if c not in conhecidas]
+
+
+def validar_cobertura_colunas(df: pd.DataFrame, permitidas: tuple[str, ...] = ()) -> None:
+    """
+    Falha se o snapshot trouxer coluna que nenhuma lista deste módulo declara.
+
+    POR QUE ISTO EXISTE (correção de 2026-08-24)
+    ---------------------------------------------
+    `colunas_ignoradas` foi escrita para "nunca mais uma feature entrar no
+    snapshot e sumir sem ninguém ver", mas o resultado dela só era IMPRESSO
+    (`descrever_features`) — nunca bloqueava nada, e nenhum teste a exercia.
+    Uma coluna nova fora de `TODAS_CANDIDATAS` continuava sendo excluída do
+    modelo em silêncio; o único obstáculo era alguém reparar numa linha de log
+    no meio de um treino. Um aviso que ninguém é obrigado a ler não é guarda.
+
+    É o antipadrão "lista de cobertura falha aberta" do AGENTS.md: a lista
+    desatualizada tinha comportamento default PERMISSIVO (fail-open), e num
+    gate a ausência de checagem acaba parecendo aprovação. Aqui o default vira
+    restritivo — coluna não declarada levanta erro.
+
+    CHAME NO CARREGAMENTO DO SNAPSHOT, não sobre o frame já fatiado. Colunas
+    de apoio criadas DENTRO de um script de avaliação (ex.: `_score_baseline`
+    em 03_teste_residuo.py) não são "coluna nova que apareceu no snapshot" e
+    não devem passar por aqui — validar tarde demais transformaria o gate em
+    falso positivo e ele seria removido na primeira vez que atrapalhasse.
+
+    `permitidas` é a saída explícita para descarte intencional: exige digitar
+    o nome da coluna na chamada, o que mantém a decisão visível no código em
+    vez de escondida num log.
+    """
+    nao_declaradas = [c for c in colunas_ignoradas(df) if c not in permitidas]
+    if nao_declaradas:
+        raise ColunaNaoDeclaradaError(
+            f"Colunas no snapshot e fora de toda lista deste módulo: "
+            f"{nao_declaradas}. Cada uma precisa de uma decisão EXPLÍCITA: "
+            "entrar como feature (CANDIDATAS_NUMERICAS/CATEGORICAS/PASSTHROUGH), "
+            "entrar como identificador (COLUNAS_ID), ou ser descarte intencional "
+            "(passe em `permitidas=`). Ver ADR-0001 para a política de leakage "
+            "que decide de que lado cada coluna cai."
+        )
 
 
 def construir_preprocessador(df: pd.DataFrame) -> ColumnTransformer:

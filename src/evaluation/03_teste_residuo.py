@@ -48,6 +48,7 @@ sys.path.insert(0, str(BASE / "src" / "preprocessing"))
 sys.path.insert(0, str(BASE / "src" / "evaluation"))
 from pipeline_preprocessamento import (  # noqa: E402
     COLUNA_TARGET, colunas_feature, construir_preprocessador,
+    validar_cobertura_colunas,
 )
 
 import importlib.util
@@ -69,6 +70,9 @@ PARAMS_XGB = dict(
 
 def main():
     df = pd.read_parquet(BASE / "data" / "snapshot_modelagem.parquet")
+    # Antes de criar `_y`/`_score_baseline`: valida o snapshot como veio do
+    # disco. Coluna de apoio criada aqui dentro não passa por este gate.
+    validar_cobertura_colunas(df)
     df["_y"] = (df[COLUNA_TARGET] == "Não").astype(int)
 
     treino = df[df["ano"] == ANO_TREINO].copy()

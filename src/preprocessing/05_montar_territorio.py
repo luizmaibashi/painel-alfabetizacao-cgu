@@ -109,6 +109,59 @@ def carregar_metas() -> pd.DataFrame:
     return df
 
 
+def imputar_meta(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Preenche `meta_alfabetizacao_2024_imputada` em cascata de dois degraus:
+    mediana da UF e, quando a UF INTEIRA nao tem meta, mediana global.
+
+    NAO e o KNN da Fase 2 (ADR-004), que precisa de Spark — e mediana por UF,
+    declarada como substituto simplificado. A diferenca importa e por isso
+    esta registrada aqui e na coluna `_origem`.
+
+    POR QUE LOGA O `n` DE CADA DEGRAU (correcao de 2026-08-24)
+    ----------------------------------------------------------
+    A cascata rodava em silencio: nenhum numero dizia quantas linhas foram
+    imputadas, nem por qual degrau. Os dois degraus NAO tem o mesmo risco —
+    cair na mediana da propria UF e razoavel; cair na mediana GLOBAL significa
+    que a UF inteira estava sem meta, correcao muito mais grosseira. Sem
+    contagem separada ninguem sabe se o degrau grosseiro atingiu 2 linhas ou
+    200. E o antipadrao "guarda silenciosa" do AGENTS.md (default aplicado sem
+    log nem erro), e o proprio projeto ja resolvia isso em
+    02_extrair_snapshot.py::_imputar_coluna — so nao tinha sido replicado aqui.
+    """
+    bruta = df["meta_alfabetizacao_2024"]
+    n_total = len(df)
+    n_nulos = int(bruta.isna().sum())
+
+    mediana_uf = df.groupby("sigla_uf")["meta_alfabetizacao_2024"].transform("median")
+    por_uf = bruta.fillna(mediana_uf)
+    # UF sem NENHUMA meta -> transform devolve NaN e a linha desce um degrau
+    n_pela_global = int(por_uf.isna().sum())
+    n_pela_uf = n_nulos - n_pela_global
+
+    df["meta_alfabetizacao_2024_imputada"] = por_uf.fillna(bruta.median())
+
+    if n_nulos:
+        print(f"  meta_alfabetizacao_2024: {n_nulos} de {n_total} imputadas "
+              f"({n_nulos / n_total:.1%}) — {n_pela_uf} pela mediana da UF, "
+              f"{n_pela_global} pela mediana GLOBAL (UF inteira sem meta).")
+    else:
+        print(f"  meta_alfabetizacao_2024: nenhuma linha imputada ({n_total} completas).")
+
+    # Coluna toda nula -> a mediana global tambem e NaN e a cascata nao imputa
+    # nada, entregando uma feature 100% nula ao modelo sem quebrar nada.
+    # Falhar alto e o comportamento certo: e dado ausente, nao dado imputado.
+    n_restante = int(df["meta_alfabetizacao_2024_imputada"].isna().sum())
+    if n_restante:
+        raise ValueError(
+            f"{n_restante} linhas seguem sem meta apos a cascata de imputacao "
+            "(mediana da UF e mediana global). Isso so acontece quando "
+            "`meta_alfabetizacao_2024` esta inteiramente nula na fonte — "
+            "conferir o CSV de metas antes de gerar o territorio."
+        )
+    return df
+
+
 def main():
     metas = carregar_metas()
     pop = buscar_populacao_ibge()
@@ -121,15 +174,7 @@ def main():
     if sem_uf:
         print(f"  ATENCAO: {sem_uf} linhas com prefixo de UF desconhecido")
 
-    # Imputação da meta. NÃO é o KNN da Fase 2 (ADR-004), que precisa de Spark —
-    # é mediana por UF, declarada como substituto simplificado. A diferença
-    # importa e por isso está registrada aqui e na coluna `_origem`.
-    mediana_uf = df.groupby("sigla_uf")["meta_alfabetizacao_2024"].transform("median")
-    df["meta_alfabetizacao_2024_imputada"] = (
-        df["meta_alfabetizacao_2024"]
-        .fillna(mediana_uf)
-        .fillna(df["meta_alfabetizacao_2024"].median())
-    )
+    df = imputar_meta(df)
 
     df["_origem"] = ("local_reduzido: IBGE SIDRA + metas do disco + UF por prefixo. "
                      "SEM gasto_por_habitante_educacao (SICONFI nao buscado). "

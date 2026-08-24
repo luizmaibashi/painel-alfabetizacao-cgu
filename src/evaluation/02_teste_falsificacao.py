@@ -69,6 +69,7 @@ BASE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BASE / "src" / "preprocessing"))
 from pipeline_preprocessamento import (  # noqa: E402
     COLUNA_TARGET, colunas_feature, construir_preprocessador,
+    validar_cobertura_colunas,
 )
 
 RANDOM_STATE = 42
@@ -85,6 +86,9 @@ PARAMS_XGB = dict(
 
 def carregar() -> pd.DataFrame:
     df = pd.read_parquet(BASE / "data" / "snapshot_modelagem.parquet")
+    # Antes de criar `_y`: valida o snapshot como veio do disco. Coluna de
+    # apoio criada aqui dentro não é "coluna nova que apareceu no snapshot".
+    validar_cobertura_colunas(df)
     df["_y"] = (df[COLUNA_TARGET] == "Não").astype(int)
     return df
 
