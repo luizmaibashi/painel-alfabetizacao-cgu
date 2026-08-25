@@ -142,7 +142,9 @@ def etapa1_tournament(m) -> dict:
                                                  random_state=RANDOM_STATE, n_jobs=-1),
         "xgboost": XGBClassifier(n_estimators=300, max_depth=4, learning_rate=0.1,
                                   random_state=RANDOM_STATE, eval_metric="logloss",
-                                  tree_method="hist", n_jobs=-1),
+                                  # n_jobs=1: hist + threads = AUC nao reproduz
+                                  # entre maquinas (ver 0009 no wayfinder).
+                                  tree_method="hist", n_jobs=1),
     }.items():
         auc = roc_auc_score(y, _oof_classificador(m, mod, NUM, CAT, skf))
         res["binaria"][nome] = float(auc)
@@ -154,7 +156,9 @@ def etapa1_tournament(m) -> dict:
         "random_forest": RandomForestRegressor(n_estimators=300, max_depth=8,
                                                 random_state=RANDOM_STATE, n_jobs=-1),
         "xgboost": XGBRegressor(n_estimators=300, max_depth=4, learning_rate=0.1,
-                                 random_state=RANDOM_STATE, tree_method="hist", n_jobs=-1),
+                                 # n_jobs=1: hist + threads = resultado nao
+                                 # reproduz entre maquinas (ver 0009).
+                                 random_state=RANDOM_STATE, tree_method="hist", n_jobs=1),
     }.items():
         oof = np.zeros(len(m))
         for tr, te in kf:
@@ -277,10 +281,24 @@ def etapa5_dentro_da_uf(m) -> dict:
     ab = float(np.average(r.auc_baseline, weights=r.n))
     print(f"    UFs avaliadas (n>=100): {len(r)}")
     print(f"    AUC modelo (média ponderada):   {am:.4f}")
-    print(f"    AUC baseline ingênuo:           {ab:.4f}  ← abaixo do acaso!")
+    print(f"    AUC baseline ingênuo:           {ab:.4f}  (direção FIXA — ver aviso)")
     print(f"    UFs em que o modelo vence:      {int((r.auc_modelo > r.auc_baseline).sum())} de {len(r)}")
-    print("\n  → dentro do estado HÁ sinal real. E o baseline intuitivo")
-    print("    ('quem estava pior falha mais') é ativamente ERRADO.")
+    print("\n  → dentro do estado HÁ sinal real.")
+    print("\n  " + "!" * 68)
+    print("  !! AVISO (ADR-0005): o baseline acima NÃO é a comparação válida.")
+    print("  !! Ele fixa a direção ('quem estava pior falha mais'). AUC é")
+    print(f"  !! antissimétrica: AUC(-s) = 1 - AUC(s), então {ab:.4f} lido ao")
+    print(f"  !! contrário vale {1 - ab:.4f} — não é 'abaixo do acaso', é a mesma")
+    print("  !! regra na direção oposta. Comparar contra a direção mais fraca")
+    print("  !! INFLA o ganho do modelo (foi assim que virou '+0,245').")
+    print("  !!")
+    print("  !! O baseline HONESTO escolhe a direção por leave-one-out e vale")
+    print("  !! 0,6209, contra 0,6478 do modelo -> ganho real de +0,027.")
+    print("  !! Fonte canônica: src/modeling/04_ranking_intra_uf.py")
+    print("  !! Este script é o EXPERIMENTO que descobriu o fenômeno; os")
+    print("  !! números dele são históricos e não devem ser citados como")
+    print("  !! resultado do projeto.")
+    print("  " + "!" * 68)
     return {"auc_modelo_ponderado": am, "auc_baseline_ponderado": ab,
             "ufs_avaliadas": int(len(r)),
             "ufs_modelo_vence": int((r.auc_modelo > r.auc_baseline).sum()),
@@ -341,13 +359,26 @@ def main():
     print(f"  k-fold aleatório (parece vitória):  AUC {a3:.4f}")
     print(f"  leave-one-UF-out (teste honesto):   AUC {a4:.4f}  ← não generaliza")
     print(f"  dentro da UF (uso legítimo):        AUC {a5:.4f} vs baseline {b5:.4f}")
+    print(f"     ^^ baseline {b5:.4f} = direção FIXA, REFUTADO pelo ADR-0005.")
+    print("     O baseline honesto é 0,6209 e o ganho real é +0,027, não o que")
+    print("     esta linha sugere. Número canônico: 04_ranking_intra_uf.py")
     print("\n  >> Ranking NACIONAL de municípios é inválido: cada estado aplica sua")
     print("     própria prova, e o efeito de estado (choque de até 20pp em um ano)")
     print("     domina qualquer característica municipal.")
-    print("  >> Ranking DENTRO do estado é válido e o modelo agrega valor real.")
+    print("  >> Ranking DENTRO do estado é válido, mas o ganho é +0,027 — e por UF")
+    print("     são 3 vitórias, 3 derrotas e 17 inconclusivos (ver ticket 0016).")
     saida["veredito"] = {
         "ranking_nacional": "INVALIDO — efeito de estado domina e nao generaliza",
-        "ranking_intra_uf": "VALIDO — modelo supera o baseline em 14 de 17 UFs",
+        "ranking_intra_uf": (
+            "VALIDO com ressalva — ganho de +0,027 sobre o baseline HONESTO "
+            "(0,6209), nao sobre o baseline de direcao fixa reportado neste "
+            "script. Por UF: 3 vencem, 3 perdem, 17 inconclusivos. "
+            "Fonte canonica: 04_ranking_intra_uf.py; ver ADR-0004 e ADR-0005."
+        ),
+        "_aviso": (
+            "Os numeros deste script sao HISTORICOS (o experimento que "
+            "descobriu o fenomeno). Nao citar como resultado do projeto."
+        ),
     }
 
     out = BASE / "reports" / "experimento_opcaoB_municipio.json"

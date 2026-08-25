@@ -3,14 +3,14 @@
   "taxa_risco_base": 0.46712538226299694,
   "etapa1_tournament": {
     "binaria": {
-      "logistica": 0.7725610343135298,
+      "logistica": 0.7725752699786553,
       "random_forest": 0.7708559832060244,
       "xgboost": 0.7614698368269905
     },
     "continua": {
       "ridge": {
-        "r2": 0.36737045450799244,
-        "auc_equivalente": 0.7663269870640363
+        "r2": 0.36737047381334376,
+        "auc_equivalente": 0.7663265467857336
       },
       "random_forest": {
         "r2": 0.34326263092847564,
@@ -370,6 +370,7 @@
   },
   "veredito": {
     "ranking_nacional": "INVALIDO — efeito de estado domina e nao generaliza",
-    "ranking_intra_uf": "VALIDO — modelo supera o baseline em 14 de 17 UFs"
+    "ranking_intra_uf": "VALIDO com ressalva — ganho de +0,027 sobre o baseline HONESTO (0,6209), nao sobre o baseline de direcao fixa reportado neste script. Por UF: 3 vencem, 3 perdem, 17 inconclusivos. Fonte canonica: 04_ranking_intra_uf.py; ver ADR-0004 e ADR-0005.",
+    "_aviso": "Os numeros deste script sao HISTORICOS (o experimento que descobriu o fenomeno). Nao citar como resultado do projeto."
   }
 }

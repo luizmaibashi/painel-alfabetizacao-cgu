@@ -21,6 +21,7 @@
       "meta_is_imputada"
     ]
   },
+  "achado_threshold_calibrado": "F2-otimo cai entre 0,15 e 0,23 em todos os candidatos, empurrando Recall para ~0,99 e Precision para ~0,43 -- marcar quase todo mundo como risco. Confirma o limite de sinal ja visto no ROC-AUC (~0,68), nao e recomendacao de operacao. Decisao operacional real e Recall@K por orcamento (02_teste_falsificacao.py).",
   "resultados": {
     "regressao_logistica": {
       "papel": "baseline interpretavel - se ganhar, explicar custa menos",
@@ -28,12 +29,13 @@
         "modelo__C": "0.1"
       },
       "n_combinacoes": 4,
-      "tempo_tuning_seg": 16.7,
+      "tempo_tuning_seg": 24.1,
       "recall_cv_media": 0.5820392345802644,
       "recall_cv_desvio": 0.006042686066639219,
       "recall_treino_cv": 0.5830493341454458,
       "gap_treino_validacao": 0.0010100995651813882,
       "teste": {
+        "threshold": 0.5,
         "recall": 0.5931347804139323,
         "precision": 0.5383734249713631,
         "f1": 0.5644289660141708,
@@ -49,6 +51,36 @@
             2350
           ]
         ]
+      },
+      "calibracao_probabilidade": {
+        "brier_score_cru": 0.2297,
+        "brier_score_calibrado_isotonic": 0.2232,
+        "melhora_absoluta": 0.0065,
+        "calibracao_ajuda": true
+      },
+      "calibracao_threshold": {
+        "criterio": "F2 maximo (Recall pesa 4x mais que Precision) sobre predicoes OOF do treino, nunca do teste",
+        "threshold_escolhido": 0.2,
+        "f_beta_oof": 0.783506283984305,
+        "threshold_default_sklearn": 0.5
+      },
+      "teste_threshold_calibrado": {
+        "threshold": 0.2,
+        "recall": 0.9946996466431095,
+        "precision": 0.42623837335063813,
+        "f1": 0.5967595396729255,
+        "roc_auc": 0.6762465899044999,
+        "accuracy": 0.4458433045468734,
+        "matriz_confusao": [
+          [
+            344,
+            5305
+          ],
+          [
+            21,
+            3941
+          ]
+        ]
       }
     },
     "random_forest": {
@@ -59,12 +91,13 @@
         "modelo__n_estimators": "200"
       },
       "n_combinacoes": 12,
-      "tempo_tuning_seg": 94.7,
+      "tempo_tuning_seg": 106.6,
       "recall_cv_media": 0.6691909896045385,
       "recall_cv_desvio": 0.0159349876516668,
       "recall_treino_cv": 0.6756277329486544,
       "gap_treino_validacao": 0.006436743344115925,
       "teste": {
+        "threshold": 0.5,
         "recall": 0.6481574962140333,
         "precision": 0.5286125977768629,
         "f1": 0.582312925170068,
@@ -80,6 +113,36 @@
             2568
           ]
         ]
+      },
+      "calibracao_probabilidade": {
+        "brier_score_cru": 0.232,
+        "brier_score_calibrado_isotonic": 0.2236,
+        "melhora_absoluta": 0.0084,
+        "calibracao_ajuda": true
+      },
+      "calibracao_threshold": {
+        "criterio": "F2 maximo (Recall pesa 4x mais que Precision) sobre predicoes OOF do treino, nunca do teste",
+        "threshold_escolhido": 0.23,
+        "f_beta_oof": 0.7835063850101444,
+        "threshold_default_sklearn": 0.5
+      },
+      "teste_threshold_calibrado": {
+        "threshold": 0.23,
+        "recall": 0.9952044422009086,
+        "precision": 0.42489224137931036,
+        "f1": 0.5955293762271561,
+        "roc_auc": 0.6757900935145165,
+        "accuracy": 0.4427218811778171,
+        "matriz_confusao": [
+          [
+            312,
+            5337
+          ],
+          [
+            19,
+            3943
+          ]
+        ]
       }
     },
     "xgboost": {
@@ -90,12 +153,13 @@
         "modelo__n_estimators": "400"
       },
       "n_combinacoes": 8,
-      "tempo_tuning_seg": 19.4,
+      "tempo_tuning_seg": 22.9,
       "recall_cv_media": 0.6095544276025734,
       "recall_cv_desvio": 0.008892228625582697,
       "recall_treino_cv": 0.6398931962788424,
       "gap_treino_validacao": 0.030338768676269057,
       "teste": {
+        "threshold": 0.5,
         "recall": 0.6150933871781928,
         "precision": 0.5405944986690329,
         "f1": 0.5754427390791027,
@@ -109,6 +173,36 @@
           [
             1525,
             2437
+          ]
+        ]
+      },
+      "calibracao_probabilidade": {
+        "brier_score_cru": 0.2291,
+        "brier_score_calibrado_isotonic": 0.2232,
+        "melhora_absoluta": 0.0059,
+        "calibracao_ajuda": true
+      },
+      "calibracao_threshold": {
+        "criterio": "F2 maximo (Recall pesa 4x mais que Precision) sobre predicoes OOF do treino, nunca do teste",
+        "threshold_escolhido": 0.15000000000000002,
+        "f_beta_oof": 0.7833807807927375,
+        "threshold_default_sklearn": 0.5
+      },
+      "teste_threshold_calibrado": {
+        "threshold": 0.15000000000000002,
+        "recall": 0.9952044422009086,
+        "precision": 0.4251671339227949,
+        "f1": 0.5957993351465699,
+        "roc_auc": 0.6825586343408067,
+        "accuracy": 0.44334616585162834,
+        "matriz_confusao": [
+          [
+            318,
+            5331
+          ],
+          [
+            19,
+            3943
           ]
         ]
       }

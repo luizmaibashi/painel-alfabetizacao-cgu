@@ -64,7 +64,10 @@ PARAMS_XGB = dict(
     n_estimators=800, max_depth=8, learning_rate=0.03,
     subsample=0.8, colsample_bytree=0.8, min_child_weight=3,
     reg_lambda=1.0, random_state=RANDOM_STATE, eval_metric="logloss",
-    tree_method="hist", n_jobs=-1,
+    # n_jobs=1 obrigatorio: tree_method="hist" + n_jobs=-1 faz o AUC variar com
+    # a contagem de threads (medido em 02_teste_falsificacao.py: 0,6025-0,6061,
+    # mesma seed e mesmo dado). Ver docs/wayfinder/tech_challenge_fase3/0009.
+    tree_method="hist", n_jobs=1,
 )
 
 

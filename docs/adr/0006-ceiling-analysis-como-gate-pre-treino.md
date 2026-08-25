@@ -181,12 +181,12 @@ profundidade 8, contra 300/4):
 |---|---|
 | A — baseline (meta do PDE) | **0,6331** — idêntico ao README, confirma que a metodologia está certa agora |
 | B — XGBoost forte, só features municipais | 0,6101 |
-| **C — XGBoost forte, município + aluno (12 features)** | **0,6026** — quase idêntico ao 0,6013 da rodada 1 |
+| **C — XGBoost forte, município + aluno (12 features)** | **0,6026** ⚠️ *(número não reprodutível — ver §7.1; o valor canônico passou a ser **0,6047**)* — quase idêntico ao 0,6013 da rodada 1 |
 | C vs B (decide sinal individual) | **−0,0075**, IC95% [−0,0122, −0,0027] — features de aluno **pioram**, com significância |
 
 **Veredito da correção:** um modelo muito mais forte que o da rodada 1,
 avaliado com a metodologia correta, chega em **praticamente o mesmo lugar**
-(0,6026 vs 0,6013). O achado central do projeto (modelo aluno-nível não
+(0,6026 ⚠️ *hoje 0,6047, ver §7.1* vs 0,6013). O achado central do projeto (modelo aluno-nível não
 supera o baseline municipal, sem sinal individual a extrair) fica **mais
 confirmado, não menos** — agora por dois caminhos independentes (tournament
 fraco da rodada 1, modelo forte + validação rigorosa de hoje).
@@ -210,12 +210,58 @@ fraco da rodada 1, modelo forte + validação rigorosa de hoje).
   `00_ceiling_analysis.py`, `00b_verificacao_teto_modelo_forte.py` e
   `00c_teste_residuo_modelo_forte.py` cumpriram o papel de investigação
   pontual e foram **removidos** depois de confirmado que 02/03 com o modelo
-  forte chegam no mesmo número (0,6026) — as tabelas desta seção preservam
+  forte chegam no mesmo número (0,6026 ⚠️ *ver §7.1: o número não era
+  reprodutível; hoje é 0,6047*) — as tabelas desta seção preservam
   o achado, o código exploratório não precisava sobreviver a ele.
 - Isso é o mesmo tipo de correção que o ADR-0005 já registrou uma vez
   (métrica lida sem checar a direção/metodologia) — outra instância da
   regra "confiar em métrica sem entender a fórmula é como confiar em régua
   sem saber se está em cm ou polegada".
+
+## 7.1 CORREÇÃO DO NÚMERO (2026-08-25) — o 0,6026 não era reprodutível
+
+**O veredito desta ADR sobrevive intacto. O número exato, não.**
+
+Ao verificar a replicabilidade exigida pelo enunciado (p.3), descobriu-se que
+`02_teste_falsificacao.py` produzia resultados diferentes a cada ambiente de
+execução. Varredura controlada — mesma `.venv` pinada, mesmo
+`snapshot_modelagem.parquet` (intocado desde 2026-08-18), mesma
+`random_state=42`, variando **apenas** `OMP_NUM_THREADS`:
+
+| Threads | AUC | | Threads | AUC |
+|---|---|---|---|---|
+| 1 | 0,6047 | | **6** | **0,6025** |
+| 2 | 0,6061 | | 8 (`nproc`) | 0,6048 |
+| 3 | 0,6034 | | 12 e 16 | 0,6048 |
+
+**Amplitude de 0,0036** — cerca de **13% do efeito medido** (a diferença para o
+baseline é −0,028).
+
+**Causa:** `tree_method="hist"` faz redução paralela na construção do
+histograma, e a ordem de soma em ponto flutuante muda com o número de threads.
+Semente fixa não protege contra isso. O `0,6026` registrado em 2026-08-23
+corresponde a uma execução com ~6 threads disponíveis — compatível com outra
+carga competindo pela CPU naquele momento.
+
+**Não foi:** mudança de código (descartada por `git stash` em 2026-08-24),
+mudança de dado (Parquet intocado) nem versão de biblioteca.
+
+**Correção aplicada:** `n_jobs=1` nos três scripts de `src/evaluation/`, com o
+motivo comentado no código. Verificado depois: 0,6047 tanto a 2 quanto a 6
+threads. **Número canônico do modelo aluno-nível: 0,6047 contra 0,6331 do
+baseline.**
+
+**Nota importante sobre o alcance:** isto atinge só os scripts que usam
+`XGBClassifier(tree_method="hist")`. `04_ranking_intra_uf.py`, que produz o
+único resultado positivo do projeto (+0,027), usa `RandomForestClassifier` —
+verificado bit a bit idêntico a 1, 2 e 6 threads, incluindo a lista nominal de
+UFs em cada veredito. **O produto entregável nunca esteve em risco.**
+
+Registro honesto: a primeira investigação deste fenômeno, no mesmo dia,
+concluiu erradamente que `n_jobs` não era a causa — porque testou 5 vezes na
+mesma máquina sem carga, ou seja, sempre com 8 threads. Manter uma variável
+constante sem perceber que é variável não é determinismo. Detalhe completo em
+`docs/wayfinder/tech_challenge_fase3/0009-replicabilidade.md`.
 
 ## 8. LINKS RELACIONADOS
 

@@ -80,7 +80,18 @@ PARAMS_XGB = dict(
     n_estimators=800, max_depth=8, learning_rate=0.03,
     subsample=0.8, colsample_bytree=0.8, min_child_weight=3,
     reg_lambda=1.0, random_state=RANDOM_STATE, eval_metric="logloss",
-    tree_method="hist", n_jobs=-1,
+    # n_jobs=1 e OBRIGATORIO, nao e preferencia de performance. Medido em
+    # 2026-08-25: com tree_method="hist" + n_jobs=-1, o AUC deste script varia
+    # de 0,6025 a 0,6061 SO com a contagem de threads disponivel (mesma seed,
+    # mesmo dado, mesmo codigo) -- a reducao paralela do histograma muda a
+    # ordem de soma em ponto flutuante. Amplitude de 0,0036 = ~13% do efeito
+    # medido. O enunciado (p.3) exige replicabilidade, que significa reproduzir
+    # na maquina do avaliador, nao so nesta sob carga leve.
+    # Custo: nenhum (33s contra 40s, uma medicao cada).
+    # Nao vale para RandomForest: la cada arvore tem semente propria e n_jobs
+    # nao altera resultado (verificado em 04_ranking_intra_uf.py, identico a
+    # 1, 2 e 6 threads). Ver docs/wayfinder/tech_challenge_fase3/0009.
+    tree_method="hist", n_jobs=1,
 )
 
 

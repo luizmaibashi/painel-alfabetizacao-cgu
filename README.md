@@ -229,8 +229,18 @@ mundo como risco.
 temporal 2023/2024, baseline municipal, IC bootstrap) validada pela
 investigação registrada em [`ADR-0006`](docs/adr/0006-ceiling-analysis-como-gate-pre-treino.md).
 O veredito da ADR-0001 §5 mantém-se: modelo aluno-nível não supera o baseline,
-agora confirmado com modelo mais robusto (AUC 0,6026 vs 0,6331, IC95%
-[-0,0364, -0,0248]).
+agora confirmado com modelo mais robusto (**AUC 0,6047 vs 0,6331**, IC95%
+[-0,0342, -0,0228]).
+
+> **Correção de 2026-08-25.** Esta linha reportava `AUC 0,6026, IC95%
+> [-0,0364, -0,0248]`. Aquele número **não era reprodutível**: com
+> `tree_method="hist"` + `n_jobs=-1`, o AUC variava entre **0,6025 e 0,6061**
+> apenas com a contagem de threads disponível na máquina (mesma seed, mesmo
+> dado, mesmo código) — a redução paralela do histograma altera a ordem de
+> soma em ponto flutuante. `n_jobs=1` foi fixado nos scripts de avaliação e o
+> valor passou a ser estável em 0,6047. **O veredito não muda em nenhum ponto
+> da faixa** — o modelo perde do baseline 0,6331 com folga em todos eles.
+> Detalhe em [`ADR-0006 §7.1`](docs/adr/0006-ceiling-analysis-como-gate-pre-treino.md).
 
 ### 5.2 Modelo municipal intra-UF
 

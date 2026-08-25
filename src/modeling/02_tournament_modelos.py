@@ -119,7 +119,18 @@ CANDIDATOS = {
         # base de 50,8% para 41,2% e o desequilibrio ficou visivel.)
         "estimador": XGBClassifier(
             random_state=RANDOM_STATE, eval_metric="logloss",
-            tree_method="hist", n_jobs=-1,
+            # n_jobs=1 obrigatorio: tree_method="hist" paraleliza a reducao do
+            # histograma, e a ordem de soma em ponto flutuante muda com a
+            # contagem de threads -- resultado deixa de reproduzir entre
+            # maquinas mesmo com random_state fixo. Medido em 2026-08-25 no
+            # 02_teste_falsificacao.py: AUC oscilava 0,6025-0,6061 so por isso.
+            # Aqui importa porque este script alimenta metrics_tournament.json,
+            # citado no README e no HANDOFF.
+            # Os outros n_jobs=-1 deste arquivo (RandomForest, GridSearchCV,
+            # cross_val_predict) NAO tem o problema: paralelizam unidades
+            # independentes (arvore, combinacao de hiperparametro, dobra), nao
+            # uma soma compartilhada. Ver docs/wayfinder/tech_challenge_fase3/0009.
+            tree_method="hist", n_jobs=1,
         ),
         "balancear": True,
         "grid": {
