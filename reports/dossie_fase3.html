@@ -328,6 +328,7 @@ footer.close{
     </div>
     <h1 class="title">Como construímos, derrubamos e provamos um modelo <em>que não deveria existir</em></h1>
     <p class="dek">Do problema de negócio ao veredito final: a história completa de ponta a ponta de um projeto de ciência de dados — base, arquitetura, modelagem, cinco vazamentos, um teste de falsificação corrigido, e o valor que sobra quando a resposta honesta é "o modelo perde".</p>
+    <p class="dek" style="font-size:0.85em;opacity:0.75">⚠️ Números sincronizados em 2026-08-29 com <code>reports/*.json</code> (ver README §7). O veredito não mudou em nenhum ponto revisado.</p>
     <div class="verdict-strip">
       <span class="chip">57.781 alunos · população oficial INEP</span>
       <span class="chip">3 modelos testados · k-fold + teste único</span>
@@ -528,9 +529,9 @@ footer.close{
         <table>
           <thead><tr><th>Modelo</th><th>Recall</th><th>Precision</th><th>F1</th><th>ROC-AUC</th><th>gap treino-val</th></tr></thead>
           <tbody>
-            <tr><td>Regressão Logística</td><td>0,694</td><td>0,433</td><td>0,533</td><td>0,533</td><td>+0,002</td></tr>
-            <tr><td>Random Forest</td><td>0,729</td><td>0,431</td><td>0,542</td><td>0,537</td><td>+0,013</td></tr>
-            <tr><td class="strong">XGBoost</td><td class="strong">0,725</td><td class="strong">0,441</td><td class="strong">0,548</td><td class="strong">0,554</td><td>+0,043</td></tr>
+            <tr><td>Regressão Logística</td><td>0,593</td><td>0,538</td><td>0,564</td><td>0,676</td><td>+0,001</td></tr>
+            <tr><td class="strong">Random Forest</td><td class="strong">0,648</td><td>0,529</td><td class="strong">0,582</td><td>0,676</td><td>+0,006</td></tr>
+            <tr><td>XGBoost</td><td>0,615</td><td class="strong">0,541</td><td>0,575</td><td class="strong">0,683</td><td>+0,030</td></tr>
           </tbody>
         </table>
       </div>
@@ -547,10 +548,10 @@ footer.close{
         <table>
           <thead><tr><th>Bloco de features</th><th>Influência</th></tr></thead>
           <tbody>
-            <tr><td class="strong">Histórico municipal (absenteísmo t-1 + contador + flag)</td><td class="strong">60,9%</td></tr>
-            <tr><td><code>rede</code></td><td>13,3%</td></tr>
-            <tr><td><code>caderno</code> (efeito residual, sem artefato de ausência)</td><td>11,6%</td></tr>
-            <tr><td>Histórico de escola (4 features)</td><td>14,2%</td></tr>
+            <tr><td class="strong">Município (UF, meta do PDE, população, absenteísmo t-1)</td><td class="strong">81,3%</td></tr>
+            <tr><td>Aluno/turma (<code>caderno</code> 9,1% + <code>rede</code> 2,1%)</td><td>11,2%</td></tr>
+            <tr><td>Escola (absenteísmo t-1; contador e flag valem 0,0%)</td><td>7,5%</td></tr>
+            
           </tbody>
         </table>
       </div>
@@ -569,8 +570,8 @@ footer.close{
         </div>
         <div class="compare-row">
           <span class="lbl strong">Modelo aluno-nível (12 features)</span>
-          <span class="compare-track"><span class="compare-fill model" style="width:60.1%"></span></span>
-          <span class="val">0,601</span>
+          <span class="compare-track"><span class="compare-fill model" style="width:60.5%"></span></span>
+          <span class="val">0,605</span>
         </div>
         <div class="compare-row">
           <span class="lbl strong">Baseline: meta do PDE, uniforme</span>
@@ -578,8 +579,8 @@ footer.close{
           <span class="val">0,633</span>
         </div>
       </div>
-      <p>Diferença modelo − melhor baseline: <strong>−0,0318</strong>, IC95% bootstrap pareado <strong>[−0,0374, −0,0261]</strong> — inteiramente negativo. O modelo perde em <strong>5 de 5</strong> orçamentos de busca ativa testados (5% a 50% dos alunos).</p>
-      <p>O modelo aprendeu algo real — saiu do acaso (0,507) para 0,601. Mas o sinal que capturou é fundamentalmente municipal. <strong>Usar esse sinal direto, sem passar por modelo nenhum, funciona melhor do que o modelo.</strong> É o cenário que o próprio ADR previu antes de qualquer treino — agora medido, não hipotético.</p>
+      <p>Diferença modelo − melhor baseline: <strong>−0,0284</strong>, IC95% bootstrap pareado <strong>[−0,0342, −0,0228]</strong> — inteiramente negativo. O modelo perde em <strong>5 de 5</strong> orçamentos de busca ativa testados (5% a 50% dos alunos).</p>
+      <p>O modelo aprendeu algo real — saiu do acaso (0,507) para 0,605. Mas o sinal que capturou é fundamentalmente municipal. <strong>Usar esse sinal direto, sem passar por modelo nenhum, funciona melhor do que o modelo.</strong> É o cenário que o próprio ADR previu antes de qualquer treino — agora medido, não hipotético.</p>
     </section>
 
     <hr class="divider">
@@ -597,7 +598,7 @@ footer.close{
           <tbody>
             <tr><td>Falta questionário socioeconômico do aluno</td><td>5ª tentativa de acesso ao pacote INEP</td><td>Sem evidência de que exista</td></tr>
             <tr><td>Enriquecer com Censo Escolar</td><td>ZIP real baixado, 215.545 escolas, cruzado com nossas 24.346</td><td class="danger">0% de cobertura</td></tr>
-            <tr><td>Sobra sinal de aluno após o baseline?</td><td>Baseline como <em>feature</em> + features de aluno</td><td class="danger">−0,0318 · IC95% [−0,037; −0,026]</td></tr>
+            <tr><td>Sobra sinal de aluno após o baseline?</td><td>Baseline como <em>feature</em> + features de aluno</td><td class="danger">−0,0284 · IC95% [−0,034; −0,023]</td></tr>
           </tbody>
         </table>
       </div>
@@ -687,7 +688,7 @@ footer.close{
         </div>
       </div>
 
-      <p>Ganho real: <strong>+0,027</strong>, IC95% <strong>[+0,007, +0,048]</strong> — positivo e significativo, mas dez vezes menor que os +0,245 que a régua invertida sugeria. Por UF, com IC pareado: o modelo <strong>vence em 3</strong> (PR, RJ, RS), <strong>perde em 3</strong> (MG, RN, TO) e <strong>empata em 17</strong>.</p>
+      <p>Ganho real: <strong>+0,027</strong>, IC95% <strong>[+0,007, +0,048]</strong> — positivo e significativo, mas dez vezes menor que os +0,245 que a régua invertida sugeria. Por UF, com IC pareado: o modelo <strong>vence em 3</strong> (PR, RJ, RS), <strong>perde em 3</strong> (MG, RN, TO) e fica <strong>inconclusivo em 17</strong>.</p>
 
       <div class="finding note">
         <span class="finding-label">O achado que sobra — e vale mais que o modelo</span>
@@ -754,7 +755,7 @@ footer.close{
       <h2>Limitações</h2>
       <ul>
         <li><strong>O modelo aluno-nível não supera o melhor baseline municipal</strong> — a limitação central, e a que mais deveria pesar em qualquer decisão de uso.</li>
-        <li><code>caderno</code> carrega um resíduo de influência (11,6%) sem explicação causal confirmada — três tentativas de acessar o dicionário oficial do INEP não resolveram a categoria 12.</li>
+        <li><code>caderno</code> carrega um resíduo de influência (6,7%) sem explicação causal confirmada — três tentativas de acessar o dicionário oficial do INEP não resolveram a categoria 12.</li>
         <li><strong>Sem dado de 2025</strong> — o modelo nunca foi validado contra o ano de uso real. Documentado como limitação, não infraestrutura de monitoramento que o enunciado não exige.</li>
         <li><strong>SICONFI</strong> (gasto por habitante em educação, ~9 mil requisições) não foi buscado — o teste barato já mostrou que o problema é de grão, não de faltar mais uma feature municipal.</li>
         <li>Nenhuma feature restante descreve o aluno em si — todas são metadado administrativo ou agregado de município/escola. Sem uma variável genuinamente individual, é improvável que qualquer modelo supere o baseline municipal.</li>

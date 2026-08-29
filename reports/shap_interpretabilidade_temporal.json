@@ -1,0 +1,100 @@
+{
+  "contexto": {
+    "modelo_explicado": "XGBoost (vencedor do tournament)",
+    "hiperparametros": {
+      "n_estimators": "800",
+      "max_depth": "8",
+      "learning_rate": "0.03",
+      "subsample": "0.8",
+      "colsample_bytree": "0.8",
+      "min_child_weight": "3",
+      "reg_lambda": "1.0",
+      "random_state": "42",
+      "eval_metric": "logloss",
+      "tree_method": "hist",
+      "n_jobs": "1"
+    },
+    "snapshot": "parcial (com: populacao_total, meta_alfabetizacao_2024_imputada; sem: gasto_por_habitante_educacao)",
+    "split": "temporal (treina 2023, explica 2024)",
+    "n_treino": 23550,
+    "n_explicado": 24505,
+    "aviso": "Metrica de influencia = |SHAP| medio. Mede o quanto a variavel move a predicao, NAO se o efeito e bom ou ruim."
+  },
+  "influencia_por_variavel": {
+    "sigla_uf": 1.453032387420535,
+    "meta_alfabetizacao_2024_imputada": 0.5611116290092468,
+    "caderno": 0.2839098274707794,
+    "absenteismo_hist_escola_t1": 0.23442049324512482,
+    "meta_is_imputada": 0.22063623368740082,
+    "populacao_total": 0.19205155968666077,
+    "absenteismo_hist_municipio_t1": 0.1143588274717331,
+    "rede": 0.06466566910967231,
+    "possui_hist_escola_t1": 0.0,
+    "possui_hist_municipio_t1": 0.0
+  },
+  "influencia_por_categoria": {
+    "num__meta_alfabetizacao_2024_imputada": 0.5611100196838379,
+    "cat__sigla_uf_CE": 0.3806299865245819,
+    "num__absenteismo_hist_escola_t1": 0.23442000150680542,
+    "bin__meta_is_imputada": 0.22064000368118286,
+    "num__populacao_total": 0.1920499950647354,
+    "num__absenteismo_hist_municipio_t1": 0.11435999721288681,
+    "cat__caderno_10": 0.10109999775886536,
+    "cat__sigla_uf_PB": 0.09371999651193619,
+    "cat__caderno_12": 0.09138000011444092,
+    "cat__sigla_uf_BA": 0.0863099992275238,
+    "cat__sigla_uf_PR": 0.08594000339508057,
+    "cat__sigla_uf_TO": 0.08529999852180481,
+    "cat__sigla_uf_ES": 0.08410000056028366,
+    "cat__sigla_uf_PI": 0.07976999878883362,
+    "cat__sigla_uf_PA": 0.07158999890089035,
+    "cat__rede_Estadual": 0.06063000112771988,
+    "cat__sigla_uf_SC": 0.05194000154733658,
+    "cat__caderno_11": 0.051350001245737076,
+    "cat__sigla_uf_RO": 0.046720001846551895,
+    "cat__sigla_uf_MS": 0.0457100011408329,
+    "cat__sigla_uf_MT": 0.04290999844670296,
+    "cat__caderno_1": 0.04008999839425087,
+    "cat__sigla_uf_PE": 0.03858000040054321,
+    "cat__sigla_uf_RS": 0.03683000057935715,
+    "cat__sigla_uf_RN": 0.036070000380277634,
+    "cat__sigla_uf_SE": 0.03449999913573265,
+    "cat__sigla_uf_AL": 0.03248000144958496,
+    "cat__sigla_uf_MG": 0.032010000199079514,
+    "cat__sigla_uf_MA": 0.02710999920964241,
+    "cat__sigla_uf_RJ": 0.02426999993622303,
+    "cat__sigla_uf_AP": 0.02191999927163124,
+    "cat__sigla_uf_GO": 0.010110000148415565,
+    "cat__sigla_uf_AM": 0.004530000034719706,
+    "cat__rede_Municipal": 0.004040000028908253,
+    "bin__possui_hist_escola_t1": 0.0,
+    "bin__possui_hist_municipio_t1": 0.0
+  },
+  "gates_adr0001_seccao5": [
+    {
+      "gate": "territorio_nao_domina_o_top5",
+      "status": "PASSOU",
+      "detalhe": "1 de 5 do top-5 são território/socioeconômico. Top-5: ['sigla_uf', 'meta_alfabetizacao_2024_imputada', 'caderno', 'absenteismo_hist_escola_t1', 'meta_is_imputada']"
+    },
+    {
+      "gate": "flags_de_imputacao_sem_influencia_relevante",
+      "status": "PASSOU",
+      "detalhe": "Participação na influência: possui_hist_escola_t1=0.0%, possui_hist_municipio_t1=0.0%, meta_is_imputada=7.1%. Limiar: 10%. (Critério por posição do ADR-0001 não discrimina aqui: o modelo tem 10 features, então top-5 seria o modelo inteiro.)"
+    },
+    {
+      "gate": "nenhuma_feature_isolada_domina",
+      "status": "PASSOU",
+      "detalhe": "`sigla_uf` concentra 46.5% da influência. Limiar: 50%."
+    },
+    {
+      "gate": "caderno_12_nao_domina",
+      "status": "PASSOU",
+      "detalhe": "|SHAP| de caderno=12 é 1.42x a média das outras categorias de caderno (0.0914 vs 0.0642). Limiar de alerta: 2.0x"
+    }
+  ],
+  "teste_ablacao": null,
+  "graficos": [
+    "shap_importancia_global_temporal.png",
+    "shap_beeswarm_temporal.png"
+  ]
+}

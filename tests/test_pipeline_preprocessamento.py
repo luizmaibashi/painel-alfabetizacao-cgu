@@ -144,3 +144,75 @@ def test_descrever_features_continua_reportando_sem_levantar():
 
     assert "coluna_estranha" in texto
     assert "ATENÇÃO" in texto
+
+
+# --- descrever_snapshot: o rotulo tem que seguir o DADO, nao uma constante ---
+#
+# POR QUE ESTES TESTES EXISTEM (2026-08-29)
+# ------------------------------------------
+# `02_tournament_modelos.py` gravava em reports/metrics_tournament.json a
+# string literal "local-only (sem territorio/socioeconomico/meta)" — constante
+# hardcoded, nao leitura do estado. O MESMO json listava populacao_total,
+# meta_alfabetizacao_2024_imputada e sigla_uf em features_usadas. Quem lesse o
+# relatorio concluiria que o ROC-AUC ~0,68 vinha de sinal puramente local,
+# quando ele vem do bloco municipal (SHAP: 85,3% da influencia).
+#
+# Mesma classe da "guarda silenciosa" do AGENTS.md: o rotulo errado nao quebra
+# nada, so convence. O teste que fecha a classe (nao a instancia) e o
+# `test_descrever_snapshot_muda_quando_o_dado_muda`: obriga o rotulo a variar
+# junto com as colunas, entao uma string fixa reprova por construcao.
+
+def test_descrever_snapshot_local_only_quando_nao_ha_territorio():
+    """Snapshot sem nenhuma coluna de territorio e legitimamente local-only."""
+    rotulo = pp.descrever_snapshot(_snapshot_valido())
+    assert "local-only" in rotulo
+
+
+def test_descrever_snapshot_nao_diz_local_only_com_territorio_presente():
+    """O bug real: rotulo dizia 'sem territorio' com territorio no dataframe."""
+    df = _snapshot_valido()
+    df["populacao_total"] = [50000, 50000]
+    df["meta_alfabetizacao_2024_imputada"] = [0.7, 0.7]
+    rotulo = pp.descrever_snapshot(df)
+    assert "local-only" not in rotulo
+    assert "populacao_total" in rotulo
+
+
+def test_descrever_snapshot_marca_parcial_quando_falta_alguma():
+    """Territorio incompleto e um terceiro estado — nao pode virar 'full'."""
+    df = _snapshot_valido()
+    df["populacao_total"] = [50000, 50000]
+    rotulo = pp.descrever_snapshot(df)
+    assert "parcial" in rotulo
+    # A que falta precisa aparecer: 'parcial' sem dizer o que falta nao ajuda.
+    assert "gasto_por_habitante_educacao" in rotulo
+
+
+def test_descrever_snapshot_full_quando_territorio_completo():
+    df = _snapshot_valido()
+    for coluna in pp.COLUNAS_TERRITORIO:
+        df[coluna] = [1.0, 1.0]
+    rotulo = pp.descrever_snapshot(df)
+    assert "full" in rotulo
+    assert "parcial" not in rotulo
+
+
+def test_descrever_snapshot_muda_quando_o_dado_muda():
+    """
+    A guarda de classe: uma constante literal passaria em qualquer teste que
+    so checasse UM caso. Este exige que o rotulo seja funcao do dataframe.
+    """
+    sem = pp.descrever_snapshot(_snapshot_valido())
+    com = _snapshot_valido()
+    for coluna in pp.COLUNAS_TERRITORIO:
+        com[coluna] = [1.0, 1.0]
+    assert sem != pp.descrever_snapshot(com)
+
+
+def test_colunas_territorio_sao_todas_candidatas_declaradas():
+    """
+    COLUNAS_TERRITORIO nao pode divergir do catalogo de features: se alguem
+    renomear uma candidata e esquecer desta lista, o rotulo volta a mentir —
+    silenciosamente, que e exatamente o modo de falha que originou o bug.
+    """
+    assert set(pp.COLUNAS_TERRITORIO) <= set(pp.TODAS_CANDIDATAS)

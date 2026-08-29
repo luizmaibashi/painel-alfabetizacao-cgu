@@ -35,6 +35,7 @@ ATENÇÃO: roda sobre o snapshot disponível. No `--local-only` não existem
 território/socioeconômico/meta, então os gates que dependem dessas features
 são reportados como NÃO APLICÁVEL, nunca como aprovados.
 """
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -59,11 +60,13 @@ BASE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BASE / "src" / "preprocessing"))
 from pipeline_preprocessamento import (  # noqa: E402
     COLUNA_TARGET, colunas_feature, construir_preprocessador, descrever_features,
-    validar_cobertura_colunas,
+    descrever_snapshot, validar_cobertura_colunas,
 )
 
 RANDOM_STATE = 42
 TEST_SIZE = 0.2
+# Mesmos anos do 02_teste_falsificacao.py — usados só no modo `--temporal`.
+ANO_TREINO, ANO_TESTE = 2023, 2024
 TOP_N = 5  # o "top-5" citado no checklist do ADR-0001 §5
 
 # Modelo forte validado em 00c_teste_residuo_modelo_forte.py, canônico pra
@@ -137,22 +140,30 @@ def calcular_shap(pipe: Pipeline, X_test: pd.DataFrame):
     return valores, Xt, nomes
 
 
-def salvar_graficos(valores, Xt, nomes, destino: Path):
+def salvar_graficos(valores, Xt, nomes, destino: Path, sufixo: str = ""):
+    """
+    `sufixo` separa os graficos do modo --temporal dos canonicos. Sem ele, os
+    dois desenhos gravariam no mesmo shap_beeswarm.png e a imagem publicada no
+    README passaria a descrever um modelo diferente do texto ao lado — que e a
+    versao grafica do problema que este modo veio corrigir.
+    """
     destino.mkdir(parents=True, exist_ok=True)
+    nomes_arquivo = [f"shap_importancia_global{sufixo}.png",
+                     f"shap_beeswarm{sufixo}.png"]
 
     shap.summary_plot(valores, Xt, feature_names=nomes, plot_type="bar", show=False)
     plt.title("Influência média de cada variável (|SHAP| médio)")
     plt.tight_layout()
-    plt.savefig(destino / "shap_importancia_global.png", dpi=130)
+    plt.savefig(destino / nomes_arquivo[0], dpi=130)
     plt.close()
 
     shap.summary_plot(valores, Xt, feature_names=nomes, show=False)
     plt.title("Direção do efeito por aluno (vermelho = valor alto da variável)")
     plt.tight_layout()
-    plt.savefig(destino / "shap_beeswarm.png", dpi=130)
+    plt.savefig(destino / nomes_arquivo[1], dpi=130)
     plt.close()
 
-    return ["shap_importancia_global.png", "shap_beeswarm.png"]
+    return nomes_arquivo
 
 
 def metricas(pipe, X_test, y_test) -> dict:
@@ -295,16 +306,49 @@ def rodar_gates(ranking_detalhado, ranking_agregado, df) -> list[dict]:
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--temporal", action="store_true",
+        help=("Explica o modelo do SPLIT TEMPORAL (treina 2023, explica 2024) "
+              "em vez do split aleatorio. Ver ADR-0008: o split aleatorio e o "
+              "temporal produzem modelos DIFERENTES nesta base, porque as "
+              "features de historico t-1 nao existem em 2023."),
+    )
+    args = parser.parse_args()
+
     df = carregar_snapshot()
     X, y = df[colunas_feature(df)], df[COLUNA_TARGET]
     print(f"Snapshot: {len(df)} linhas | classe de risco ('Não') = {y.mean():.1%}")
     print(descrever_features(df))
 
-    # Mesmo split do tournament (mesmo random_state) — o SHAP precisa explicar
-    # o modelo nas mesmas condições em que ele foi escolhido.
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_STATE,
-    )
+    if args.temporal:
+        # POR QUE ESTE MODO EXISTE (2026-08-29)
+        # --------------------------------------
+        # O split aleatorio abaixo mistura 2023 e 2024 no treino. Isso da ao
+        # modelo linhas de 2024, onde as features de historico t-1 EXISTEM --
+        # entao o SHAP explicava um modelo com 12 features, enquanto o
+        # veredito do 02_teste_falsificacao.py (split temporal) media um
+        # modelo que na pratica tem 10: em 2023 os contadores n_alunos_* sao
+        # 100% nulos (o sklearn descarta a coluna em silencio) e o
+        # absenteismo_hist_* e a mediana da UF, ou seja, funcao deterministica
+        # de sigla_uf -- 1 valor unico por UF, zero informacao municipal.
+        #
+        # Interpretacao e veredito descreviam modelos diferentes no mesmo
+        # README. Este modo alinha os dois.
+        treino = df[df["ano"] == ANO_TREINO]
+        teste = df[df["ano"] == ANO_TESTE]
+        feats = colunas_feature(df)
+        X_train, y_train = treino[feats], treino[COLUNA_TARGET]
+        X_test, y_test = teste[feats], teste[COLUNA_TARGET]
+        print(f"\nSplit TEMPORAL: treina {ANO_TREINO} (n={len(X_train)}), "
+              f"explica {ANO_TESTE} (n={len(X_test)})")
+    else:
+        # Mesmo split do tournament (mesmo random_state) — o SHAP precisa
+        # explicar o modelo nas mesmas condições em que ele foi escolhido.
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_STATE,
+        )
+        print(f"\nSplit ALEATORIO estratificado (test_size={TEST_SIZE})")
     pipe = treinar(X_train, y_train)
     valores, Xt, nomes = calcular_shap(pipe, X_test)
 
@@ -356,14 +400,19 @@ def main():
                   f"{ablacao['sem_a_feature'][k]:>10.3f}"
                   f"{ablacao['delta'][k]:>+10.3f}")
 
-    graficos = salvar_graficos(valores, Xt, nomes, BASE / "images")
+    graficos = salvar_graficos(valores, Xt, nomes, BASE / "images",
+                               sufixo="_temporal" if args.temporal else "")
     print(f"\nGraficos salvos em images/: {', '.join(graficos)}")
 
     saida = {
         "contexto": {
             "modelo_explicado": "XGBoost (vencedor do tournament)",
             "hiperparametros": {k: str(v) for k, v in PARAMS_XGB.items()},
-            "snapshot": "local-only" if "populacao_total" not in df.columns else "full",
+            "snapshot": descrever_snapshot(df),
+            "split": ("temporal (treina %d, explica %d)" % (ANO_TREINO, ANO_TESTE)
+                      if args.temporal
+                      else "aleatorio estratificado (test_size=%s)" % TEST_SIZE),
+            "n_treino": int(len(X_train)),
             "n_explicado": int(len(X_test)),
             "aviso": ("Metrica de influencia = |SHAP| medio. Mede o quanto a "
                       "variavel move a predicao, NAO se o efeito e bom ou ruim."),
@@ -374,7 +423,12 @@ def main():
         "teste_ablacao": ablacao,
         "graficos": graficos,
     }
-    out = BASE / "reports" / "shap_interpretabilidade.json"
+    # Destino separado no modo temporal: o artefato do split aleatorio e
+    # citado no README e no HANDOFF, e sobrescreve-lo apagaria a comparacao
+    # que motivou este modo existir.
+    nome = ("shap_interpretabilidade_temporal.json" if args.temporal
+            else "shap_interpretabilidade.json")
+    out = BASE / "reports" / nome
     out.write_text(json.dumps(saida, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Relatorio salvo em {out}")
 

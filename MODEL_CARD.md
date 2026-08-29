@@ -63,12 +63,12 @@ Apoiar busca ativa escolar: identificar alunos em risco de não-alfabetização 
 ❌ **Não use este modelo.** Falhou no teste de falsificação — não supera o baseline municipal.
 
 **Por quê:**
-- ROC-AUC 0,6013 (modelo) vs 0,6331 (meta do PDE aplicada uniformemente)
-- Diferença: −0,0318, IC95% [−0,0374, −0,0261] — inteiramente negativo
+- ROC-AUC 0,6047 (modelo) vs 0,6331 (meta do PDE aplicada uniformemente)
+- Diferença: −0,0284, IC95% [−0,0342, −0,0228] — inteiramente negativo
 - Interprets: em 5 de 5 orçamentos de busca ativa testados (5%, 10%, 20%, 30%, 50% dos alunos), o modelo perde do baseline trivial
 
 **Achado técnico:**
-Teste de resíduo mostrou que adicionar features de aluno ao baseline municipal **piora** o desempenho (AUC: 0,6331 → 0,6013, IC95% [−0,0374, −0,0261] com significância). Não há sinal individual a extrair com os dados disponíveis.
+Teste de resíduo mostrou que adicionar features de aluno ao baseline municipal **piora** o desempenho (AUC: 0,6331 → 0,6047, IC95% [−0,0342, −0,0228] com significância). Não há sinal individual a extrair com os dados disponíveis.
 
 ---
 
@@ -81,7 +81,7 @@ Priorizar municípios em risco de falhar a meta do Indicador Criança Alfabetiza
 ✅ **Funciona, mas com condições.**
 - ROC-AUC 0,6478 (modelo) vs 0,6209 (baseline honesto previsto por Leave-One-UF-Out)
 - Diferença: +0,027, IC95% [+0,007, +0,048] — ganho pequeno, mas significativo
-- Veredito por UF (IC95% pareado): vence em 3 (PR, RJ, RS), perde em 3 (MG, RN, TO), empata em 17
+- Veredito por UF (IC95% pareado): vence em 3 (PR, RJ, RS), perde em 3 (MG, RN, TO), inconclusivo em 17
 
 **Achado técnico:**
 O modelo é um **seguro contra errar a direção**, não um ranqueador superior. Funciona bem nas 7 UFs onde a direção (priorize quem estava melhor vs quem estava pior) não é previsível de fora. Nas 16 UFs previsíveis, o modelo e a regra simples empatam.
@@ -98,8 +98,8 @@ O modelo é um **seguro contra errar a direção**, não um ranqueador superior.
 |---|---|---|
 | Taxa municipal 2023 (baseline fraco) | 0,5816 | — |
 | **Meta PDE 2024** (baseline forte) | **0,6331** | — |
-| **Modelo XGBoost aluno-nível** | **0,6013** | — |
-| **Diferença** | **−0,0318** | IC95% [−0,0374, −0,0261] |
+| **Modelo XGBoost aluno-nível** | **0,6047** | — |
+| **Diferença** | **−0,0284** | IC95% [−0,0342, −0,0228] |
 
 **Interpretação:** o modelo perde do baseline com significância estatística. A meta municipal aplicada igualmente a todos os alunos supera o modelo completo de 12 features.
 
@@ -112,6 +112,20 @@ O modelo é um **seguro contra errar a direção**, não um ranqueador superior.
 | Precision (classe "Não") | 0,431 | 0,428 |
 | F1 | 0,542 | 0,534 |
 | Gap treino-validação | +0,013 | — |
+
+> ⚠️ **Tabela histórica — não sincronizada com os artefatos atuais
+> (2026-08-29).** Estes valores são de uma execução superada: o Recall 0,729 /
+> Precision 0,431 / F1 0,542 / gap +0,013 correspondem ao Random Forest do
+> torneio antes da integração de território, não ao XGBoost descrito nesta
+> seção. Deliberadamente **não** substituídos por valores novos, porque a
+> combinação exata (treino-val 5-fold + teste, deste modelo) não existe em
+> nenhum `reports/*.json` atual — inventar o par seria pior que declarar a
+> lacuna.
+>
+> Números canônicos, com a fonte de cada um:
+> - Teste, split temporal: **ROC-AUC 0,6047** ([`teste_falsificacao.json`](reports/teste_falsificacao.json))
+> - Torneio, split aleatório: Regressão Logística 0,676 · Random Forest 0,676 · XGBoost 0,683 ([`metrics_tournament.json`](reports/metrics_tournament.json))
+> - Gaps treino-validação: +0,001 · +0,006 · +0,030 (mesma fonte)
 
 *(Recall da classe "Não" é a métrica principal — falso negativo (aluno em risco não identificado) é o erro caro para busca ativa.)*
 
@@ -184,7 +198,7 @@ Ordenar municípios de UFs diferentes na mesma escala compara réguas distintas.
 | **3** | Direção não previsível em 7 UFs | Médio | Modelo protege contra errar a direção nessas UFs; nas outras, regra simples já resolve |
 | **4** | Sem validação em 2025 (ano real de uso) | Médio | Modelo treinado em 2023–2024; performance em novo ciclo desconhecida |
 | **5** | `peso_aluno` excluído por vazamento de nulidade | Técnico | Nenhum impacto no uso; foi detecção correta de vazamento |
-| **6** | `caderno=12` (11,6% SHAP) sem causa confirmada | Técnico | Resolvido por análise de dados (crosstab), não documentação externa; categoria representa alta ausência |
+| **6** | `caderno=12` (6,7% SHAP) sem causa confirmada | Técnico | Resolvido por análise de dados (crosstab), não documentação externa; categoria representa alta ausência |
 | **7** | SICONFI não buscado | Técnico | Decisão documentada (ADR-0002): teste barato já mostrou limitação é o modelo tentar ser baseline municipal, não falta de features |
 | **8** | Variação de versão do scikit-learn (~1,6pp em Recall) | Técnico | `requirements.txt` pinado mitiga (não elimina); usar ambiente reproduzível |
 
@@ -223,7 +237,7 @@ Ordenar municípios de UFs diferentes na mesma escala compara réguas distintas.
 
 ### 5.4 Features — origem e decisão
 
-#### Features de histórico municipal (60,9% SHAP)
+#### Features de município (85,3% SHAP no split aleatório, 81,3% no temporal)
 
 | Feature | Origem | Decisão | Razão |
 |---|---|---|---|
@@ -231,14 +245,14 @@ Ordenar municípios de UFs diferentes na mesma escala compara réguas distintas.
 | `contador_falhas_municipio` | Contagem cumulativa de ciclos com falha | Mantida | Padrão persistente |
 | `flag_regiao_prioritaria` | Derivado de meta vs performance histórica | Mantida | Contexto administrativo |
 
-#### Features categóricas (13,3% + 11,6% SHAP)
+#### Features categóricas (`rede` 3,3% + `caderno` 6,7% SHAP)
 
 | Feature | Valores | Decisão | Razão |
 |---|---|---|---|
 | `rede` | Estadual / Municipal / Federal / Privada | OneHot | Proxy de capacidade administrativa |
 | `caderno` | 1, 10, 11, 12 | OneHot | Categoria 12 = 79,7% ausência; análise cruzada resolveu causa |
 
-#### Features de contexto escolar (14,2% SHAP)
+#### Features de contexto escolar (4,7% SHAP no aleatório, 7,5% no temporal)
 
 | Feature | Detalhe | Decisão |
 |---|---|---|
@@ -294,7 +308,7 @@ Ordenar municípios de UFs diferentes na mesma escala compara réguas distintas.
 #### Para Modelo A
 - Taxa de não-alfabetização municipal 2023 (baseline fraco): AUC 0,5816
 - Meta do PDE 2024, aplicada igualmente a todos os alunos (baseline forte): AUC **0,6331** ← o que vence
-- Modelo: AUC 0,6013 (perde)
+- Modelo: AUC 0,6047 (perde)
 
 #### Para Modelo B
 - Regra trivial "priorize quem estava pior em 2023": AUC 0,4032 (inválida — é simétrica)
@@ -324,7 +338,7 @@ Ordenar municípios de UFs diferentes na mesma escala compara réguas distintas.
 
 **Mitigação:** 
 - Remover alunos ausentes da população de modelagem (48.782 → 48.055)
-- Teste de resíduo confirmou: adicionar features de aluno ao baseline municipal **piora** resultado (−0,0318, IC95% [−0,0374, −0,0261])
+- Teste de resíduo confirmou: adicionar features de aluno ao baseline municipal **piora** resultado (−0,0284, IC95% [−0,0342, −0,0228])
 - Cinco colunas de vazamento foram identificadas e removidas
 
 ---
@@ -433,8 +447,8 @@ Este Model Card descreve o resultado final. O caminho até aqui envolveu:
 
 1. **Cap. 5–8 do HANDOFF:** vazamento identificado (5 colunas) → AUC caiu de 0,669 (falso) para 0,53
 2. **Cap. 9:** descoberta que a base completa (57.782) estava em disco enquanto tudo rodava sobre amostra (5.000) → AUC subiu de 0,53 para 0,577
-3. **Cap. 14:** integração de território público (população IBGE + meta do PDE) sem depender de GCP → AUC subiu de 0,507 para 0,6013, mas baseline (meta simples) saltou para 0,6331 e venceu
-4. **Cap. 14.5:** detecção de que a própria régua do teste estava fraca → refeita contra baseline mais forte → veredito: FALHOU (−0,0318, IC95% [−0,0374, −0,0261])
+3. **Cap. 14:** integração de território público (população IBGE + meta do PDE) sem depender de GCP → AUC subiu de 0,507 para 0,6047, mas baseline (meta simples) saltou para 0,6331 e venceu
+4. **Cap. 14.5:** detecção de que a própria régua do teste estava fraca → refeita contra baseline mais forte → veredito: FALHOU (−0,0284, IC95% [−0,0342, −0,0228])
 5. **Cap. 8 (reformulação):** com modelo aluno reprovado, testado grão município → Leave-One-UF-Out colapsou em 0,48 (régua estadual)
 6. **Cap. 8 (final):** modelo intra-UF funcionou (0,6478 vs 0,6209, +0,027) — seguro contra errar direção nas UFs imprevisíveis
 

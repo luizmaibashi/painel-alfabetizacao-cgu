@@ -10,9 +10,9 @@
 
 | # | Entregável | Resultado |
 |---|---|---|
-| 1 | **Modelo supervisionado aluno-nível** (exigência do enunciado) | Executado com rigor e **reprovado no próprio critério de falsificação**: 0,6013 contra 0,6331 da meta do PDE aplicada uniformemente, IC95% [−0,0374, −0,0261]. Resultado negativo, medido e documentado |
+| 1 | **Modelo supervisionado aluno-nível** (exigência do enunciado) | Executado com rigor e **reprovado no próprio critério de falsificação**: 0,6047 contra 0,6331 da meta do PDE aplicada uniformemente, IC95% [−0,0342, −0,0228]. Resultado negativo, medido e documentado |
 | 2 | **A inversão de direção entre estados** | "Quem estava melhor em 2023 falha mais a meta" vale em **16 UFs**; o **oposto** vale em 7. Dois mecanismos medidos: regressão à média onde a meta acompanha o município (MG), e teto de 80,0 que blinda os melhores onde a meta satura (CE). Responde a pergunta de negócio nº 4 do enunciado ("como prever municípios que podem não atingir metas futuras?"), a única sem resposta **desenvolvida nesta fase** |
-| 3 | **Modelo de priorização municipal intra-UF** | AUC **0,6478** contra **0,6209** do baseline honesto — ganho de **+0,027**, IC95% [+0,007, +0,048]. O valor não é ranquear melhor: é **não precisar saber a direção de antemão**. Toda a vantagem vem das 7 UFs onde a direção é imprevisível (ADR-0005) |
+| 3 | **Modelo de priorização municipal intra-UF** | AUC **0,6478** contra **0,6209** do baseline honesto — ganho de **+0,027**, IC95% [+0,007, +0,048]. O valor não é ranquear melhor: é **não precisar saber a direção de antemão**. Toda a vantagem vem das 7 UFs onde a direção é imprevisível (ADR-0005). **Entregue particionado por evidência**, não pela média: vence em 3 UFs, **perde em 3** e é inconclusivo em 17 — e o painel recomenda a regra trivial onde ela ganha |
 | 4 | **Advertência de validade sobre comparação entre estados** | Ranking nacional de municípios compara réguas de avaliação distintas — inclusive nos marts da nossa Fase 2 |
 | 5 | **Painel de priorização** (`reports/painel_intra_uf.html`) | 5.216 municípios, particionado por UF, com veredito honesto de 3 estados por UF — inclusive **recomendando a regra simples** nos 3 estados onde ela vence o modelo |
 
@@ -204,18 +204,36 @@ Logística, Random Forest e XGBoost.
 
 | Modelo | Recall | Precision | F1 | ROC-AUC | gap treino-val |
 |---|---|---|---|---|---|
-| Regressão Logística | 0,694 | 0,433 | 0,533 | 0,533 | +0,002 |
-| Random Forest | 0,729 | 0,431 | 0,542 | 0,537 | +0,013 |
-| **XGBoost** | 0,725 | 0,441 | **0,548** | **0,554** | +0,043 |
+| Regressão Logística | 0,593 | 0,538 | 0,564 | 0,676 | **+0,001** |
+| **Random Forest** | **0,648** | 0,529 | **0,582** | 0,676 | +0,006 |
+| XGBoost | 0,615 | **0,541** | 0,575 | **0,683** | +0,030 |
 
-*(Base completa, 48.055 alunos avaliados, população oficial, sem
-território — ver §7 para os números finais com território.)*
+*(48.055 alunos avaliados, população oficial, split aleatório 80/20 **com**
+território. Fonte: `reports/metrics_tournament.json`.)*
 
-XGBoost lidera nas três métricas de decisão e sustenta a liderança na
-checagem temporal. A Regressão Logística — quase cega (ROC-AUC 0,533,
-próximo de moeda) — não é descartada por ser "modelo ruim": é diagnóstico de
-que as features disponíveis não têm relação **linear** forte com o alvo, e
-esse achado permanece no relatório em vez de ser omitido.
+**Nenhum candidato vence em tudo, e isso é o achado.** Pela métrica de decisão
+declarada — Recall da classe "Não", ADR-0001 §5 — quem lidera é o **Random
+Forest** (0,648). O XGBoost leva ROC-AUC e Precision, e tem o **maior gap
+treino-validação dos três** (+0,030, cinco vezes o do RF), sinal de que ajusta
+mais o treino do que os outros.
+
+E a Regressão Logística, com apenas 4 hiperparâmetros e uma fronteira linear,
+**empata em ROC-AUC com os dois ensembles**. Isso é diagnóstico, não
+decepção: se um modelo linear alcança gradient boosting, não existe estrutura
+complexa a aprender — o sinal disponível é essencialmente um número por
+município, aplicado a todos os seus alunos. É a mesma conclusão da §7.2, vista
+pelo lado do algoritmo.
+
+> **Correção de 2026-08-29.** Esta tabela reportava `0,533 / 0,537 / 0,554` de
+> ROC-AUC e a frase *"XGBoost lidera nas três métricas de decisão"*. Os números
+> eram de uma execução anterior à integração de território, e a liderança
+> declarada contradizia o próprio artefato — `metrics_tournament.json` grava
+> `maior_recall_no_teste: "random_forest"`. A leitura antiga também chamava a
+> Logística de "quase cega (0,533)" e concluía que as features não tinham
+> relação linear com o alvo; com 0,676 medido, a conclusão se inverte.
+
+**A escolha de algoritmo não decide o veredito.** Testados os três no split
+temporal contra o baseline municipal, nenhum o supera — ver §7.3.
 
 **Métrica de decisão**: Recall da classe "Não" (aluno em risco). Falso
 negativo — aluno em risco não identificado — é o erro caro para busca
@@ -263,6 +281,56 @@ sinal do problema.
 um modelo que não o viu no treino. Um ranking gerado com predições in-sample
 pareceria melhor e enganaria quem o usasse.
 
+### 5.3 Técnicas de feature encoding comparadas
+
+O enunciado (p.5) pede "técnicas de feature **encoding**", no plural. Três
+foram aplicadas e comparadas no split temporal, contra o mesmo baseline
+(`src/modeling/05_comparar_encodings.py` →
+[`comparacao_encodings.json`](reports/comparacao_encodings.json)).
+
+**Categóricas atuais** (`caderno` 12 valores, `rede` 2, `sigla_uf` 27):
+
+| Encoding | ROC-AUC | Colunas geradas | vs baseline 0,6331 |
+|---|---|---|---|
+| OneHot | 0,6047 | 36 | −0,0284 [−0,0342, −0,0228] |
+| **Target** (cross-fit `cv=5`) | **0,6096** | **10** | −0,0235 [−0,0289, −0,0181] |
+| Frequency | 0,6032 | 10 | −0,0299 [−0,0357, −0,0241] |
+
+**A diferença de AUC é desprezível — e era a previsão, registrada antes de
+rodar.** Encoding não cria informação: é a mesma variável escrita de outro
+jeito. O ganho real do Target está na outra coluna: **o mesmo resultado com 10
+features em vez de 36**. Esse é o motivo de existir da técnica — controlar
+dimensionalidade em categórica de cardinalidade média —, não separação melhor.
+
+**Alta cardinalidade** — `id_municipio`, 4.478 valores, onde OneHot é inviável
+e Target/Frequency justificam sua existência:
+
+| Encoding | ROC-AUC | Ganho ao adicionar `id_municipio` |
+|---|---|---|
+| Target | 0,6123 | **+0,0027** |
+| Frequency | 0,5915 | −0,0117 |
+
+Dar ao modelo a identidade dos 4.478 municípios rende **+0,003**. A identidade
+municipal é **redundante**: o sinal do município já entrava por `meta do PDE` e
+`população`. É a tese do projeto confirmada por um quarto caminho independente
+— depois do SHAP (§7.1), do teste de resíduo (§8) e do teste de robustez a
+algoritmo (§7.3).
+
+Frequency **piora** com `id_municipio` porque a frequência de um município é
+quantos alunos foram amostrados nele — proxy ruidoso de população, variável que
+o modelo já tem de forma direta.
+
+**Contenção de vazamento.** Target encoding sem fold interno vaza o alvo — é o
+modo de falha clássico da técnica. Aqui o `TargetEncoder` roda com `cv=5`
+(cada linha de treino é codificada por folds que não a contêm), `fit` só no
+treino, e o split é temporal. O critério de suspeita foi declarado antes de
+rodar — *"melhora relevante é suspeita de vazamento antes de ser descoberta"* —
+e **não disparou**: a maior variação foi +0,005, ordem de grandeza incompatível
+com vazamento, que levaria o AUC para perto de 1,0.
+
+**Nenhum encoding supera o baseline.** Os cinco resultados seguem
+significativamente abaixo de 0,6331.
+
 ## 6. Métricas de avaliação
 
 | Métrica | Por quê |
@@ -280,12 +348,54 @@ pareceria melhor e enganaria quem o usasse.
 Com o vazamento removido e a população correta, a influência se concentra
 em **agregados de município**:
 
-| Bloco de features | Influência (SHAP) |
-|---|---|
-| Histórico municipal (absenteísmo t-1 + contador + flag) | **60,9%** |
-| `rede` | 13,3% |
-| `caderno` (efeito residual, sem o artefato de ausência) | 11,6% |
-| Histórico de escola (4 features) | 14,2% |
+Duas execuções, porque **o desenho do split muda o modelo** (ver §7.4). A
+coluna que vale para interpretar o veredito é a **temporal**, porque é o
+desenho que o teste de falsificação usa.
+
+| Bloco de features | Split temporal *(alinhado ao veredito)* | Split aleatório |
+|---|---|---|
+| **Município** — `sigla_uf` 46,5%, meta do PDE 18,0%, flag de imputação 7,1%, população 6,1%, absenteísmo t-1 3,7%, contador 0,0% | **81,3%** | 85,3% |
+| Aluno/turma — `caderno` 9,1%, `rede` 2,1% | 11,2% | 10,0% |
+| **Escola** — absenteísmo t-1 7,5%, contador 0,0%, flag 0,0% | **7,5%** | 4,7% |
+
+*Fontes:
+[`shap_interpretabilidade_temporal.json`](reports/shap_interpretabilidade_temporal.json)
+e [`shap_interpretabilidade.json`](reports/shap_interpretabilidade.json) —
+XGBoost forte (800 árvores, depth 8, `n_jobs=1`). Métrica: |SHAP| médio
+normalizado. Mede o quanto a variável move a predição, não se o efeito é bom
+ou ruim.*
+
+**Município domina nos dois desenhos** — 81,3% e 85,3%. É o número que
+sustenta o veredito da §7.2: o modelo não lê o aluno nem a escola dele, lê o
+município. E a meta do PDE, sozinha, é exatamente o baseline que vence o
+modelo inteiro logo abaixo.
+
+**Quatro features valem exatamente 0,0% no split temporal**:
+`n_alunos_hist_municipio_t1` (6,3% no aleatório), `possui_hist_municipio_t1`
+(2,2%), `n_alunos_hist_escola_t1` (1,5%) e `possui_hist_escola_t1` (1,4%) —
+11,4% de influência que simplesmente evapora. Não é ruído: são precisamente as
+features que o ano de treino não tem (§7.4). Em compensação `sigla_uf` salta
+de 20,4% para **46,5%**, absorvendo o que o histórico deixou de explicar.
+
+> **Correção de 2026-08-29.** Esta seção reportava `60,9% / 13,3% / 11,6% /
+> 14,2%`, de um modelo superado (400 árvores, depth 3, antes de território — os
+> blocos nem incluíam meta do PDE, `sigla_uf` e população). O
+> [`HANDOFF_RENAN.md`](docs/HANDOFF_RENAN.md) Cap. 10.3 carrega um terceiro par
+> (`45,1% / 9,9%`), de outra execução intermediária.
+>
+> Na mesma revisão descobriu-se que esta seção e a §7.2 descreviam **modelos
+> diferentes**: o SHAP rodava em split aleatório e o veredito em split
+> temporal. Daí a coluna dupla acima. A conclusão — município domina — é
+> robusta a todas as leituras.
+
+> **Correção de 2026-08-29.** Esta tabela reportava `60,9% / 13,3% / 11,6% /
+> 14,2%`, números de um modelo superado (400 árvores, depth 3, antes da
+> integração de território — os blocos nem incluíam meta do PDE, `sigla_uf` e
+> população). O [`HANDOFF_RENAN.md`](docs/HANDOFF_RENAN.md) Cap. 10.3 carrega
+> um terceiro par (`45,1% / 9,9%`), de outra execução intermediária. **O valor
+> canônico é o desta tabela**, recalculado do JSON regenerado em 2026-08-25.
+> A conclusão — município domina — é robusta nas três leituras; só a magnitude
+> mudou, e para mais.
 
 ### 7.2 O teste de falsificação — o resultado que decide o projeto
 
@@ -295,17 +405,24 @@ disco). Isso mudou o modelo de aleatório para algo com sinal real:
 
 | Abordagem | ROC-AUC |
 |---|---|
+| Referência aleatória | 0,5039 |
 | Baseline: taxa de não-alfabetização municipal t-1 | 0,5816 |
+| **Modelo aluno-nível completo (12 features)** | **0,6047** |
 | **Baseline: meta do PDE, aplicada uniformemente a todos os alunos do município** | **0,6331** |
-| **Modelo aluno-nível completo (12 features)** | **0,6013** |
 
-Diferença modelo − melhor baseline: **−0,0318**, IC95% bootstrap pareado
-**[−0,0374, −0,0261]** — inteiramente negativo. O modelo perde em **5 de 5**
-orçamentos de busca ativa testados (5% a 50% dos alunos).
+Diferença modelo − melhor baseline: **−0,0284**, IC95% bootstrap pareado
+**[−0,0342, −0,0228]** (n = 24.505, 2.000 reamostragens) — inteiramente
+negativo. Não é empate: é derrota com significância. O modelo perde também em
+**5 de 5** orçamentos de busca ativa testados (5% a 50% dos alunos).
+
+*Números de [`reports/teste_falsificacao.json`](reports/teste_falsificacao.json),
+regenerado em 2026-08-25 com `n_jobs=1` (ver ADR-0007). A ordem da tabela é
+proposital: o modelo fica **entre** o baseline fraco e o forte.*
 
 **Isso não foi a primeira medição.** Uma versão anterior do teste, usando a
 taxa bruta municipal como baseline, tinha *passado* (0,6013 vs 0,5816,
-IC95% [+0,0129, +0,0263]). Investigar de onde vinha essa vitória mostrou que
+IC95% [+0,0129, +0,0263] — valores medidos à época, antes da correção de
+determinismo do ADR-0007). Investigar de onde vinha essa vitória mostrou que
 ela dependia quase inteiramente de uma única feature — a meta do PDE — que
 correlaciona 0,979 com a taxa de alfabetização do próprio ano. Ou seja: a
 meta *é* um número município tão forte que comparar o modelo contra um
@@ -315,11 +432,88 @@ inverteu. Ver [`docs/HANDOFF_RENAN.md`](docs/HANDOFF_RENAN.md) Cap. 14 para
 a sequência completa, incluindo o bug de leitura do intervalo de confiança
 que também foi corrigido nesse processo.
 
-### 7.3 Leitura honesta
+### 7.3 O veredito depende do algoritmo escolhido? (não)
+
+A objeção óbvia contra a §7.2 é *"vocês perderam porque escolheram o algoritmo
+errado"*. `src/evaluation/04_robustez_algoritmo.py` responde rodando os **três
+candidatos do torneio** no mesmo split temporal, com o mesmo baseline
+(reusado por import do teste canônico, não recalculado — ver ADR-0005).
+
+São 3 comparações informando uma decisão, então o veredito usa intervalo
+**corrigido por Bonferroni** (α 0,05/3 → IC de 98,33%):
+
+| Candidato | ROC-AUC | Diferença vs baseline 0,6331 | IC 98,33% | Veredito |
+|---|---|---|---|---|
+| XGBoost (canônico) | 0,6047 | −0,0284 | [−0,0354, −0,0217] | **perde** com significância |
+| Random Forest | 0,6322 | −0,0009 | [−0,0042, +0,0024] | equivalente ao baseline |
+| Regressão Logística | 0,6325 | −0,0006 | [−0,0034, +0,0021] | equivalente ao baseline |
+
+**Nenhum supera o baseline** — a recomendação de negócio não muda: use a meta
+do PDE, que é gratuita. Mas a *magnitude* da derrota era artefato do XGBoost:
+−0,0284 contra −0,0009 do Random Forest, ~30× de diferença.
+
+**"Equivalente" aqui é afirmação forte, não desculpa.** O IC do Random Forest
+tem largura 0,0066 e está inteiramente contido numa faixa desprezível em torno
+de zero — isso *limita* a diferença, não apenas deixa de detectá-la. É o
+oposto das 17 UFs inconclusivas do ranking intra-UF (§8), onde os intervalos
+passam de 0,3 de largura: lá o dado não sabe, aqui o dado sabe que não há
+diferença material. Só se pode chamar de empate quando o intervalo é estreito;
+com intervalo largo, o nome honesto é *inconclusivo*.
+
+**E empatar não é "quase lá".** 0,632 contra 0,6331 significa que os dois
+modelos **re-derivaram o baseline** — chegaram ao mesmo lugar por um caminho
+caro. Um modelo que iguala uma regra de uma linha não justifica existir.
+
+### 7.4 Por que o XGBoost cai, e o que isso revela sobre o dado
+
+Investigando a diferença, apareceu um defeito estrutural que nenhuma EDA do
+projeto tinha pego — porque todas rodaram sobre o dataset inteiro, e este só
+aparece **dentro do split de treino**.
+
+No ano de treino (2023), as 6 features de histórico t-1 estão assim:
+
+| Feature | 2023 (treino) | 2024 (scoring) |
+|---|---|---|
+| `n_alunos_hist_escola_t1` | **100% nula** → descartada em silêncio | 78,2% nula |
+| `n_alunos_hist_municipio_t1` | **100% nula** → descartada em silêncio | 28,5% nula |
+| `possui_hist_escola_t1` | **constante 0** | 0/1 |
+| `possui_hist_municipio_t1` | **constante 0** | 0/1 |
+| `absenteismo_hist_escola_t1` | **1 valor único por UF** | 3 a 21 por UF |
+| `absenteismo_hist_municipio_t1` | **1 valor único por UF** | até 50 por UF |
+
+A causa é aritmética simples: **a base tem 2 anos, e o t-1 de 2023 seria 2022**.
+A imputação preenche o absenteísmo pela mediana da UF — o que torna a coluna
+uma cópia de `sigla_uf`, já presente no modelo — e não toca nos contadores,
+que ficam nulos e são descartados pelo `SimpleImputer` com apenas um
+`UserWarning`.
+
+**O modelo declara 12 features e treina com 10.** É *training-serving skew*: o
+que ele vê no treino não é o que recebe no scoring.
+
+Isso explica a §7.3 sem precisar de nenhuma hipótese extra. O XGBoost tem
+capacidade para ajustar esse mapeamento degenerado de 2023 — e era o candidato
+com maior gap treino-validação (+0,030, §5.1). Esse mapeamento não vale em
+2024. Random Forest e Logística não se agarram a ele e pousam no que sobra:
+o sinal municipal, que **é** o baseline.
+
+**Isto muda o argumento do projeto, para melhor.** A conclusão deixa de ser
+"aluno não tem sinal" e passa a ser mais precisa e mais defensável:
+
+> Com 2 anos de dado, **não é possível testar** se o nível aluno tem sinal. O
+> desenho de validação temporal consome o único ano de histórico disponível, e
+> o que resta para o modelo aprender é exatamente o baseline municipal.
+
+Ou seja: **um terceiro ano não é melhoria incremental, é pré-condição** para a
+pergunta do enunciado ser respondível com validação temporal. Detalhe completo
+e alternativas descartadas em
+[`ADR-0008`](docs/adr/0008-skew-treino-servico-nas-features-de-historico.md).
+
+### 7.5 Leitura honesta
 
 O modelo aprendeu algo real — saiu de ROC-AUC aleatório (0,507, antes do
-território) para 0,601. Mas o sinal que ele capturou é fundamentalmente
-municipal (SHAP confirma: histórico de município soma 60,9% da influência).
+território) para 0,605. Mas o sinal que ele capturou é fundamentalmente
+municipal (SHAP confirma: features de município somam **81,3%** da influência
+no split temporal, contra 7,5% das de escola).
 **Usar esse sinal diretamente, sem passá-lo por um modelo de aluno, funciona
 melhor do que o modelo.** É exatamente o cenário de regressão previsto no
 ADR-0001 §5 ("o modelo é o baseline municipal disfarçado") — agora medido,
@@ -343,14 +537,40 @@ outros projetos.
 aluno, uma "taxa de absenteísmo por escola" não é estatisticamente viável —
 só pode valer 0% ou 100%. Por município a cobertura é robusta (65,2% entre
 anos). O SHAP confirmou empiricamente essa decisão de desenho: nível
-município pesa 4,5× mais que nível escola.
+município pesa **10,8×** mais que nível escola no split temporal
+(81,3% contra 7,5%) e 18× no aleatório — ver §7.1.
+
+**A chave de join fecha a questão de enriquecimento externo.** O enunciado
+autoriza enriquecer com IBGE, Censo Escolar, FUNDEB, PNAD, Atlas do
+Desenvolvimento Humano, Cadastro Único e dados socioeconômicos regionais. Mas
+só se enriquece na granularidade de uma chave que seja **real** e
+**compartilhada** com a fonte externa — e nesta base:
+
+| Chave | Natureza | Fontes externas que entram |
+|---|---|---|
+| `id_municipio` | ✅ código IBGE real | todas as municipais |
+| `id_escola` | ❌ sequencial sintético | **nenhuma** (0% de cobertura, testado) |
+| `id_aluno` | ❌ sintético | nenhuma |
+
+Consequência lógica, não empírica: **todo enriquecimento possível nesta base é
+constante dentro do município.** E variável constante dentro do município não
+distingue dois alunos do mesmo município — por construção de função, não por
+limitação de algoritmo. Ela só distingue municípios, que é exatamente o que a
+meta do PDE já faz melhor.
+
+Resumindo em uma frase: **o projeto foi pedido para prever indivíduos a partir
+de uma base que nunca observou indivíduos.**
 
 **Uma meta de política pública é um preditor melhor que o modelo.** A meta
 do PDE, aplicada uniformemente a todos os alunos do município, sozinha —
-sem nenhuma feature de aluno — supera o modelo completo de 12 features. Não
-é uma limitação do algoritmo (testamos três, todos convergem para o mesmo
-teto); é limitação do que os dados atualmente disponíveis conseguem
-diferenciar dentro de um mesmo município.
+sem nenhuma feature de aluno — supera o modelo completo de 12 features.
+
+Não é limitação do algoritmo, e isso agora está **medido**, não afirmado: os
+três candidatos rodados no mesmo split temporal contra o mesmo baseline
+convergem para o mesmo teto — Random Forest 0,6322 e Regressão Logística
+0,6325 contra 0,6331 do baseline, com intervalos que os declaram equivalentes
+a ele (§7.3). É limitação do que os dados disponíveis conseguem diferenciar
+dentro de um mesmo município.
 
 ### A reformulação do alvo, e o achado de maior valor do projeto
 
@@ -365,7 +585,7 @@ Antes, três hipóteses de "faltava dado" foram **medidas e fechadas**:
 |---|---|
 | Existe questionário socioeconômico do aluno? | Sem evidência (5ª tentativa de acesso ao INEP; todas as fontes descrevem só a prova) |
 | Enriquecer com Censo Escolar | **0% de cobertura** — nosso `id_escola` é sequencial (60000002–60042811); o `CO_ENTIDADE` oficial usa prefixo de UF (11–53). É identificador sintético, sem tabela de correspondência |
-| Sobra sinal de aluno depois do baseline? | **−0,0318**, IC95% [−0,0374, −0,0261] — dar o baseline ao modelo *como feature* e somar as features de aluno **piora** o resultado (`src/evaluation/03_teste_residuo.py`) |
+| Sobra sinal de aluno depois do baseline? | **−0,0284**, IC95% [−0,0342, −0,0228] — dar o baseline ao modelo *como feature* e somar as features de aluno **piora** o resultado (`src/evaluation/03_teste_residuo.py`) |
 
 No grão município (5.232 casos, alvo `taxa_2024 < meta_2024`), o modelo
 **passou** no teste de falsificação — AUC 0,7709 contra 0,7294 de um lookup de
@@ -404,7 +624,14 @@ das outras UFs** (leave-one-UF-out, sem olhar o resultado do próprio estado):
 | **modelo** | **0,6478** — ganho **+0,027**, IC95% [+0,007, +0,048] |
 
 Veredito por UF com IC95% pareado: o modelo **vence em 3** (PR, RJ, RS),
-**perde em 3** (MG, RN, TO) e **empata em 17**.
+**perde em 3** (MG, RN, TO) e fica **inconclusivo em 17**.
+
+*"Inconclusivo" não é "empata".* Um IC que cruza o zero é **ausência de
+evidência**, não evidência de equivalência — nessas 17 UFs o dado não permite
+afirmar nem negar vantagem, e a recomendação prática é usar a regra trivial,
+que é mais barata. O campo `veredito` de
+[`ranking_intra_uf.json`](reports/ranking_intra_uf.json) grava `inconclusivo`
+exatamente por isso.
 
 **De onde vem a vantagem:** das 7 UFs onde a direção *não* é previsível de
 fora (+0,155, IC95% [+0,082, +0,226]). Nas 16 previsíveis, empate técnico
@@ -426,10 +653,18 @@ omitido.
 
 - **O modelo aluno-nível não supera o melhor baseline municipal** — ver §7.
   Segunda limitação mais importante para qualquer decisão de uso.
+- **Com 2 anos de dado, a validação temporal não consegue testar o nível
+  aluno.** O t-1 de 2023 seria 2022, que não existe: no ano de treino as 6
+  features de histórico são nulas, constantes ou cópias de `sigla_uf`, e o
+  modelo treina com 10 das 12 features declaradas (§7.4). Quatro delas valem
+  **0,0%** de influência (§7.1). Não é bug de código — é consequência
+  aritmética do tamanho da série. **Um terceiro ano é pré-condição, não
+  melhoria incremental.** Ver
+  [`ADR-0008`](docs/adr/0008-skew-treino-servico-nas-features-de-historico.md).
 - **`peso_aluno`** (peso amostral) foi excluído como feature — seu uso
   correto é exclusivamente estatístico, para ponderar cálculos de
   população, nunca como entrada de modelo.
-- **`caderno`** carrega um resíduo de influência (11,6%) sem explicação
+- **`caderno`** carrega um resíduo de influência (6,7%) sem explicação
   causal confirmada. Três tentativas de acessar o dicionário oficial de
   valores do INEP (portal restrito, basedosdados.org sem essa informação,
   PDF técnico com erro de certificado) não resolveram a categoria 12 —
@@ -476,10 +711,11 @@ Três decisões de produto que valem registro:
   ordenar municípios de estados diferentes, ela convidaria exatamente o erro
   descrito em §9. A restrição vive na ferramenta, não no rodapé.
 - **Cada estado declara se o modelo ajuda ali — em três estados, não dois.**
-  O painel mostra `vence` (PR, RJ, RS), `perde` (MG, RN, TO) ou `empata` (as
-  outras 17), pelo IC95% pareado contra a regra simples. Nos 3 estados em que
-  perde, ele **recomenda a regra simples** em vez de si mesmo. Um painel que
-  só soubesse dizer "vence/perde" esconderia que a maioria dos casos é empate.
+  O painel mostra `vence` (PR, RJ, RS), `perde` (MG, RN, TO) ou
+  `inconclusivo` (as outras 17), pelo IC95% pareado contra a regra simples.
+  Nos 3 estados em que perde, ele **recomenda a regra simples** em vez de si
+  mesmo. Um painel que só soubesse dizer "vence/perde" esconderia que a
+  maioria dos casos não tem evidência em nenhuma direção.
 - **Cada estado declara qual direção vale ali.** Antes de qualquer ranking, o
   painel diz se a regra que funciona naquele estado é "priorize quem estava
   melhor" ou "quem estava pior" — e avisa quando é um dos 7 estados em que
@@ -508,7 +744,7 @@ jeito, e aqui está a prova — mas deste outro jeito, sim."*
   (SICONFI, Atlas do Desenvolvimento Humano) — é onde há sinal legítimo e
   ainda não exploramos features além das quatro atuais.
 - **Resolver `caderno=12`** com acesso ao dicionário oficial do INEP — hoje o
-  resíduo de 11,6% de influência fica sem explicação causal.
+  resíduo de 6,7% de influência fica sem explicação causal.
 - **Re-executar com dado de 2025** para checar se o efeito de régua estadual
   persiste ou se foi específico do ciclo 2024.
 

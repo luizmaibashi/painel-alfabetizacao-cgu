@@ -111,6 +111,16 @@ TODAS_CANDIDATAS = (
     CANDIDATAS_NUMERICAS + CANDIDATAS_CATEGORICAS + CANDIDATAS_PASSTHROUGH
 )
 
+# Features que SÓ existem no snapshot `--full` (território/socioeconômico,
+# montado por 05_montar_territorio.py). A presença de qualquer uma delas prova
+# que o snapshot não é local-only — é o que `descrever_snapshot` usa para
+# derivar o rótulo em vez de confiar numa constante escrita à mão.
+COLUNAS_TERRITORIO = [
+    "populacao_total",
+    "gasto_por_habitante_educacao",
+    "meta_alfabetizacao_2024_imputada",
+]
+
 
 def _presentes(candidatas: list[str], df: pd.DataFrame) -> list[str]:
     return [c for c in candidatas if c in df.columns]
@@ -129,6 +139,45 @@ def colunas_feature(df: pd.DataFrame) -> list[str]:
     """Colunas de entrada do preprocessador, na ordem que ele espera."""
     tipos = colunas_por_tipo(df)
     return tipos["numericas"] + tipos["categoricas"] + tipos["passthrough"]
+
+
+def descrever_snapshot(df: pd.DataFrame) -> str:
+    """
+    Rótulo de proveniência do snapshot, DERIVADO das colunas presentes.
+
+    POR QUE ISTO EXISTE (correção de 2026-08-29)
+    ---------------------------------------------
+    `02_tournament_modelos.py` gravava em `reports/metrics_tournament.json` a
+    string literal `"local-only (sem territorio/socioeconomico/meta)"`. Era
+    constante hardcoded, não leitura do estado — e o MESMO JSON listava
+    `populacao_total`, `meta_alfabetizacao_2024_imputada` e `sigla_uf` em
+    `features_usadas`. Quem lesse o relatório concluiria que o ROC-AUC ~0,68
+    veio de sinal puramente local, quando ele vem justamente do bloco
+    municipal (SHAP: 85,3% da influência contra 4,7% de escola).
+
+    Agravante: o rótulo citava um modo `--local-only` que este script nem
+    expõe — o único flag dele é `--temporal`. Descrevia um estado que não
+    existia mais em nenhum lugar do código.
+
+    É a "guarda silenciosa" do AGENTS.md na forma mais barata de errar: o
+    rótulo não quebra nada, não derruba teste, só convence quem lê. Derivar do
+    dataframe faz o rótulo acompanhar o dado por construção, em vez de depender
+    de alguém lembrar de editar a string quando o snapshot muda.
+
+    TRÊS ESTADOS, não dois: território incompleto é situação real (hoje o
+    snapshot tem `populacao_total` e a meta, mas não
+    `gasto_por_habitante_educacao`). Colapsar "parcial" em "full" reintroduz
+    a mesma mentira em escala menor, então o rótulo nomeia o que falta.
+    """
+    presentes = _presentes(COLUNAS_TERRITORIO, df)
+    if not presentes:
+        return "local-only (sem territorio/socioeconomico/meta)"
+
+    ausentes = [c for c in COLUNAS_TERRITORIO if c not in presentes]
+    if not ausentes:
+        return f"full (territorio completo: {', '.join(presentes)})"
+    return (f"parcial (com: {', '.join(presentes)}; "
+            f"sem: {', '.join(ausentes)})")
 
 
 class ColunaNaoDeclaradaError(RuntimeError):

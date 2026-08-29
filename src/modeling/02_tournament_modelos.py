@@ -39,10 +39,20 @@ risco não identificado) é o erro caro no caso de uso de busca ativa. Precision
 entra como contrapeso: Recall alto com Precision no chão significa marcar todo
 mundo como risco, o que não prioriza nada.
 
-ATENÇÃO AO LER OS NÚMEROS: roda sobre o snapshot `--local-only` (48.055 alunos
-avaliados, sem território/socioeconômico/meta). NÃO são números de README —
-servem para escolher o algoritmo e como base de comparação para quando o
-`--full` rodar.
+ATENÇÃO AO LER OS NÚMEROS (corrigido em 2026-08-29): este script lê o que
+estiver em `data/snapshot_modelagem.parquet` — ele não tem flag de modo, e o
+`--local-only`/`--full` que esta docstring citava nunca existiu aqui (o único
+flag é `--temporal`). O rótulo de proveniência gravado no JSON agora é
+DERIVADO das colunas presentes (`descrever_snapshot`), não uma constante.
+
+Hoje o snapshot inclui território (`populacao_total`, meta do PDE), então o
+ROC-AUC ~0,68 desta bateria **não** é sinal puramente local: o SHAP mostra
+85,3% da influência vindo do bloco municipal. Ler estes números como
+"desempenho sem território" foi exatamente o erro que a string fixa induzia.
+
+Além disso: o split aqui é ALEATÓRIO (80/20). O veredito do projeto vem do
+split TEMPORAL (2023→2024) em `02_teste_falsificacao.py`, muito mais duro —
+0,68 aqui e 0,60 lá não são comparáveis.
 
 POPULAÇÃO (2026-08-18): o snapshot passou a conter só alunos AVALIADOS, que é a
 metodologia oficial do indicador (ver docstring de `carregar_alunos` em
@@ -78,7 +88,7 @@ BASE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BASE / "src" / "preprocessing"))
 from pipeline_preprocessamento import (  # noqa: E402
     COLUNA_TARGET, colunas_feature, construir_preprocessador, descrever_features,
-    validar_cobertura_colunas,
+    descrever_snapshot, validar_cobertura_colunas,
 )
 
 RANDOM_STATE = 42
@@ -409,7 +419,11 @@ def main():
 
     saida = {
         "contexto": {
-            "snapshot": "local-only (sem territorio/socioeconomico/meta)",
+            # Derivado do dataframe, nunca escrito a mao: a versao anterior era
+            # a string fixa "local-only (sem territorio/socioeconomico/meta)"
+            # gravada junto de features_usadas que INCLUIA territorio. Ver
+            # descrever_snapshot() em pipeline_preprocessamento.py.
+            "snapshot": descrever_snapshot(df),
             "n_linhas": int(len(df)),
             "n_treino": int(len(X_train)),
             "n_teste": int(len(X_test)),

@@ -1,0 +1,111 @@
+{
+  "aviso": "Encoding nao cria informacao. Este relatorio cumpre a exigencia literal do enunciado (p.5, 'tecnicas de feature encoding', plural) e demonstra dominio de tecnica. Nao e tentativa de salvar o modelo aluno-nivel.",
+  "desenho": {
+    "split": "temporal, treina 2023, testa 2024",
+    "n_treino": 23550,
+    "n_teste": 24505,
+    "baseline_comparado": "meta_pde",
+    "auc_baseline": 0.6330826061326773,
+    "aucs_baselines": {
+      "taxa_nao_alfab_t1": 0.5815595658315599,
+      "meta_pde": 0.6330826061326773,
+      "combinado_ranks": 0.6214432115135127
+    },
+    "contencao_de_vazamento": "TargetEncoder com cv=5 (cross-fitting interno); fit so no treino; split temporal"
+  },
+  "bateria_a_categoricas_atuais": {
+    "onehot": {
+      "roc_auc": 0.6046630783347305,
+      "n_colunas_apos_encoding": 36,
+      "vs_baseline": {
+        "diferenca_observada": -0.028419527797946764,
+        "n_teste": 24505,
+        "n_bootstrap": 2000,
+        "intervalos": {
+          "ic95": {
+            "alpha": 0.05,
+            "inferior": -0.03420421236104161,
+            "superior": -0.022754122230617513,
+            "vence": false,
+            "perde": true
+          }
+        }
+      }
+    },
+    "target": {
+      "roc_auc": 0.6096213268686759,
+      "n_colunas_apos_encoding": 10,
+      "vs_baseline": {
+        "diferenca_observada": -0.023461279264001433,
+        "n_teste": 24505,
+        "n_bootstrap": 2000,
+        "intervalos": {
+          "ic95": {
+            "alpha": 0.05,
+            "inferior": -0.028899973095579026,
+            "superior": -0.01808583364149767,
+            "vence": false,
+            "perde": true
+          }
+        }
+      }
+    },
+    "frequency": {
+      "roc_auc": 0.6031872238807028,
+      "n_colunas_apos_encoding": 10,
+      "vs_baseline": {
+        "diferenca_observada": -0.029895382251974523,
+        "n_teste": 24505,
+        "n_bootstrap": 2000,
+        "intervalos": {
+          "ic95": {
+            "alpha": 0.05,
+            "inferior": -0.03571275403195858,
+            "superior": -0.0240796477565702,
+            "vence": false,
+            "perde": true
+          }
+        }
+      }
+    }
+  },
+  "bateria_b_alta_cardinalidade": {
+    "target": {
+      "roc_auc": 0.6123162689149007,
+      "n_colunas_apos_encoding": 11,
+      "vs_baseline": {
+        "diferenca_observada": -0.020766337217776654,
+        "n_teste": 24505,
+        "n_bootstrap": 2000,
+        "intervalos": {
+          "ic95": {
+            "alpha": 0.05,
+            "inferior": -0.02621189478254908,
+            "superior": -0.015834543597094457,
+            "vence": false,
+            "perde": true
+          }
+        }
+      }
+    },
+    "frequency": {
+      "roc_auc": 0.5914778160817566,
+      "n_colunas_apos_encoding": 11,
+      "vs_baseline": {
+        "diferenca_observada": -0.04160479005092066,
+        "n_teste": 24505,
+        "n_bootstrap": 2000,
+        "intervalos": {
+          "ic95": {
+            "alpha": 0.05,
+            "inferior": -0.048428587124456426,
+            "superior": -0.03445127397538428,
+            "vence": false,
+            "perde": true
+          }
+        }
+      }
+    }
+  },
+  "bateria_b_previsao_registrada": "Escrita antes de rodar: target encoding de id_municipio calcula a media do alvo por municipio no treino, que E a taxa de nao-alfabetizacao municipal de 2023 -- o baseline taxa_nao_alfab_t1 (0.5816). Previsao: converge para perto desse valor, nao para o da meta do PDE."
+}

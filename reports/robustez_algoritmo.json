@@ -1,0 +1,112 @@
+{
+  "pergunta": "O veredito da falsificacao depende do algoritmo escolhido, ou e limitacao do dado?",
+  "desenho": {
+    "treino": "alunos de 2023",
+    "n_treino": 23550,
+    "teste": "alunos de 2024",
+    "n_teste": 24505,
+    "features": [
+      "absenteismo_hist_escola_t1",
+      "absenteismo_hist_municipio_t1",
+      "n_alunos_hist_escola_t1",
+      "n_alunos_hist_municipio_t1",
+      "populacao_total",
+      "meta_alfabetizacao_2024_imputada",
+      "caderno",
+      "rede",
+      "sigla_uf",
+      "possui_hist_escola_t1",
+      "possui_hist_municipio_t1",
+      "meta_is_imputada"
+    ],
+    "baseline": "meta_pde",
+    "auc_baseline": 0.6330826061326773,
+    "aucs_todos_baselines": {
+      "taxa_nao_alfab_t1": 0.5815595658315599,
+      "meta_pde": 0.6330826061326773,
+      "combinado_ranks": 0.6214432115135127
+    },
+    "baseline_reusado_de": "src/evaluation/02_teste_falsificacao.py (baselines_municipais) — nao reimplementado"
+  },
+  "correcao_comparacoes_multiplas": {
+    "metodo": "Bonferroni",
+    "n_comparacoes": 3,
+    "alpha_original": 0.05,
+    "alpha_corrigido": 0.016666666666666666,
+    "por_que": "3 comparacoes informam UMA decisao (existe algoritmo que salva o aluno-nivel?). Sem correcao, a chance de um vencer por ruido cresce com o numero de tentativas.",
+    "veredito_usa": "o intervalo corrigido"
+  },
+  "resultados": {
+    "xgboost": {
+      "nota_configuracao": "configuracao canonica do 02_teste_falsificacao.py (800 arvores, depth 8)",
+      "roc_auc": 0.6046630783347305,
+      "diferenca_observada": -0.028419527797946764,
+      "n_teste": 24505,
+      "n_bootstrap": 2000,
+      "intervalos": {
+        "ic95": {
+          "alpha": 0.05,
+          "inferior": -0.03420421236104161,
+          "superior": -0.022754122230617513,
+          "vence": false,
+          "perde": true
+        },
+        "ic98.3333": {
+          "alpha": 0.016666666666666666,
+          "inferior": -0.03541525459455045,
+          "superior": -0.021697334779908015,
+          "vence": false,
+          "perde": true
+        }
+      }
+    },
+    "random_forest": {
+      "nota_configuracao": "extremo forte do grid do torneio (800 arvores, depth 12)",
+      "roc_auc": 0.6321716982514736,
+      "diferenca_observada": -0.0009109078812037374,
+      "n_teste": 24505,
+      "n_bootstrap": 2000,
+      "intervalos": {
+        "ic95": {
+          "alpha": 0.05,
+          "inferior": -0.003710063378683126,
+          "superior": 0.0019240069858639589,
+          "vence": false,
+          "perde": false
+        },
+        "ic98.3333": {
+          "alpha": 0.016666666666666666,
+          "inferior": -0.004181728663324747,
+          "superior": 0.002413058360091026,
+          "vence": false,
+          "perde": false
+        }
+      }
+    },
+    "regressao_logistica": {
+      "nota_configuracao": "C=1.0, o centro do grid do torneio",
+      "roc_auc": 0.6324706175636197,
+      "diferenca_observada": -0.0006119885690576421,
+      "n_teste": 24505,
+      "n_bootstrap": 2000,
+      "intervalos": {
+        "ic95": {
+          "alpha": 0.05,
+          "inferior": -0.002840115916581573,
+          "superior": 0.00156463585405135,
+          "vence": false,
+          "perde": false
+        },
+        "ic98.3333": {
+          "alpha": 0.016666666666666666,
+          "inferior": -0.003409031556234061,
+          "superior": 0.002102734691073222,
+          "vence": false,
+          "perde": false
+        }
+      }
+    }
+  },
+  "veredito": "PARCIAL — nenhum vence, mas nem todos perdem com significancia",
+  "leitura": "Nenhum candidato supera o baseline, mas algum ficou inconclusivo apos a correcao. O veredito de derrota se sustenta para os que perderam; para os demais o dado nao permite afirmar nem negar."
+}
