@@ -5,6 +5,11 @@ __pycache__/
 *.parquet
 *.crc
 
+# Originais redundantes do Atlas IDHM; o experimento consome somente o recorte
+# mínimo e versionado `dados_externos/idhm_municipio_2010.csv`.
+dados_externos/idhm_municipio_1991_2010.csv
+dados_externos/idhm_municipio_1991_2010.csv.gz
+
 # Material do curso (nao redistribuir)
 # Colchetes escapados: em sintaxe .gitignore, [IAST] sem escape e uma classe
 # de caracteres (casa I, A, S ou T sozinho), nao colchetes literais -- sem

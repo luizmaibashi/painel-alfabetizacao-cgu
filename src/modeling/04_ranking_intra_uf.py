@@ -115,6 +115,10 @@ UF_POR_PREFIXO = _territorio.UF_POR_PREFIXO
 METAS = FASE2 / "dados" / "br_inep_avaliacao_alfabetizacao_meta_alfabetizacao_municipio.csv.gz"
 TERRITORIO = BASE / "data" / "territorio_local.parquet"
 IBGE_MUNICIPIOS = "https://servicodados.ibge.gov.br/api/v1/localidades/municipios"
+# ADR-0009: IDHM-M constante (sem serie anual, 2010 e o ano mais recente com
+# cobertura municipal completa). Ver reports/proveniencia_idhm.md,
+# reports/eda_idhm.md e reports/dicionario_idhm.md para o gate CRISP-DM.
+IDHM = BASE / "dados_externos" / "idhm_municipio_2010.csv"
 
 RANDOM_STATE = 42
 N_FOLDS_MAX = 5
@@ -125,8 +129,16 @@ N_BOOT = 1000
 # outros 6 que ficavam de fora do piso antigo (100) agora entram com dobras
 # adaptativas + IC bootstrap explicito (ver `amostra_pequena` na saida).
 MIN_MUNICIPIOS_POR_UF = 40
-FEATURES = ["taxa23", "meta_alfabetizacao_2024", "meta_alfabetizacao_2025",
-            "populacao_total"]
+FEATURES_BASE = ["taxa23", "meta_alfabetizacao_2024", "meta_alfabetizacao_2025",
+                  "populacao_total"]
+# ADR-0009: features de enriquecimento municipal, testadas em separado do
+# baseline acima (FEATURES_BASE) para poder reportar as duas metricas de
+# sucesso definidas no ADR sem misturar contribuicao de cada fonte:
+#   1. IC95% bootstrap pareado do AUC ponderado, com vs sem enriquecimento.
+#   2. Contagem de UFs que mudam de veredito (inconclusivo -> modelo_vence).
+# FUNDEB adiado (ADR-0009 SS7) -- so IDHM nesta rodada.
+FEATURES_IDHM = ["idhm", "idhm_e", "idhm_l", "idhm_r"]
+FEATURES = FEATURES_BASE  # default: comportamento antigo preservado
 
 
 def bootstrap_ic_auc(y: np.ndarray, score: np.ndarray, n_boot: int = N_BOOT,
@@ -180,7 +192,7 @@ def buscar_nomes_ibge() -> pd.DataFrame:
     return df
 
 
-def montar_dataset() -> pd.DataFrame:
+def montar_dataset(com_idhm: bool = False) -> pd.DataFrame:
     df = pd.read_csv(METAS)
     df["id_municipio"] = df["id_municipio"].astype(str).str.zfill(7)
     d23 = df[df.ano == 2023][["id_municipio", "taxa_alfabetizacao",
@@ -198,6 +210,19 @@ def montar_dataset() -> pd.DataFrame:
     m = m.merge(buscar_nomes_ibge(), on="id_municipio", how="left")
     m["nome_municipio"] = m["nome_municipio"].fillna("(nome nao encontrado)")
 
+    if com_idhm:
+        # ADR-0009: IDHM constante (ano 2010, unico com serie municipal
+        # completa) -- mesmo valor aplicado a 2023/2024, nao e vazamento
+        # temporal porque a fonte nao tem granularidade anual pra vazar.
+        idhm = pd.read_csv(IDHM, usecols=["id_municipio"] + FEATURES_IDHM)
+        idhm["id_municipio"] = idhm["id_municipio"].astype(str).str.zfill(7)
+        cobertura_antes = len(m)
+        m = m.merge(idhm, on="id_municipio", how="left")
+        cobertura_idhm = m["idhm"].notna().sum()
+        print(f"  IDHM: {cobertura_idhm}/{cobertura_antes} municipios com "
+              f"match ({cobertura_idhm / cobertura_antes:.1%}) — sem piso "
+              f"minimo (ADR-0009), SimpleImputer cobre o resto")
+
     # UF pelo prefixo do codigo IBGE — definicao, nao heuristica (ver docstring
     # de buscar_nomes_ibge e o mesmo mapa em 05_montar_territorio.py).
     m["sigla_uf"] = m["id_municipio"].str[:2].astype(int).map(UF_POR_PREFIXO)
@@ -211,15 +236,16 @@ def montar_dataset() -> pd.DataFrame:
     return m.reset_index(drop=True)
 
 
-def _pipeline() -> Pipeline:
+def _pipeline(features: list[str]) -> Pipeline:
     pre = ColumnTransformer([("num", Pipeline([
         ("imputer", SimpleImputer(strategy="median")),
-        ("scaler", RobustScaler())]), FEATURES)])
+        ("scaler", RobustScaler())]), features)])
     return Pipeline([("prep", pre), ("modelo", RandomForestClassifier(
         n_estimators=200, max_depth=6, random_state=RANDOM_STATE, n_jobs=-1))])
 
 
-def treinar_por_uf(m: pd.DataFrame) -> tuple[pd.DataFrame, list[dict]]:
+def treinar_por_uf(m: pd.DataFrame, features: list[str] = FEATURES
+                    ) -> tuple[pd.DataFrame, list[dict]]:
     """
     Um modelo por UF. As predições são OUT-OF-FOLD: cada município é pontuado
     por um modelo que não o viu no treino — senão o score do produto seria
@@ -230,7 +256,7 @@ def treinar_por_uf(m: pd.DataFrame) -> tuple[pd.DataFrame, list[dict]]:
         if len(g) < MIN_MUNICIPIOS_POR_UF or g.y.nunique() < 2:
             continue
         g = g.copy().reset_index(drop=True)
-        X, y = g[FEATURES], g.y.values
+        X, y = g[features], g.y.values
 
         # Validacao adaptativa: estado grande mantem 5-fold (piso antigo,
         # inalterado); estado pequeno reduz dobras pra nao deixar fold sem
@@ -244,7 +270,7 @@ def treinar_por_uf(m: pd.DataFrame) -> tuple[pd.DataFrame, list[dict]]:
                                        random_state=RANDOM_STATE).split(X, y):
             if len(np.unique(y[tr])) < 2:
                 continue
-            pipe = _pipeline()
+            pipe = _pipeline(features)
             pipe.fit(X.iloc[tr], y[tr])
             oof[te] = pipe.predict_proba(X.iloc[te])[:, 1]
 

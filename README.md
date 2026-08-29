@@ -272,7 +272,7 @@ contínua 0,7673 de AUC equivalente, com R² de 0,36 no contínuo. Escolhemos
 direto de ordenar e explicar que uma magnitude em pp.
 
 **Algoritmo**: Random Forest, `n_estimators=200`, `max_depth=6`. Com quatro
-features e amostras pequenas por estado (n de 102 a 801), profundidade curta e
+features e amostras pequenas por estado (n de 48 a 801), profundidade curta e
 ensemble moderado importam mais que capacidade — XGBoost não ganhou nada aqui,
 e Logística não capta a não-linearidade da regressão à média que é justamente o
 sinal do problema.
@@ -387,15 +387,6 @@ de 20,4% para **46,5%**, absorvendo o que o histórico deixou de explicar.
 > diferentes**: o SHAP rodava em split aleatório e o veredito em split
 > temporal. Daí a coluna dupla acima. A conclusão — município domina — é
 > robusta a todas as leituras.
-
-> **Correção de 2026-08-29.** Esta tabela reportava `60,9% / 13,3% / 11,6% /
-> 14,2%`, números de um modelo superado (400 árvores, depth 3, antes da
-> integração de território — os blocos nem incluíam meta do PDE, `sigla_uf` e
-> população). O [`HANDOFF_RENAN.md`](docs/HANDOFF_RENAN.md) Cap. 10.3 carrega
-> um terceiro par (`45,1% / 9,9%`), de outra execução intermediária. **O valor
-> canônico é o desta tabela**, recalculado do JSON regenerado em 2026-08-25.
-> A conclusão — município domina — é robusta nas três leituras; só a magnitude
-> mudou, e para mais.
 
 ### 7.2 O teste de falsificação — o resultado que decide o projeto
 
@@ -782,9 +773,11 @@ python src/preprocessing/02_extrair_snapshot.py --full --silver data/territorio_
 python src/preprocessing/03_guarda_leakage.py                # gate: falha se houver vazamento
 python src/preprocessing/01_eda_alunos.py --dataset snapshot
 python src/modeling/02_tournament_modelos.py --temporal
-python src/evaluation/01_shap_interpretabilidade.py
+python src/modeling/05_comparar_encodings.py                 # OneHot, Target e Frequency
+python src/evaluation/01_shap_interpretabilidade.py --temporal
 python src/evaluation/02_teste_falsificacao.py               # o teste que decide o projeto
 python src/evaluation/03_teste_residuo.py                    # sobra sinal individual?
+python src/evaluation/04_robustez_algoritmo.py               # veredito independe do algoritmo?
 ```
 
 **Entregável 2 — priorização municipal intra-UF** (§8 e §10):

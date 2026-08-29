@@ -1,0 +1,1402 @@
+{
+  "criterio_sucesso": "ADR-0009 SS2 — duas metricas separadas, nunca uma so",
+  "auc_ponderado_sem_idhm": 0.6478,
+  "auc_ponderado_com_idhm": 0.6579,
+  "diferenca_auc_ponderado": 0.0101,
+  "ufs_idhm_ajuda": [
+    "MG",
+    "RN"
+  ],
+  "ufs_idhm_atrapalha": [
+    "PR",
+    "RJ"
+  ],
+  "todas_mudancas_de_veredito": {
+    "BA": {
+      "antes": "inconclusivo",
+      "depois": "modelo_perde"
+    },
+    "MG": {
+      "antes": "modelo_perde",
+      "depois": "inconclusivo"
+    },
+    "PE": {
+      "antes": "inconclusivo",
+      "depois": "modelo_vence"
+    },
+    "RN": {
+      "antes": "modelo_perde",
+      "depois": "inconclusivo"
+    }
+  },
+  "ufs_mudou_para_vence": [
+    "PE"
+  ],
+  "ufs_mudou_para_perde": [
+    "BA"
+  ],
+  "resultado": "misto",
+  "comparacao_por_uf": {
+    "AL": {
+      "auc_sem_idhm": 0.4235,
+      "auc_com_idhm": 0.4965,
+      "diferenca_ic95": [
+        -0.0078,
+        0.1561
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "AM": {
+      "auc_sem_idhm": 0.4429,
+      "auc_com_idhm": 0.4582,
+      "diferenca_ic95": [
+        -0.1539,
+        0.2057
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "BA": {
+      "auc_sem_idhm": 0.6487,
+      "auc_com_idhm": 0.6247,
+      "diferenca_ic95": [
+        -0.0574,
+        0.0098
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "CE": {
+      "auc_sem_idhm": 0.9001,
+      "auc_com_idhm": 0.9204,
+      "diferenca_ic95": [
+        -0.0058,
+        0.0529
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "ES": {
+      "auc_sem_idhm": 0.4764,
+      "auc_com_idhm": 0.3617,
+      "diferenca_ic95": [
+        -0.2585,
+        0.0419
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "GO": {
+      "auc_sem_idhm": 0.575,
+      "auc_com_idhm": 0.5522,
+      "diferenca_ic95": [
+        -0.0842,
+        0.0505
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "MA": {
+      "auc_sem_idhm": 0.6769,
+      "auc_com_idhm": 0.7192,
+      "diferenca_ic95": [
+        -0.0122,
+        0.0955
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "MG": {
+      "auc_sem_idhm": 0.7236,
+      "auc_com_idhm": 0.7596,
+      "diferenca_ic95": [
+        0.0115,
+        0.0603
+      ],
+      "veredito_idhm": "idhm_ajuda"
+    },
+    "MS": {
+      "auc_sem_idhm": 0.7147,
+      "auc_com_idhm": 0.7019,
+      "diferenca_ic95": [
+        -0.0882,
+        0.0563
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "MT": {
+      "auc_sem_idhm": 0.632,
+      "auc_com_idhm": 0.6748,
+      "diferenca_ic95": [
+        -0.0297,
+        0.1139
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "PA": {
+      "auc_sem_idhm": 0.6481,
+      "auc_com_idhm": 0.601,
+      "diferenca_ic95": [
+        -0.1295,
+        0.0316
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "PB": {
+      "auc_sem_idhm": 0.6981,
+      "auc_com_idhm": 0.7107,
+      "diferenca_ic95": [
+        -0.0319,
+        0.0545
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "PE": {
+      "auc_sem_idhm": 0.5321,
+      "auc_com_idhm": 0.5924,
+      "diferenca_ic95": [
+        -0.0089,
+        0.1296
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "PI": {
+      "auc_sem_idhm": 0.6024,
+      "auc_com_idhm": 0.5845,
+      "diferenca_ic95": [
+        -0.0782,
+        0.051
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "PR": {
+      "auc_sem_idhm": 0.6902,
+      "auc_com_idhm": 0.6547,
+      "diferenca_ic95": [
+        -0.0647,
+        -0.0032
+      ],
+      "veredito_idhm": "idhm_atrapalha"
+    },
+    "RJ": {
+      "auc_sem_idhm": 0.7474,
+      "auc_com_idhm": 0.6548,
+      "diferenca_ic95": [
+        -0.1816,
+        -0.0222
+      ],
+      "veredito_idhm": "idhm_atrapalha"
+    },
+    "RN": {
+      "auc_sem_idhm": 0.6669,
+      "auc_com_idhm": 0.735,
+      "diferenca_ic95": [
+        0.0061,
+        0.1262
+      ],
+      "veredito_idhm": "idhm_ajuda"
+    },
+    "RO": {
+      "auc_sem_idhm": 0.7037,
+      "auc_com_idhm": 0.703,
+      "diferenca_ic95": [
+        -0.1045,
+        0.0938
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "RS": {
+      "auc_sem_idhm": 0.6746,
+      "auc_com_idhm": 0.6749,
+      "diferenca_ic95": [
+        -0.0617,
+        0.0624
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "SC": {
+      "auc_sem_idhm": 0.5634,
+      "auc_com_idhm": 0.6005,
+      "diferenca_ic95": [
+        -0.0275,
+        0.1007
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "SE": {
+      "auc_sem_idhm": 0.6156,
+      "auc_com_idhm": 0.6835,
+      "diferenca_ic95": [
+        -0.0128,
+        0.1525
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "SP": {
+      "auc_sem_idhm": 0.5516,
+      "auc_com_idhm": 0.5765,
+      "diferenca_ic95": [
+        -0.0096,
+        0.0618
+      ],
+      "veredito_idhm": "sem_diferenca"
+    },
+    "TO": {
+      "auc_sem_idhm": 0.6992,
+      "auc_com_idhm": 0.71,
+      "diferenca_ic95": [
+        -0.0364,
+        0.0566
+      ],
+      "veredito_idhm": "sem_diferenca"
+    }
+  },
+  "metricas_sem_idhm": [
+    {
+      "uf": "AL",
+      "n_municipios": 102,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.451,
+      "auc_modelo": 0.4235,
+      "auc_modelo_ic95": [
+        0.3083,
+        0.5229
+      ],
+      "auc_dir_pior": 0.5602,
+      "auc_dir_melhor": 0.4398,
+      "direcao_real": "pior_primeiro",
+      "folga_media": -4.557,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.4398,
+      "ganho_sobre_baseline": -0.0163,
+      "ganho_ic95": [
+        -0.1891,
+        0.1505
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "AM",
+      "n_municipios": 48,
+      "n_folds": 2,
+      "amostra_pequena": true,
+      "taxa_falha_observada": 0.7292,
+      "auc_modelo": 0.4429,
+      "auc_modelo_ic95": [
+        0.2548,
+        0.627
+      ],
+      "auc_dir_pior": 0.5088,
+      "auc_dir_melhor": 0.4912,
+      "direcao_real": "pior_primeiro",
+      "folga_media": -4.807,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.4912,
+      "ganho_sobre_baseline": -0.0483,
+      "ganho_ic95": [
+        -0.3715,
+        0.2714
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "BA",
+      "n_municipios": 394,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.8096,
+      "auc_modelo": 0.6487,
+      "auc_modelo_ic95": [
+        0.5679,
+        0.7245
+      ],
+      "auc_dir_pior": 0.2989,
+      "auc_dir_melhor": 0.7011,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -6.094,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7011,
+      "ganho_sobre_baseline": -0.0524,
+      "ganho_ic95": [
+        -0.1048,
+        0.0003
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "CE",
+      "n_municipios": 184,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.087,
+      "auc_modelo": 0.9001,
+      "auc_modelo_ic95": [
+        0.8448,
+        0.9403
+      ],
+      "auc_dir_pior": 0.9282,
+      "auc_dir_melhor": 0.0718,
+      "direcao_real": "pior_primeiro",
+      "folga_media": 10.749,
+      "direcao_prevista": "pior_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.9282,
+      "ganho_sobre_baseline": -0.0281,
+      "ganho_ic95": [
+        -0.0713,
+        0.0092
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "ES",
+      "n_municipios": 78,
+      "n_folds": 3,
+      "amostra_pequena": true,
+      "taxa_falha_observada": 0.2436,
+      "auc_modelo": 0.4764,
+      "auc_modelo_ic95": [
+        0.3299,
+        0.6207
+      ],
+      "auc_dir_pior": 0.5192,
+      "auc_dir_melhor": 0.4808,
+      "direcao_real": "pior_primeiro",
+      "folga_media": -0.034,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.4808,
+      "ganho_sobre_baseline": -0.0044,
+      "ganho_ic95": [
+        -0.2143,
+        0.2132
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "GO",
+      "n_municipios": 243,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.1934,
+      "auc_modelo": 0.5748,
+      "auc_modelo_ic95": [
+        0.4851,
+        0.6607
+      ],
+      "auc_dir_pior": 0.4199,
+      "auc_dir_melhor": 0.5801,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": 0.761,
+      "direcao_prevista": "pior_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.4199,
+      "ganho_sobre_baseline": 0.1549,
+      "ganho_ic95": [
+        -0.0074,
+        0.3039
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "MA",
+      "n_municipios": 216,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.4815,
+      "auc_modelo": 0.6768,
+      "auc_modelo_ic95": [
+        0.5998,
+        0.7478
+      ],
+      "auc_dir_pior": 0.341,
+      "auc_dir_melhor": 0.659,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -1.143,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.659,
+      "ganho_sobre_baseline": 0.0178,
+      "ganho_ic95": [
+        -0.051,
+        0.0907
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "MG",
+      "n_municipios": 801,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.2047,
+      "auc_modelo": 0.7235,
+      "auc_modelo_ic95": [
+        0.6786,
+        0.7644
+      ],
+      "auc_dir_pior": 0.2503,
+      "auc_dir_melhor": 0.7497,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -1.953,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7497,
+      "ganho_sobre_baseline": -0.0262,
+      "ganho_ic95": [
+        -0.0483,
+        -0.0039
+      ],
+      "veredito": "modelo_perde"
+    },
+    {
+      "uf": "MS",
+      "n_municipios": 79,
+      "n_folds": 3,
+      "amostra_pequena": true,
+      "taxa_falha_observada": 0.3418,
+      "auc_modelo": 0.7144,
+      "auc_modelo_ic95": [
+        0.5941,
+        0.8206
+      ],
+      "auc_dir_pior": 0.2432,
+      "auc_dir_melhor": 0.7568,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -4.06,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7568,
+      "ganho_sobre_baseline": -0.0424,
+      "ganho_ic95": [
+        -0.1194,
+        0.0392
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "MT",
+      "n_municipios": 139,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.3597,
+      "auc_modelo": 0.632,
+      "auc_modelo_ic95": [
+        0.5345,
+        0.7302
+      ],
+      "auc_dir_pior": 0.3246,
+      "auc_dir_melhor": 0.6754,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -2.612,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.6754,
+      "ganho_sobre_baseline": -0.0434,
+      "ganho_ic95": [
+        -0.1296,
+        0.0498
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "PA",
+      "n_municipios": 136,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.6618,
+      "auc_modelo": 0.6483,
+      "auc_modelo_ic95": [
+        0.5496,
+        0.7396
+      ],
+      "auc_dir_pior": 0.3703,
+      "auc_dir_melhor": 0.6297,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -5.173,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.6297,
+      "ganho_sobre_baseline": 0.0186,
+      "ganho_ic95": [
+        -0.1074,
+        0.1403
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "PB",
+      "n_municipios": 220,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.4864,
+      "auc_modelo": 0.6981,
+      "auc_modelo_ic95": [
+        0.6275,
+        0.7609
+      ],
+      "auc_dir_pior": 0.2921,
+      "auc_dir_melhor": 0.7079,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -2.996,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7079,
+      "ganho_sobre_baseline": -0.0098,
+      "ganho_ic95": [
+        -0.067,
+        0.047
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "PE",
+      "n_municipios": 184,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.3913,
+      "auc_modelo": 0.5321,
+      "auc_modelo_ic95": [
+        0.445,
+        0.6149
+      ],
+      "auc_dir_pior": 0.5541,
+      "auc_dir_melhor": 0.4459,
+      "direcao_real": "pior_primeiro",
+      "folga_media": -2.885,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.4459,
+      "ganho_sobre_baseline": 0.0862,
+      "ganho_ic95": [
+        -0.0351,
+        0.2035
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "PI",
+      "n_municipios": 224,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.4152,
+      "auc_modelo": 0.6024,
+      "auc_modelo_ic95": [
+        0.5307,
+        0.6796
+      ],
+      "auc_dir_pior": 0.4128,
+      "auc_dir_melhor": 0.5872,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -0.294,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.5872,
+      "ganho_sobre_baseline": 0.0152,
+      "ganho_ic95": [
+        -0.082,
+        0.1026
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "PR",
+      "n_municipios": 395,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.5316,
+      "auc_modelo": 0.6902,
+      "auc_modelo_ic95": [
+        0.6409,
+        0.7409
+      ],
+      "auc_dir_pior": 0.5656,
+      "auc_dir_melhor": 0.4344,
+      "direcao_real": "pior_primeiro",
+      "folga_media": 1.288,
+      "direcao_prevista": "pior_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.5656,
+      "ganho_sobre_baseline": 0.1246,
+      "ganho_ic95": [
+        0.0506,
+        0.2013
+      ],
+      "veredito": "modelo_vence"
+    },
+    {
+      "uf": "RJ",
+      "n_municipios": 90,
+      "n_folds": 4,
+      "amostra_pequena": true,
+      "taxa_falha_observada": 0.6,
+      "auc_modelo": 0.7474,
+      "auc_modelo_ic95": [
+        0.6478,
+        0.8372
+      ],
+      "auc_dir_pior": 0.6394,
+      "auc_dir_melhor": 0.3606,
+      "direcao_real": "pior_primeiro",
+      "folga_media": -4.006,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.3606,
+      "ganho_sobre_baseline": 0.3868,
+      "ganho_ic95": [
+        0.1919,
+        0.5453
+      ],
+      "veredito": "modelo_vence"
+    },
+    {
+      "uf": "RN",
+      "n_municipios": 139,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.518,
+      "auc_modelo": 0.6669,
+      "auc_modelo_ic95": [
+        0.5824,
+        0.7534
+      ],
+      "auc_dir_pior": 0.2219,
+      "auc_dir_melhor": 0.7781,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -5.96,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7781,
+      "ganho_sobre_baseline": -0.1112,
+      "ganho_ic95": [
+        -0.1705,
+        -0.0504
+      ],
+      "veredito": "modelo_perde"
+    },
+    {
+      "uf": "RO",
+      "n_municipios": 52,
+      "n_folds": 2,
+      "amostra_pequena": true,
+      "taxa_falha_observada": 0.4808,
+      "auc_modelo": 0.7037,
+      "auc_modelo_ic95": [
+        0.554,
+        0.8501
+      ],
+      "auc_dir_pior": 0.2341,
+      "auc_dir_melhor": 0.7659,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -1.808,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7659,
+      "ganho_sobre_baseline": -0.0622,
+      "ganho_ic95": [
+        -0.2182,
+        0.0923
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "RS",
+      "n_municipios": 421,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.905,
+      "auc_modelo": 0.6746,
+      "auc_modelo_ic95": [
+        0.5852,
+        0.754
+      ],
+      "auc_dir_pior": 0.4466,
+      "auc_dir_melhor": 0.5534,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": 0.983,
+      "direcao_prevista": "pior_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.4466,
+      "ganho_sobre_baseline": 0.228,
+      "ganho_ic95": [
+        0.084,
+        0.3797
+      ],
+      "veredito": "modelo_vence"
+    },
+    {
+      "uf": "SC",
+      "n_municipios": 238,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.4454,
+      "auc_modelo": 0.5633,
+      "auc_modelo_ic95": [
+        0.4894,
+        0.6308
+      ],
+      "auc_dir_pior": 0.3989,
+      "auc_dir_melhor": 0.6011,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -1.156,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.6011,
+      "ganho_sobre_baseline": -0.0378,
+      "ganho_ic95": [
+        -0.1156,
+        0.0411
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "SE",
+      "n_municipios": 75,
+      "n_folds": 3,
+      "amostra_pequena": true,
+      "taxa_falha_observada": 0.5067,
+      "auc_modelo": 0.6156,
+      "auc_modelo_ic95": [
+        0.4873,
+        0.744
+      ],
+      "auc_dir_pior": 0.3289,
+      "auc_dir_melhor": 0.6711,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -6.688,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.6711,
+      "ganho_sobre_baseline": -0.0555,
+      "ganho_ic95": [
+        -0.1773,
+        0.0673
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "SP",
+      "n_municipios": 621,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.4831,
+      "auc_modelo": 0.5516,
+      "auc_modelo_ic95": [
+        0.5095,
+        0.5984
+      ],
+      "auc_dir_pior": 0.4526,
+      "auc_dir_melhor": 0.5474,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -2.217,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.5474,
+      "ganho_sobre_baseline": 0.0042,
+      "ganho_ic95": [
+        -0.0497,
+        0.0571
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "TO",
+      "n_municipios": 137,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.438,
+      "auc_modelo": 0.6992,
+      "auc_modelo_ic95": [
+        0.6093,
+        0.7903
+      ],
+      "auc_dir_pior": 0.2206,
+      "auc_dir_melhor": 0.7794,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -5.536,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7794,
+      "ganho_sobre_baseline": -0.0802,
+      "ganho_ic95": [
+        -0.1365,
+        -0.0247
+      ],
+      "veredito": "modelo_perde"
+    }
+  ],
+  "metricas_com_idhm": [
+    {
+      "uf": "AL",
+      "n_municipios": 102,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.451,
+      "auc_modelo": 0.4965,
+      "auc_modelo_ic95": [
+        0.3871,
+        0.6073
+      ],
+      "auc_dir_pior": 0.5602,
+      "auc_dir_melhor": 0.4398,
+      "direcao_real": "pior_primeiro",
+      "folga_media": -4.557,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.4398,
+      "ganho_sobre_baseline": 0.0567,
+      "ganho_ic95": [
+        -0.1184,
+        0.2367
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "AM",
+      "n_municipios": 48,
+      "n_folds": 2,
+      "amostra_pequena": true,
+      "taxa_falha_observada": 0.7292,
+      "auc_modelo": 0.4582,
+      "auc_modelo_ic95": [
+        0.2668,
+        0.6596
+      ],
+      "auc_dir_pior": 0.5088,
+      "auc_dir_melhor": 0.4912,
+      "direcao_real": "pior_primeiro",
+      "folga_media": -4.807,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.4912,
+      "ganho_sobre_baseline": -0.033,
+      "ganho_ic95": [
+        -0.3237,
+        0.2735
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "BA",
+      "n_municipios": 394,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.8096,
+      "auc_modelo": 0.6247,
+      "auc_modelo_ic95": [
+        0.5442,
+        0.7021
+      ],
+      "auc_dir_pior": 0.2989,
+      "auc_dir_melhor": 0.7011,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -6.094,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7011,
+      "ganho_sobre_baseline": -0.0764,
+      "ganho_ic95": [
+        -0.1281,
+        -0.0298
+      ],
+      "veredito": "modelo_perde"
+    },
+    {
+      "uf": "CE",
+      "n_municipios": 184,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.087,
+      "auc_modelo": 0.9204,
+      "auc_modelo_ic95": [
+        0.8709,
+        0.9598
+      ],
+      "auc_dir_pior": 0.9282,
+      "auc_dir_melhor": 0.0718,
+      "direcao_real": "pior_primeiro",
+      "folga_media": 10.749,
+      "direcao_prevista": "pior_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.9282,
+      "ganho_sobre_baseline": -0.0078,
+      "ganho_ic95": [
+        -0.0412,
+        0.0213
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "ES",
+      "n_municipios": 78,
+      "n_folds": 3,
+      "amostra_pequena": true,
+      "taxa_falha_observada": 0.2436,
+      "auc_modelo": 0.3613,
+      "auc_modelo_ic95": [
+        0.2278,
+        0.5103
+      ],
+      "auc_dir_pior": 0.5192,
+      "auc_dir_melhor": 0.4808,
+      "direcao_real": "pior_primeiro",
+      "folga_media": -0.034,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.4808,
+      "ganho_sobre_baseline": -0.1195,
+      "ganho_ic95": [
+        -0.3467,
+        0.1092
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "GO",
+      "n_municipios": 243,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.1934,
+      "auc_modelo": 0.5521,
+      "auc_modelo_ic95": [
+        0.4678,
+        0.6291
+      ],
+      "auc_dir_pior": 0.4199,
+      "auc_dir_melhor": 0.5801,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": 0.761,
+      "direcao_prevista": "pior_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.4199,
+      "ganho_sobre_baseline": 0.1322,
+      "ganho_ic95": [
+        -0.0332,
+        0.2801
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "MA",
+      "n_municipios": 216,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.4815,
+      "auc_modelo": 0.7193,
+      "auc_modelo_ic95": [
+        0.6436,
+        0.7878
+      ],
+      "auc_dir_pior": 0.341,
+      "auc_dir_melhor": 0.659,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -1.143,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.659,
+      "ganho_sobre_baseline": 0.0603,
+      "ganho_ic95": [
+        -0.0017,
+        0.1278
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "MG",
+      "n_municipios": 801,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.2047,
+      "auc_modelo": 0.7596,
+      "auc_modelo_ic95": [
+        0.7197,
+        0.7969
+      ],
+      "auc_dir_pior": 0.2503,
+      "auc_dir_melhor": 0.7497,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -1.953,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7497,
+      "ganho_sobre_baseline": 0.0099,
+      "ganho_ic95": [
+        -0.0162,
+        0.0366
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "MS",
+      "n_municipios": 79,
+      "n_folds": 3,
+      "amostra_pequena": true,
+      "taxa_falha_observada": 0.3418,
+      "auc_modelo": 0.7023,
+      "auc_modelo_ic95": [
+        0.5707,
+        0.8169
+      ],
+      "auc_dir_pior": 0.2432,
+      "auc_dir_melhor": 0.7568,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -4.06,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7568,
+      "ganho_sobre_baseline": -0.0545,
+      "ganho_ic95": [
+        -0.1442,
+        0.0311
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "MT",
+      "n_municipios": 139,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.3597,
+      "auc_modelo": 0.6748,
+      "auc_modelo_ic95": [
+        0.576,
+        0.7713
+      ],
+      "auc_dir_pior": 0.3246,
+      "auc_dir_melhor": 0.6754,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -2.612,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.6754,
+      "ganho_sobre_baseline": -0.0006,
+      "ganho_ic95": [
+        -0.0933,
+        0.1023
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "PA",
+      "n_municipios": 136,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.6618,
+      "auc_modelo": 0.601,
+      "auc_modelo_ic95": [
+        0.5015,
+        0.6913
+      ],
+      "auc_dir_pior": 0.3703,
+      "auc_dir_melhor": 0.6297,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -5.173,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.6297,
+      "ganho_sobre_baseline": -0.0287,
+      "ganho_ic95": [
+        -0.1413,
+        0.0744
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "PB",
+      "n_municipios": 220,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.4864,
+      "auc_modelo": 0.7108,
+      "auc_modelo_ic95": [
+        0.6387,
+        0.7725
+      ],
+      "auc_dir_pior": 0.2921,
+      "auc_dir_melhor": 0.7079,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -2.996,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7079,
+      "ganho_sobre_baseline": 0.0029,
+      "ganho_ic95": [
+        -0.0572,
+        0.0552
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "PE",
+      "n_municipios": 184,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.3913,
+      "auc_modelo": 0.5924,
+      "auc_modelo_ic95": [
+        0.504,
+        0.67
+      ],
+      "auc_dir_pior": 0.5541,
+      "auc_dir_melhor": 0.4459,
+      "direcao_real": "pior_primeiro",
+      "folga_media": -2.885,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.4459,
+      "ganho_sobre_baseline": 0.1465,
+      "ganho_ic95": [
+        0.0164,
+        0.2711
+      ],
+      "veredito": "modelo_vence"
+    },
+    {
+      "uf": "PI",
+      "n_municipios": 224,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.4152,
+      "auc_modelo": 0.5845,
+      "auc_modelo_ic95": [
+        0.5085,
+        0.6546
+      ],
+      "auc_dir_pior": 0.4128,
+      "auc_dir_melhor": 0.5872,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -0.294,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.5872,
+      "ganho_sobre_baseline": -0.0027,
+      "ganho_ic95": [
+        -0.0905,
+        0.0838
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "PR",
+      "n_municipios": 395,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.5316,
+      "auc_modelo": 0.6547,
+      "auc_modelo_ic95": [
+        0.6018,
+        0.7095
+      ],
+      "auc_dir_pior": 0.5656,
+      "auc_dir_melhor": 0.4344,
+      "direcao_real": "pior_primeiro",
+      "folga_media": 1.288,
+      "direcao_prevista": "pior_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.5656,
+      "ganho_sobre_baseline": 0.0891,
+      "ganho_ic95": [
+        0.0148,
+        0.1639
+      ],
+      "veredito": "modelo_vence"
+    },
+    {
+      "uf": "RJ",
+      "n_municipios": 90,
+      "n_folds": 4,
+      "amostra_pequena": true,
+      "taxa_falha_observada": 0.6,
+      "auc_modelo": 0.6548,
+      "auc_modelo_ic95": [
+        0.5462,
+        0.7634
+      ],
+      "auc_dir_pior": 0.6394,
+      "auc_dir_melhor": 0.3606,
+      "direcao_real": "pior_primeiro",
+      "folga_media": -4.006,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.3606,
+      "ganho_sobre_baseline": 0.2942,
+      "ganho_ic95": [
+        0.1014,
+        0.4785
+      ],
+      "veredito": "modelo_vence"
+    },
+    {
+      "uf": "RN",
+      "n_municipios": 139,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.518,
+      "auc_modelo": 0.7349,
+      "auc_modelo_ic95": [
+        0.6489,
+        0.8081
+      ],
+      "auc_dir_pior": 0.2219,
+      "auc_dir_melhor": 0.7781,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -5.96,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7781,
+      "ganho_sobre_baseline": -0.0432,
+      "ganho_ic95": [
+        -0.0931,
+        0.008
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "RO",
+      "n_municipios": 52,
+      "n_folds": 2,
+      "amostra_pequena": true,
+      "taxa_falha_observada": 0.4808,
+      "auc_modelo": 0.703,
+      "auc_modelo_ic95": [
+        0.5496,
+        0.8452
+      ],
+      "auc_dir_pior": 0.2341,
+      "auc_dir_melhor": 0.7659,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -1.808,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7659,
+      "ganho_sobre_baseline": -0.0629,
+      "ganho_ic95": [
+        -0.2127,
+        0.0953
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "RS",
+      "n_municipios": 421,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.905,
+      "auc_modelo": 0.6749,
+      "auc_modelo_ic95": [
+        0.5715,
+        0.767
+      ],
+      "auc_dir_pior": 0.4466,
+      "auc_dir_melhor": 0.5534,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": 0.983,
+      "direcao_prevista": "pior_primeiro",
+      "direcao_previsivel": false,
+      "auc_baseline_honesto": 0.4466,
+      "ganho_sobre_baseline": 0.2283,
+      "ganho_ic95": [
+        0.0663,
+        0.3905
+      ],
+      "veredito": "modelo_vence"
+    },
+    {
+      "uf": "SC",
+      "n_municipios": 238,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.4454,
+      "auc_modelo": 0.6005,
+      "auc_modelo_ic95": [
+        0.5249,
+        0.6677
+      ],
+      "auc_dir_pior": 0.3989,
+      "auc_dir_melhor": 0.6011,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -1.156,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.6011,
+      "ganho_sobre_baseline": -0.0006,
+      "ganho_ic95": [
+        -0.0783,
+        0.0707
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "SE",
+      "n_municipios": 75,
+      "n_folds": 3,
+      "amostra_pequena": true,
+      "taxa_falha_observada": 0.5067,
+      "auc_modelo": 0.6835,
+      "auc_modelo_ic95": [
+        0.5608,
+        0.8079
+      ],
+      "auc_dir_pior": 0.3289,
+      "auc_dir_melhor": 0.6711,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -6.688,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.6711,
+      "ganho_sobre_baseline": 0.0124,
+      "ganho_ic95": [
+        -0.1184,
+        0.1408
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "SP",
+      "n_municipios": 621,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.4831,
+      "auc_modelo": 0.5765,
+      "auc_modelo_ic95": [
+        0.5329,
+        0.621
+      ],
+      "auc_dir_pior": 0.4526,
+      "auc_dir_melhor": 0.5474,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -2.217,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.5474,
+      "ganho_sobre_baseline": 0.0291,
+      "ganho_ic95": [
+        -0.0237,
+        0.0828
+      ],
+      "veredito": "inconclusivo"
+    },
+    {
+      "uf": "TO",
+      "n_municipios": 137,
+      "n_folds": 5,
+      "amostra_pequena": false,
+      "taxa_falha_observada": 0.438,
+      "auc_modelo": 0.71,
+      "auc_modelo_ic95": [
+        0.618,
+        0.7941
+      ],
+      "auc_dir_pior": 0.2206,
+      "auc_dir_melhor": 0.7794,
+      "direcao_real": "melhor_primeiro",
+      "folga_media": -5.536,
+      "direcao_prevista": "melhor_primeiro",
+      "direcao_previsivel": true,
+      "auc_baseline_honesto": 0.7794,
+      "ganho_sobre_baseline": -0.0694,
+      "ganho_ic95": [
+        -0.1295,
+        -0.0086
+      ],
+      "veredito": "modelo_perde"
+    }
+  ]
+}
