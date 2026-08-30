@@ -1,34 +1,38 @@
 """
-Gera o PAINEL DE PRIORIZAÇÃO INTRA-UF — a peça que faltava no projeto.
+Gera o PAINEL DE PRIORIZAÇÃO INTRA-UF — ciclo 2025, com contrato de uso condicional.
 
 POR QUE ESTE SCRIPT EXISTE
 --------------------------
-A auditoria de maturidade CRISP-DM deste projeto deu nota 3 ou 4 em cinco das
-seis fases, e **1 em Deployment**: a recomendação de negócio existia só como
-prosa em Markdown. Nenhum gestor abre um `.md` de 1.700 linhas para decidir
-quem visitar na segunda-feira.
-
-Este script fecha esse buraco. Ele lê `reports/ranking_intra_uf.json` (saída de
-`04_ranking_intra_uf.py`) e gera uma página HTML autocontida onde o gestor
+A auditoria CRISP-DM deste projeto deu nota 1 em Deployment: a recomendação de
+negócio existia só como prosa em Markdown. Este script fecha esse buraco — lê o
+ranking prospectivo de 2025 e gera uma página HTML autocontida onde o gestor
 escolhe o estado dele e vê os municípios ordenados por risco.
+
+O QUE MUDOU EM 2025
+-------------------
+O painel antigo era um retrato histórico de 2024. O Inep publicou a planilha
+municipal de 2025 em 01/04/2026, e `src/evaluation/05_backtest_prospectivo_2025.py`
+testou o modelo fora do ciclo de treino: congelado em 2023->2024, avaliado em
+2024->2025 sem tuning nem alvo de 2025. Resultado por UF, não nacional:
+
+  - 14 UFs: o modelo vence a regra simples com IC95% inteiramente positivo
+    -> painel mostra o RANKING DO MODELO;
+  - CE: o modelo perde para a regra simples (IC95% inteiramente negativo)
+    -> painel mostra a REGRA SIMPLES, sem score do modelo como recomendação;
+  - 8 UFs: inconclusivo (IC95% cruza zero)
+    -> painel SE ABSTÉM: só diagnóstico, sem sugerir ordem de ação.
 
 A DECISÃO DE DESIGN QUE IMPORTA
 -------------------------------
-O painel é **particionado por UF, sem opção de visão nacional** — e isso é
-deliberado, não limitação. O achado central do Cap. 16 é que comparar
-municípios de estados diferentes compara réguas de avaliação distintas. Se a
-interface permitisse ordenar nacionalmente, ela convidaria exatamente o erro
-que o projeto descobriu. A restrição está na ferramenta, não só no rodapé.
+O painel é particionado por UF, SEM visão nacional — deliberado, não limitação.
+Comparar municípios de estados diferentes compara réguas de avaliação distintas
+(as provas são aplicadas pelos próprios estados). O payload não tem eixo
+nacional; a restrição está na ferramenta, não só no rodapé.
 
-Cada estado mostra o veredito honesto em TRÊS estados possíveis, não dois
-(ADR-0005): o modelo vence a regra simples com significância em 3 UFs
-(PR, RJ, RS), perde em 3 (MG, RN, TO) e empata nas outras 17 — e o painel diz
-isso na cara, inclusive recomendando a regra simples onde ela é melhor.
-
-O painel também nomeia, por estado, QUAL direção da regra simples funciona
-ali — porque ela inverte: "quem estava melhor falha mais" vale em 16 UFs,
-o oposto em 7. Piso e dobras adaptativas: ADR-0004 (antes eram 17 UFs com
-piso fixo de 100). Correção da régua do baseline: ADR-0005.
+FONTE E RASTREABILIDADE
+-----------------------
+Entrada: reports/ranking_prospectivo_2025.json (gerado pelo backtest, carrega
+fonte oficial, SHA-256 da planilha, data de publicação e data de corte).
 
 SAÍDA
 -----
@@ -42,67 +46,36 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 BASE = Path(__file__).resolve().parents[2]
-ENTRADA = BASE / "reports" / "ranking_intra_uf.json"
+ENTRADA = BASE / "reports" / "ranking_prospectivo_2025.json"
 SAIDA = BASE / "reports" / "painel_intra_uf.html"
-
-NOME_UF = {
-    "AL": "Alagoas", "BA": "Bahia", "CE": "Ceará", "GO": "Goiás",
-    "MA": "Maranhão", "MG": "Minas Gerais", "MT": "Mato Grosso",
-    "PA": "Pará", "PB": "Paraíba", "PE": "Pernambuco", "PI": "Piauí",
-    "PR": "Paraná", "RN": "Rio Grande do Norte", "RS": "Rio Grande do Sul",
-    "SC": "Santa Catarina", "SP": "São Paulo", "TO": "Tocantins",
-}
-
-
-def compactar(dados: dict) -> dict:
-    """
-    Reduz o payload para o que a interface usa. O JSON completo tem 1,4 MB;
-    embutir tudo numa página estática é desperdício de banda por campo que
-    ninguém lê. Arrays posicionais em vez de objetos cortam ~60%.
-    """
-    metricas = {m["uf"]: m for m in dados["metricas_por_uf"]}
-    compacto = {}
-    for uf, linhas in dados["ranking"].items():
-        compacto[uf] = {
-            "nome": NOME_UF.get(uf, uf),
-            "n": metricas[uf]["n_municipios"],
-            "taxa_falha": metricas[uf]["taxa_falha_observada"],
-            "auc": metricas[uf]["auc_modelo"],
-            "auc_ic": metricas[uf]["auc_modelo_ic95"],
-            "auc_base": metricas[uf]["auc_baseline_honesto"],
-            "ganho": metricas[uf]["ganho_sobre_baseline"],
-            "ganho_ic": metricas[uf]["ganho_ic95"],
-            "veredito": metricas[uf]["veredito"],
-            "direcao": metricas[uf]["direcao_real"],
-            "direcao_previsivel": metricas[uf]["direcao_previsivel"],
-            "amostra_pequena": metricas[uf]["amostra_pequena"],
-            # [rank, nome, score, taxa23, taxa24, meta, gap, resultado_real]
-            "m": [[l["rank_uf"], l["nome_municipio"], l["score_risco"],
-                    l["taxa23"], l["taxa24"], l["meta_alfabetizacao_2024"],
-                    l["gap_meta"], l["y"]] for l in linhas],
-        }
-    return compacto
 
 
 def main():
     dados = json.loads(ENTRADA.read_text(encoding="utf-8"))
-    compacto = compactar(dados)
-    resumo = dados["resumo"]
-    payload = json.dumps({"ufs": compacto, "resumo": resumo},
-                          ensure_ascii=False, separators=(",", ":"))
+    payload = json.dumps({
+        "ufs": dados["ufs"],
+        "resumo": dados["resumo"],
+        "fonte": dados["fonte"],
+        "ciclo": dados["ciclo"],
+        "data_publicacao_inep": dados["data_publicacao_inep"],
+        "aviso_validade": dados["aviso_validade"],
+    }, ensure_ascii=False, separators=(",", ":"))
 
     html = TEMPLATE.replace("__PAYLOAD__", payload)
     SAIDA.write_text(html, encoding="utf-8")
 
+    r = dados["resumo"]
     kb = len(html.encode("utf-8")) / 1024
     print(f"Painel gerado: {SAIDA}")
-    print(f"  {len(compacto)} UFs | {resumo['municipios']} municipios | {kb:.0f} KB")
-    print(f"  vs baseline honesto: vence {resumo['ufs_modelo_vence']}, "
-          f"empata {resumo['ufs_inconclusivo']}, perde {resumo['ufs_modelo_perde']} "
-          f"(de {resumo['ufs']} UFs)")
+    print(f"  {r['ufs']} UFs | {r['municipios']} municipios | {kb:.0f} KB")
+    print(f"  contrato 2025: ranking do modelo em {r['ufs_ranking_modelo']}, "
+          f"regra simples em {r['ufs_regra_simples']}, "
+          f"abstencao em {r['ufs_abster']}")
 
 
-TEMPLATE = r"""<title>Priorização da Alfabetização</title>
+TEMPLATE = r"""<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Priorização da Alfabetização</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -159,12 +132,24 @@ h1{font-size:clamp(1.6rem,3.4vw,2.2rem);font-weight:700;letter-spacing:-.02em;li
 .picker-label{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.55rem}
 .chips{display:flex;flex-wrap:wrap;gap:.4rem}
 .chip{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:.42rem .7rem;
-  cursor:pointer;font-size:.86rem;font-weight:500;transition:background .12s,border-color .12s;font-family:var(--mono)}
+  cursor:pointer;font-size:.86rem;font-weight:500;transition:background .12s,border-color .12s;font-family:var(--mono);
+  display:flex;align-items:center;gap:.4rem}
 .chip:hover{border-color:var(--primary)}
 .chip[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:var(--surface)}
+.chip .mk{width:6px;height:6px;border-radius:50%;flex:none}
+.chip .mk.ranking_modelo{background:var(--ok)}
+.chip .mk.regra_simples{background:var(--warn)}
+.chip .mk.abster{background:var(--muted)}
+.chip[aria-pressed="true"] .mk{outline:1px solid var(--surface)}
 :root[data-theme="dark"] .chip[aria-pressed="true"],
 :root:not([data-theme="light"]) .chip[aria-pressed="true"]{color:#0F1614}
 @media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .chip[aria-pressed="true"]{color:#fff}}
+
+.legend-uf{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.76rem;color:var(--muted);margin-top:.55rem;font-family:var(--mono)}
+.legend-uf i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:.35rem}
+.legend-uf i.ranking_modelo{background:var(--ok)}
+.legend-uf i.regra_simples{background:var(--warn)}
+.legend-uf i.abster{background:var(--muted)}
 
 .state-head{display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;align-items:flex-end;margin:1.6rem 0 .9rem}
 .state-name{font-size:1.5rem;font-weight:700;letter-spacing:-.01em;margin:0}
@@ -176,11 +161,30 @@ h1{font-size:clamp(1.6rem,3.4vw,2.2rem);font-weight:700;letter-spacing:-.02em;li
 .stat .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.25rem;font-weight:600;line-height:1}
 .stat .d{font-size:.74rem;color:var(--muted);margin-top:.3rem}
 
-.trust{display:flex;align-items:center;gap:.5rem;padding:.55rem .85rem;border-radius:8px;font-size:.87rem;margin-bottom:1.1rem}
+.trust{display:flex;align-items:flex-start;gap:.5rem;padding:.7rem .95rem;border-radius:8px;font-size:.9rem;margin-bottom:1.1rem;line-height:1.45}
 .trust.good{background:var(--ok-soft);color:var(--ok)}
 .trust.bad{background:var(--warn-soft);color:var(--warn)}
 .trust.warn{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
 .trust b{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+.auc-compare{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.95rem 1.1rem 1.1rem;margin-bottom:.7rem}
+.auc-note{font-family:var(--prose);font-size:.86rem;color:var(--ink-2);margin:0;max-width:68ch}
+.auc-track{position:relative;height:6px;background:var(--line-2);border-radius:99px;margin:1.7rem .4rem 1.9rem}
+.auc-tick{position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:1px;height:16px;background:var(--muted);opacity:.55}
+.auc-tick label{position:absolute;top:18px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.64rem;color:var(--muted);white-space:nowrap}
+.auc-end{position:absolute;top:14px;font-family:var(--mono);font-size:.64rem;color:var(--muted)}
+.auc-end.left{left:0}
+.auc-end.right{right:0}
+.auc-mark{position:absolute;top:50%;width:13px;height:13px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid var(--surface)}
+.auc-mark.intuicao{background:var(--warn)}
+.auc-mark.modelo{background:var(--primary)}
+.auc-legend{display:flex;flex-wrap:wrap;gap:.4rem 1.3rem;font-size:.82rem;color:var(--ink-2)}
+.auc-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:.4rem}
+.auc-legend .dot.intuicao{background:var(--warn)}
+.auc-legend .dot.modelo{background:var(--primary)}
+.auc-legend b{font-family:var(--mono);color:var(--ink)}
+.auc-legend .ic{font-family:var(--mono);color:var(--muted);font-size:.9em}
+.auc-small{font-family:var(--mono);font-size:.72rem;color:var(--warn);margin:.7rem 0 0}
 
 .toolbar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-bottom:.8rem}
 .search{flex:1;min-width:180px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.5rem .75rem;font-size:.9rem}
@@ -205,7 +209,7 @@ td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:righ
 .badge.miss{background:var(--warn-soft);color:var(--warn)}
 .badge.hit{background:var(--ok-soft);color:var(--ok)}
 
-footer.note{margin-top:2rem;padding-top:1.2rem;border-top:1px solid var(--line);font-size:.83rem;color:var(--muted);max-width:76ch}
+footer.note{margin-top:2rem;padding-top:1.2rem;border-top:1px solid var(--line);font-size:.83rem;color:var(--muted);max-width:82ch}
 footer.note p{margin:0 0 .5rem}
 footer.note code{font-family:var(--mono);font-size:.9em}
 
@@ -220,28 +224,6 @@ footer.note code{font-family:var(--mono);font-size:.9em}
 .gterms details[open] summary::after{content:"fechar"}
 .gterms p{font-family:var(--prose);font-size:.86rem;color:var(--ink-2);margin:.5rem 0 .1rem}
 
-.auc-compare{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.95rem 1.1rem 1.1rem;margin-bottom:.7rem}
-.auc-note{font-family:var(--prose);font-size:.86rem;color:var(--ink-2);margin:0;max-width:68ch}
-.auc-track{position:relative;height:6px;background:var(--line-2);border-radius:99px;margin:1.7rem .4rem 1.9rem}
-.auc-tick{position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:1px;height:16px;background:var(--muted);opacity:.55}
-.auc-tick label{position:absolute;top:18px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.64rem;color:var(--muted);white-space:nowrap}
-.auc-end{position:absolute;top:14px;font-family:var(--mono);font-size:.64rem;color:var(--muted)}
-.auc-end.left{left:0}
-.auc-end.right{right:0}
-.auc-ci{position:absolute;top:50%;height:4px;transform:translateY(-50%);border-radius:99px;opacity:.32}
-.auc-ci.intuicao{background:var(--warn)}
-.auc-ci.modelo{background:var(--primary)}
-.auc-mark{position:absolute;top:50%;width:13px;height:13px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid var(--surface)}
-.auc-mark.intuicao{background:var(--warn)}
-.auc-mark.modelo{background:var(--primary)}
-.auc-legend{display:flex;flex-wrap:wrap;gap:.4rem 1.3rem;font-size:.82rem;color:var(--ink-2)}
-.auc-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:.4rem}
-.auc-legend .dot.intuicao{background:var(--warn)}
-.auc-legend .dot.modelo{background:var(--primary)}
-.auc-legend b{font-family:var(--mono);color:var(--ink)}
-.auc-legend .ic{font-family:var(--mono);color:var(--muted);font-size:.9em}
-.auc-small{font-family:var(--mono);font-size:.72rem;color:var(--warn);margin:.7rem 0 0}
-
 .method{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.9rem 1.1rem;margin-bottom:1.2rem}
 .method summary{cursor:pointer;font-weight:500;font-size:.9rem;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:.6rem}
 .method summary::-webkit-details-marker,.method summary::marker{display:none}
@@ -251,32 +233,43 @@ footer.note code{font-family:var(--mono);font-size:.9em}
 .method li{margin-bottom:.55rem}
 .method li:last-child{margin-bottom:0}
 .method code{font-family:var(--mono);font-size:.85em}
+
+.provenance{font-family:var(--mono);font-size:.74rem;color:var(--muted);background:var(--surface-2);border:1px solid var(--line-2);border-radius:8px;padding:.7rem .9rem;margin-bottom:1.4rem;line-height:1.7;word-break:break-all}
+.provenance b{color:var(--ink-2)}
 </style>
 
 <div class="wrap">
   <header class="top">
-    <div class="kicker">Compromisso Nacional Criança Alfabetizada &middot; ciclo 2024</div>
+    <div class="kicker" id="kicker">Compromisso Nacional Criança Alfabetizada</div>
     <h1>Quais municípios do meu estado não vão atingir a meta?</h1>
-    <p class="sub">Risco previsto de o município ficar abaixo da meta do PDE, ordenado dentro de cada estado — um modelo separado para cada UF.</p>
+    <p class="sub">Risco previsto de o município ficar abaixo da meta do PDE no próximo ciclo, ordenado dentro de cada estado — com uso condicional por UF, definido por um teste fora do ciclo de treino.</p>
   </header>
 
-  <p class="lead">Este painel estima, <strong>antes do resultado sair</strong>, quais municípios têm mais chance de não bater a meta de alfabetização — para ajudar a decidir onde priorizar apoio primeiro. A estimativa vem de um modelo treinado separadamente para cada estado; não existe um ranking nacional único, pelo motivo explicado no aviso abaixo.</p>
+  <p class="lead">Este painel estima, <strong>antes do resultado sair</strong>, quais municípios têm mais chance de não bater a meta de alfabetização — para ajudar a decidir onde priorizar apoio primeiro. O modelo foi <strong>congelado com dados até 2024 e testado no ciclo de 2025</strong> sem ver o resultado de 2025. Onde ele provou vencer uma regra simples, o painel mostra o ranking do modelo. Onde perdeu, mostra a regra simples. Onde o teste foi inconclusivo, <strong>o painel se abstém</strong> — mostra só o diagnóstico.</p>
+
+  <div class="provenance" id="provenance"></div>
 
   <div class="gterms">
-    <details><summary>Risco previsto</summary><p>Probabilidade estimada (0 a 1) de o município ficar abaixo da meta em 2024, calculada só com dado disponível até 2023 — sem espiar o resultado real.</p></details>
-    <details><summary>Meta do PDE</summary><p>Meta de alfabetização de cada município, definida pelo Plano de Metas do Compromisso Nacional Criança Alfabetizada. Ela sobe a cada ano, então comparar direto com a taxa de 2023 engana.</p></details>
-    <details><summary>AUC</summary><p>Métrica de 0 a 1 que mede se um critério separa bem quem vai ficar abaixo da meta de quem vai atingir. 0,5 é o mesmo que sortear; 1,0 seria acerto perfeito.</p></details>
-    <details><summary>IC95%</summary><p>Faixa onde o AUC verdadeiro provavelmente está, calculada repetindo o cálculo em milhares de reamostras dos municípios do estado. Estado com poucos municípios tem faixa mais larga — o número sozinho esconde essa incerteza.</p></details>
+    <details><summary>Risco previsto</summary><p>Probabilidade estimada (0 a 1) de o município ficar abaixo da meta no próximo ciclo, calculada só com dado do ciclo anterior — sem espiar o resultado real.</p></details>
+    <details><summary>Meta do PDE</summary><p>Meta de alfabetização de cada município, definida pelo Plano de Metas do Compromisso Nacional Criança Alfabetizada. Ela sobe a cada ano, então comparar direto com a taxa do ano anterior engana.</p></details>
+    <details><summary>Regra simples</summary><p>Ordenar os municípios só pela taxa do ano anterior, numa direção fixa. Em alguns estados "quem estava melhor falha mais" (regressão à média); em outros é o contrário (a meta satura e protege quem já está no topo). O modelo só se justifica se superar essa regra.</p></details>
+    <details><summary>Backtest prospectivo</summary><p>Testar o modelo num ciclo que ele nunca viu: treina com 2023→2024, prevê 2024→2025 e só então compara com o que de fato aconteceu em 2025. É a evidência mais forte de que a previsão funciona fora do laboratório.</p></details>
+    <details><summary>IC95%</summary><p>Faixa onde o ganho verdadeiro sobre a regra simples provavelmente está, por bootstrap pareado. Se a faixa cruza o zero, não dá para afirmar que o modelo é melhor — é o caso das 8 UFs em que o painel se abstém.</p></details>
   </div>
 
   <div class="warn">
     <span class="ic">!</span>
-    <p><strong>Este painel não permite comparação entre estados — de propósito.</strong> As avaliações são aplicadas pelos próprios estados, e a variação estadual entre 2023 e 2024 chega a 20 pontos percentuais (RS caiu 20,0; MG subiu 12,3). Ordenar municípios de UFs diferentes na mesma escala compara réguas de prova distintas, não desempenho educacional.</p>
+    <p><strong>Este painel não permite comparação entre estados — de propósito.</strong> As avaliações são aplicadas pelos próprios estados, e a variação estadual entre anos chega a 20 pontos percentuais. Ordenar municípios de UFs diferentes na mesma escala compara réguas de prova distintas, não desempenho educacional. Também <strong>não serve para decisão sobre um aluno</strong>: é priorização municipal para orientar busca ativa e alocação de apoio, nunca para negar direito ou rotular uma criança.</p>
   </div>
 
   <div class="picker">
     <div class="picker-label">Selecione o estado</div>
     <div class="chips" id="chips"></div>
+    <div class="legend-uf">
+      <span><i class="ranking_modelo"></i>ranking do modelo (venceu o backtest)</span>
+      <span><i class="regra_simples"></i>regra simples (modelo perdeu)</span>
+      <span><i class="abster"></i>abstenção (inconclusivo)</span>
+    </div>
   </div>
 
   <div class="state-head">
@@ -287,18 +280,16 @@ footer.note code{font-family:var(--mono);font-size:.9em}
   <div id="trust"></div>
 
   <details class="method">
-    <summary>Como este modelo foi construído <span class="mchev">&#9662;</span></summary>
+    <summary>Como este modelo foi construído e testado <span class="mchev">&#9662;</span></summary>
     <ol>
-      <li><strong>Dado:</strong> taxa de alfabetização por município (2023 e 2024), meta do PDE por município e porte populacional — Indicador Criança Alfabetizada (INEP).</li>
-      <li><strong>Um modelo por estado, não um modelo nacional.</strong> Testamos primeiro um modelo único para o Brasil inteiro: fora da amostra (Leave-One-UF-Out) ele caiu para AUC 0,48 — pior que sortear. Cada estado aplica sua própria prova e sua própria meta; misturar todos numa régua só esconde esse efeito, não neutraliza.</li>
-      <li><strong>Validação:</strong> dentro de cada estado, as predições mostradas são <em>out-of-fold</em> — nenhum município foi avaliado por um modelo que o viu durante o treino. O número de dobras é adaptativo (2 a 5, conforme o tamanho do estado) para não deixar dobra pequena sem as duas classes — e por isso todo AUC vem com intervalo de confiança de 95% por bootstrap, não só o ponto.</li>
-      <li><strong>Piso de 40 municípios por UF.</strong> Abaixo disso nem dobra reduzida nem intervalo de confiança tornam o número confiável — é o caso só do Amapá (16 municípios no estado inteiro). Não é limitação deste painel: com 16 municípios, o gestor consegue olhar a lista inteira sem precisar de um modelo.</li>
-      <li><strong>3 estados de fora por falta de dado na fonte, não por limite de modelo:</strong> Acre, Distrito Federal e Roraima não têm taxa de alfabetização de 2023 (Acre e DF) ou de nenhum ano (Roraima) publicada pelo INEP para este indicador — confirmado até o nível estadual, não é falha de coleta deste projeto.</li>
-      <li><strong>A direção da regra simples inverte entre estados — e esse é o achado principal.</strong> Em 16 estados quem ia <em>melhor</em> em 2023 falha mais a meta (a meta acompanha o município, e a regressão à média derruba quem estava no topo). Em 7 estados é o contrário, porque a meta satura em 80,0 e blinda quem já está muito acima dela. Não existe uma regra nacional única.</li>
-      <li><strong>Comparação honesta:</strong> o modelo é medido contra a regra simples <em>na direção certa daquele estado</em>, sendo que essa direção é prevista a partir dos <em>outros</em> estados — nunca olhando o resultado do próprio. Diferença com IC95% por bootstrap pareado.</li>
-      <li><strong>O que o modelo de fato entrega:</strong> ele não ranqueia melhor — ele dispensa saber a direção de antemão. No conjunto ele supera a regra simples por <strong>+0,027</strong> (IC95% +0,007 a +0,048), e essa vantagem vem quase toda dos <span id="mResumo">7</span> estados em que a direção não é previsível de fora. Nos demais, empata.</li>
+      <li><strong>Dado:</strong> taxa de alfabetização por município (2023, 2024 e 2025), meta do PDE por município e porte populacional — planilha oficial de resultados e metas do Inep, publicada em <span id="mData">01/04/2026</span>.</li>
+      <li><strong>Um modelo por estado, não um modelo nacional.</strong> Um modelo único para o Brasil, testado fora da amostra (Leave-One-UF-Out), caiu para AUC 0,48 — pior que sortear. Cada estado aplica sua própria prova e sua própria meta.</li>
+      <li><strong>Backtest prospectivo:</strong> o modelo foi congelado na transição 2023→2024 — mesmos hiperparâmetros, sem retuning — e usado para prever o ciclo de 2025. O alvo de 2025 nunca entrou no treino. A comparação é contra a regra simples cuja direção já funcionava naquele estado em 2024.</li>
+      <li><strong>Veredito por UF, com IC95% bootstrap pareado (1.000 reamostragens):</strong> em <span id="mVence">14</span> estados o ganho do modelo sobre a regra simples tem intervalo inteiramente positivo → o painel usa o ranking do modelo. No <span id="mPerde">Ceará</span> o intervalo é inteiramente negativo → o painel usa a regra simples. Em <span id="mAbster">8</span> estados o intervalo cruza zero → o painel se abstém, mostrando só o diagnóstico.</li>
+      <li><strong>Abstenção é uma resposta, não uma falha.</strong> Onde não há evidência de que o modelo supere a regra simples, recomendar qualquer um dos dois seria vender certeza inexistente. O painel mostra os números e não sugere ordem de ação.</li>
+      <li><strong>Reavaliação anual.</strong> A cada publicação de um novo ciclo pelo Inep, o mesmo backtest roda de novo antes de mudar a regra de qualquer UF.</li>
     </ol>
-    <p>Decisões completas em <code>docs/adr/0002-modelo-final-validacao-temporal-e-tratamento-caderno.md</code> e no Cap. 16 de <code>docs/HANDOFF_RENAN.md</code>.</p>
+    <p>Decisões completas em <code>docs/adr/0002-modelo-final-validacao-temporal-e-tratamento-caderno.md</code>, <code>reports/decisao_produto_pos_backtest_2025.md</code> e <code>reports/diagnostico_ufs_inconclusivas.md</code>.</p>
   </details>
 
   <div class="toolbar">
@@ -309,10 +300,10 @@ footer.note code{font-family:var(--mono);font-size:.9em}
   <div class="tbl-wrap">
     <table>
       <thead><tr>
-        <th>#</th><th>Município</th><th>Risco previsto</th>
-        <th style="text-align:right">Taxa 2023</th>
-        <th style="text-align:right">Meta 2024</th>
+        <th>#</th><th>Município</th><th id="thOrd">Risco previsto</th>
         <th style="text-align:right">Taxa 2024</th>
+        <th style="text-align:right">Meta 2025</th>
+        <th style="text-align:right">Taxa 2025</th>
         <th>Resultado real</th>
       </tr></thead>
       <tbody id="rows"></tbody>
@@ -320,8 +311,9 @@ footer.note code{font-family:var(--mono);font-size:.9em}
   </div>
 
   <footer class="note">
-    <p><strong>Como ler a tabela.</strong> “Taxa 2023” e “Meta 2024” são o que já se sabia antes do resultado — é o que o modelo usa para prever. “Taxa 2024” e “Resultado real” são o que de fato aconteceu, mostrados só para conferência.</p>
-    <p>Gerado por <code>src/visualization/01_gerar_painel_intra_uf.py</code> a partir de <code>reports/ranking_intra_uf.json</code>. Fonte: microdados do Indicador Criança Alfabetizada (INEP) e metas do PDE.</p>
+    <p><strong>Como ler a tabela.</strong> “Taxa 2024” e “Meta 2025” são o que já se sabia antes do resultado de 2025 — é o que o modelo usa para prever. “Taxa 2025” e “Resultado real” são o que de fato aconteceu, mostrados só para conferência do backtest.</p>
+    <p id="footProv"></p>
+    <p>Gerado por <code>src/visualization/01_gerar_painel_intra_uf.py</code> a partir de <code>reports/ranking_prospectivo_2025.json</code> (saída de <code>src/evaluation/05_backtest_prospectivo_2025.py</code>).</p>
   </footer>
 </div>
 
@@ -334,6 +326,7 @@ let filtro = "";
 const el = id => document.getElementById(id);
 const pct = v => (v*100).toFixed(1).replace(".", ",") + "%";
 const num = v => v === null || v === undefined ? "—" : Number(v).toFixed(1).replace(".", ",");
+const n3 = v => v.toFixed(3).replace(".", ",");
 
 function corRisco(s){
   if (s >= 0.75) return "var(--r4)";
@@ -342,49 +335,60 @@ function corRisco(s){
   return "var(--r1)";
 }
 
+function montarProvenance(){
+  const f = DATA.fonte;
+  el("provenance").innerHTML =
+    `<b>Fonte:</b> Inep — Indicador Criança Alfabetizada, planilha municipal de resultados e metas.<br>` +
+    `<b>Arquivo:</b> ${f.arquivo}<br>` +
+    `<b>SHA-256:</b> ${f.sha256}<br>` +
+    `<b>Publicação Inep:</b> ${DATA.data_publicacao_inep} &nbsp;·&nbsp; <b>Ciclo avaliado:</b> ${DATA.ciclo} &nbsp;·&nbsp; <b>Data de corte do treino:</b> 2024`;
+  el("footProv").innerHTML =
+    `${DATA.aviso_validade} Fonte oficial: <code>${f.url}</code>.`;
+  el("mData").textContent = DATA.data_publicacao_inep.split("-").reverse().join("/");
+}
+
 function montarChips(){
   el("chips").innerHTML = ufs.map(uf =>
-    `<button class="chip" data-uf="${uf}" aria-pressed="${uf===atual}">${uf}</button>`).join("");
+    `<button class="chip" data-uf="${uf}" aria-pressed="${uf===atual}"><span class="mk ${DATA.ufs[uf].uso}"></span>${uf}</button>`).join("");
   el("chips").querySelectorAll(".chip").forEach(b =>
     b.addEventListener("click", () => { atual = b.dataset.uf; filtro=""; el("search").value=""; render(); }));
 }
 
 function montarResumoMetodologia(){
   const r = DATA.resumo;
-  el("mResumo").textContent = `${r.ufs - r.ufs_direcao_previsivel}`;
+  el("mVence").textContent = r.ufs_ranking_modelo;
+  el("mAbster").textContent = r.ufs_abster;
 }
 
 function renderTrust(d){
-  const n3 = v => v.toFixed(3).replace(".", ",");
   const clamp = v => Math.max(1, Math.min(99, v * 100));
-  const [loM, hiM] = d.auc_ic.map(clamp);
-  const regra = d.direcao === "melhor_primeiro"
-    ? "priorizar quem tinha a <b>maior</b> taxa em 2023"
-    : "priorizar quem tinha a <b>menor</b> taxa em 2023";
   const avisoAmostra = d.amostra_pequena
     ? `<p class="auc-small">Amostra pequena (${d.n} municípios) — intervalo de confiança mais largo. Trate como referência mais fraca do que nos estados maiores.</p>`
     : "";
-  const cls = {modelo_vence:"good", modelo_perde:"bad", inconclusivo:"warn"}[d.veredito];
+  const regraTxt = d.direcao === "melhor_primeiro"
+    ? "priorizar quem tinha a <b>maior</b> taxa em 2024"
+    : "priorizar quem tinha a <b>menor</b> taxa em 2024";
+
+  const cls = {ranking_modelo:"good", regra_simples:"bad", abster:"warn"}[d.uso];
   const txt = {
-    modelo_vence: "✓ Aqui o modelo <b>supera</b> a regra simples, com significância estatística. Use o ranking abaixo.",
-    modelo_perde: "⚠ Aqui o modelo <b>fica atrás</b> da regra simples. Prefira ordenar por " +
-                  (d.direcao === "melhor_primeiro" ? "maior" : "menor") + " taxa de 2023.",
-    inconclusivo: "≈ Aqui modelo e regra simples <b>empatam</b> — a diferença não é estatisticamente distinguível. Qualquer um dos dois serve."
-  }[d.veredito];
+    ranking_modelo: "✓ No backtest de 2025, o modelo <b>superou</b> a regra simples neste estado, com o intervalo de confiança inteiramente positivo (ganho <b>" + (d.ganho>=0?"+":"") + n3(d.ganho) + "</b>, IC95% " + n3(d.ganho_ic[0]) + " a " + n3(d.ganho_ic[1]) + "). <b>Use o ranking abaixo.</b>",
+    regra_simples: "⚠ No backtest de 2025, o modelo <b>ficou atrás</b> da regra simples neste estado, com o intervalo inteiramente negativo (ganho <b>" + n3(d.ganho) + "</b>, IC95% " + n3(d.ganho_ic[0]) + " a " + n3(d.ganho_ic[1]) + "). A tabela abaixo está ordenada pela <b>regra simples</b> (" + regraTxt + "); o score do modelo é mostrado só para referência.",
+    abster: "≈ No backtest de 2025, a diferença entre modelo e regra simples <b>não é estatisticamente distinguível</b> neste estado (ganho <b>" + (d.ganho>=0?"+":"") + n3(d.ganho) + "</b>, IC95% " + n3(d.ganho_ic[0]) + " a " + n3(d.ganho_ic[1]) + ", cruzando zero). <b>O painel não recomenda ordem de ação aqui</b> — a tabela é só diagnóstico. Olhe a lista inteira e complemente com conhecimento local."
+  }[d.uso];
+
   return `
     <div class="auc-compare">
-      <p class="auc-note">Neste estado, a regra simples que funciona é <b>${regra}</b> — e ela não é a mesma em todo lugar: a direção se inverte entre estados${d.direcao_previsivel ? "" : ", e <b>este é um dos estados em que ela não dá para adivinhar de fora</b>"}. O modelo só se justifica se superar essa regra.</p>
+      <p class="auc-note">Comparação medida no ciclo de 2025, que o modelo nunca viu no treino. A régua da esquerda é o sorteio aleatório (0,5); mais à direita é melhor.</p>
       <div class="auc-track">
         <span class="auc-tick"><label>sorteio aleatório</label></span>
         <span class="auc-end left">0,0</span>
         <span class="auc-end right">1,0</span>
-        <span class="auc-ci modelo" style="left:${loM}%;width:${hiM - loM}%"></span>
-        <span class="auc-mark intuicao" style="left:${clamp(d.auc_base)}%"></span>
-        <span class="auc-mark modelo" style="left:${clamp(d.auc)}%"></span>
+        <span class="auc-mark intuicao" style="left:${clamp(d.auc_baseline)}%"></span>
+        <span class="auc-mark modelo" style="left:${clamp(d.auc_modelo)}%"></span>
       </div>
       <div class="auc-legend">
-        <span><i class="dot intuicao"></i>regra simples — <b>${n3(d.auc_base)}</b></span>
-        <span><i class="dot modelo"></i>modelo — <b>${n3(d.auc)}</b> <span class="ic">(${n3(d.auc_ic[0])}–${n3(d.auc_ic[1])})</span></span>
+        <span><i class="dot intuicao"></i>regra simples — <b>${n3(d.auc_baseline)}</b></span>
+        <span><i class="dot modelo"></i>modelo — <b>${n3(d.auc_modelo)}</b></span>
         <span>diferença <b>${d.ganho >= 0 ? "+" : ""}${n3(d.ganho)}</b> <span class="ic">IC95% ${n3(d.ganho_ic[0])} a ${n3(d.ganho_ic[1])}</span></span>
       </div>
       ${avisoAmostra}
@@ -397,16 +401,21 @@ function render(){
   el("chips").querySelectorAll(".chip").forEach(b =>
     b.setAttribute("aria-pressed", String(b.dataset.uf === atual)));
 
-  el("stateName").innerHTML = `${d.nome}<small>${atual} &middot; ${d.n} municípios avaliados</small>`;
+  el("stateName").innerHTML = `${d.nome}<small>${atual} &middot; ${d.n} municípios avaliados no backtest 2025</small>`;
+
+  const rotuloOrd = d.uso === "regra_simples"
+    ? "ordenado pela regra simples"
+    : d.uso === "abster" ? "score do modelo (diagnóstico)" : "ranking do modelo";
+  el("thOrd").textContent = d.uso === "regra_simples" ? "Score do modelo (ref.)" : "Risco previsto";
 
   el("stats").innerHTML = `
     <div class="stat"><div class="k">Municípios</div><div class="v">${d.n}</div></div>
     <div class="stat"><div class="k">Ficaram abaixo da meta</div>
-      <div class="v" style="color:${d.taxa_falha>=.5?'var(--r4)':'var(--ink)'}">${pct(d.taxa_falha)}</div>
-      <div class="d">observado em 2024</div></div>
-    <div class="stat"><div class="k">AUC do modelo</div><div class="v">${d.auc.toFixed(3).replace(".",",")}</div>
-      <div class="d">nunca viu esse município no treino</div></div>
-    <div class="stat"><div class="k">AUC da regra simples</div><div class="v">${d.auc_base.toFixed(3).replace(".",",")}</div>
+      <div class="v" style="color:${d.taxa_falha_2025>=.5?'var(--r4)':'var(--ink)'}">${pct(d.taxa_falha_2025)}</div>
+      <div class="d">observado em 2025</div></div>
+    <div class="stat"><div class="k">AUC do modelo (2025)</div><div class="v">${n3(d.auc_modelo)}</div>
+      <div class="d">fora do ciclo de treino</div></div>
+    <div class="stat"><div class="k">AUC da regra simples</div><div class="v">${n3(d.auc_baseline)}</div>
       <div class="d">${d.direcao === "melhor_primeiro" ? "“priorize quem estava melhor”" : "“priorize quem estava pior”"}</div></div>`;
 
   el("trust").innerHTML = renderTrust(d);
@@ -415,10 +424,10 @@ function render(){
   const linhas = d.m.filter(r => !termo || r[1].toLowerCase().includes(termo));
   el("count").textContent = termo
     ? `${linhas.length} de ${d.m.length} municípios`
-    : `${d.m.length} municípios, do maior para o menor risco`;
+    : `${d.m.length} municípios — ${rotuloOrd}`;
 
   el("rows").innerHTML = linhas.map(r => {
-    const [rank, nome, score, t23, t24, meta, gap, real] = r;
+    const [rank, nome, score, t24, meta, t25, real] = r;
     return `<tr>
       <td class="rk">${rank}</td>
       <td class="nm">${nome}</td>
@@ -426,9 +435,9 @@ function render(){
         <span class="riskbar"><span class="riskfill" style="width:${(score*100).toFixed(0)}%;background:${corRisco(score)}"></span></span>
         <span class="riskval">${score.toFixed(2).replace(".",",")}</span>
       </div></td>
-      <td class="num">${num(t23)}</td>
-      <td class="num">${num(meta)}</td>
       <td class="num">${num(t24)}</td>
+      <td class="num">${num(meta)}</td>
+      <td class="num">${num(t25)}</td>
       <td>${real === 1
         ? '<span class="badge miss">abaixo da meta</span>'
         : '<span class="badge hit">atingiu</span>'}</td>
@@ -437,6 +446,7 @@ function render(){
 }
 
 el("search").addEventListener("input", e => { filtro = e.target.value; render(); });
+montarProvenance();
 montarChips();
 montarResumoMetodologia();
 render();

@@ -1,4 +1,4 @@
-# ADR-0002: Modelo final em aberto, validação temporal sem dado 2025 e tratamento condicional de `caderno`
+# ADR-0002: Modelo final em aberto, validação temporal e tratamento condicional de `caderno`
 
 **Data**: 2026-08-18
 **Status**: Proposed (as 3 decisões desta ADR ficam explicitamente em aberto
@@ -7,6 +7,15 @@ Luiz, ao contrário do ADR-0001)
 **Proposto por**: Luiz Maibashi
 **Contexto**: Sessão de refinamento pós-Fase-3 (`PLANO_REFINAMENTO_CONCEITOS.md`,
 Seção 2 — ADRs e decisões arquiteturais), 2026-08-17/18.
+
+> **Atualização (2026-08-30):** a premissa de §2.2 foi superada. O Inep
+> publicou a planilha municipal oficial de 2025; o backtest prospectivo do
+> produto intra-UF foi executado e fechado no ticket 0018. O resultado é uso
+> condicional (14 UFs vencem, CE perde, 8 são inconclusivas), documentado em
+> `reports/backtest_prospectivo_2025.json` e
+> `reports/decisao_produto_pos_backtest_2025.md`. Esta ADR preserva a decisão
+> original e não deve mais ser lida como limitação vigente de ausência de
+> dado temporal.
 
 ---
 
@@ -56,15 +65,15 @@ quando houver `--full` e decidir com número que signifique alguma coisa. O
 desenho da comparação (k-fold, teste tocado uma vez, grids comparáveis) está
 pronto e validado — só falta dado.
 
-### 2.2 Validação temporal sem dado de 2025 — decisão fechada, sem construir monitoramento agora
+### 2.2 Validação temporal sem dado de 2025 — decisão histórica, superada
 
-O projeto não tem e não terá acesso a dado de 2025 dentro do prazo da
-entrega. **Checagem contra o enunciado**: o PDF oficial não exige
-monitoramento de produção em tempo real — exige que o README trate
-`Limitações do projeto` e `Possíveis evoluções futuras` como seções
-explícitas. Decisão: **documentar como limitação conhecida**, não construir
-infraestrutura de monitoramento (drift, retraining automático) que o
-enunciado não pede e que consumiria tempo do prazo real de entrega.
+Na data desta decisão, o projeto não tinha acesso ao resultado municipal de
+2025; por isso, a escolha correta era documentar a lacuna em vez de simular
+monitoramento de produção. Essa condição foi superada em 2026-08-30 pelo
+backtest prospectivo 2023→2024→2025 do ticket 0018. A limitação vigente não é
+mais ausência total de ano futuro, mas haver apenas **uma** transição temporal
+validada e efeito heterogêneo por UF; a recomendação atual exige atualização
+anual antes de alterar a regra de cada estado.
 
 ### 2.3 Tratamento de `caderno=12` — feature condicional, com risco registrado
 

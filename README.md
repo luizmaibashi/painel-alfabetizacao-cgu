@@ -14,7 +14,7 @@
 | 2 | **A inversão de direção entre estados** | "Quem estava melhor em 2023 falha mais a meta" vale em **16 UFs**; o **oposto** vale em 7. Dois mecanismos medidos: regressão à média onde a meta acompanha o município (MG), e teto de 80,0 que blinda os melhores onde a meta satura (CE). Responde a pergunta de negócio nº 4 do enunciado ("como prever municípios que podem não atingir metas futuras?"), a única sem resposta **desenvolvida nesta fase** |
 | 3 | **Modelo de priorização municipal intra-UF** | Validado prospectivamente no ciclo 2025: AUC ponderada **0,6167** contra **0,4523** do baseline cuja direção já era conhecida em 2024 — ganho de **+0,1644**. A decisão é condicional, não nacional: o modelo vence em 14 UFs, o baseline vence no CE e 8 UFs exigem abstenção. O ranking só é acionável onde o IC bootstrap pareado sustenta essa afirmação |
 | 4 | **Advertência de validade sobre comparação entre estados** | Ranking nacional de municípios compara réguas de avaliação distintas — inclusive nos marts da nossa Fase 2 |
-| 5 | **Painel de priorização** (`reports/painel_intra_uf.html`) | Demonstração histórica de 2024, particionada por UF. O contrato operacional de 2025 está em `reports/decisao_produto_pos_backtest_2025.md`; o painel deve ser regenerado antes de ser usado para recomendação |
+| 5 | **Painel de priorização** (`reports/painel_intra_uf.html`) | Regenerado com o contrato operacional de 2025: ranking do modelo nas 14 UFs vencedoras, regra simples no CE, abstenção (só diagnóstico) nas 8 UFs inconclusivas. Particionado por UF, sem eixo nacional. Fonte oficial, SHA-256 da planilha e data de corte no rodapé. Gerado de `reports/ranking_prospectivo_2025.json` |
 
 A narrativa curta: **testamos onde o enunciado mandou testar, provamos com
 rigor que não funciona, e achamos onde funciona.**
@@ -173,7 +173,15 @@ Pipeline scikit-learn completa, com pré-processamento integrado ao modelo
     que não o viu no treino), nome do município via API pública do IBGE.
     Saída: `reports/ranking_intra_uf.{json,csv}`, 5.216 municípios.
 11. **Painel** (`src/visualization/01_gerar_painel_intra_uf.py`) — gera
-    `reports/painel_intra_uf.html`, autocontido, particionado por UF.
+    `reports/painel_intra_uf.html`, autocontido, particionado por UF, a partir
+    de `reports/ranking_prospectivo_2025.json` (saída do backtest, passo 12).
+    Cada UF exibe um de três modos, conforme o veredito prospectivo: ranking do
+    modelo (14 UFs), regra simples (CE) ou abstenção diagnóstica (8 UFs).
+12. **Backtest prospectivo** (`src/evaluation/05_backtest_prospectivo_2025.py`)
+    — congela o modelo em 2023→2024, testa em 2024→2025 sem tuning nem alvo de
+    2025. Grava `reports/backtest_prospectivo_2025.json` (métricas) e
+    `reports/ranking_prospectivo_2025.json` (listas municipais + contrato de
+    uso + rastreabilidade da fonte).
 
 ### Tratamento de data leakage
 
@@ -693,10 +701,12 @@ intervalo de confiança:**
 ### O painel de priorização
 
 A recomendação 2 não fica apenas em prosa: `reports/painel_intra_uf.html` é
-uma demonstração autocontida do ranking histórico. O artefato ainda não
-incorpora a validação temporal de 2025; por isso, a regra de uso operacional
-está explicitada em `reports/decisao_produto_pos_backtest_2025.md` e deve
-guiar sua próxima regeneração.
+uma demonstração autocontida, regenerada a partir do backtest prospectivo de
+2025 (`reports/ranking_prospectivo_2025.json`). Ele já aplica o contrato de uso
+condicional — ranking do modelo nas 14 UFs vencedoras, regra simples no CE,
+abstenção diagnóstica nas 8 inconclusivas — e mostra fonte oficial, SHA-256 da
+planilha e data de corte do treino. A decisão completa está em
+`reports/decisao_produto_pos_backtest_2025.md`.
 
 Três decisões de produto que valem registro:
 
@@ -705,15 +715,19 @@ Três decisões de produto que valem registro:
   descrito em §9. A restrição vive na ferramenta, não no rodapé.
 - **Cada estado declara se o modelo ajuda ali, no ciclo futuro.** O
   backtest 2025 registra `modelo_vence` em 14 UFs, `modelo_perde` no CE e
-  `inconclusivo` em 8. A interface operacional deve recomendar a regra
-  simples no CE e abster-se nas inconclusivas; um número médio não pode
-  esconder essas diferenças.
-- **Cada estado declara qual direção vale ali.** Antes de qualquer ranking, o
-  painel diz se a regra que funciona naquele estado é "priorize quem estava
-  melhor" ou "quem estava pior" — e avisa quando é um dos 7 estados em que
-  essa direção não dá para adivinhar de fora.
-- **Predições out-of-fold.** O número que o gestor vê é o que o modelo
-  entregaria para um município que ele não conhece.
+  `inconclusivo` em 8. O painel já aplica isso: recomenda a regra simples no
+  CE, exibe só diagnóstico nas 8 inconclusivas (cabeçalho da tabela muda para
+  "score do modelo (diagnóstico)" e o texto não sugere ordem de ação) e libera
+  o ranking do modelo só nas 14. Um número médio não pode esconder essas
+  diferenças.
+- **Cada estado declara qual direção vale ali.** Onde o painel usa a regra
+  simples (CE) ou se abstém, ele diz se a regra que funciona naquele estado é
+  "priorize quem estava melhor" ou "quem estava pior" — a direção usada é a que
+  já funcionava na própria UF em 2024, nunca escolhida olhando o resultado de
+  2025.
+- **O score vem do backtest, fora do ciclo de treino.** O número que o gestor
+  vê é o que o modelo — congelado em 2023→2024 — atribuiu ao município para o
+  ciclo de 2025 antes de o resultado sair.
 
 Isso não diminui o valor da Fase 3 — o projeto define um critério de sucesso
 antes de medir, executa o teste, desconfia do próprio resultado quando ele
@@ -785,9 +799,13 @@ python src/evaluation/04_robustez_algoritmo.py               # veredito independ
 
 ```bash
 python src/modeling/03_experimento_municipio_meta.py    # 5 etapas, a 4ª é a que decide
-python src/modeling/04_ranking_intra_uf.py              # modelo produtizado
-python src/visualization/01_gerar_painel_intra_uf.py    # gera reports/painel_intra_uf.html
+python src/modeling/04_ranking_intra_uf.py              # modelo produtizado (retrato histórico)
+python src/evaluation/05_backtest_prospectivo_2025.py   # backtest 2024→2025 + ranking_prospectivo_2025.json
+python src/visualization/01_gerar_painel_intra_uf.py    # gera reports/painel_intra_uf.html (contrato 2025)
 ```
+
+O painel depende de `reports/ranking_prospectivo_2025.json` — rode o backtest
+antes do gerador.
 
 **Notebook da narrativa analítica:**
 

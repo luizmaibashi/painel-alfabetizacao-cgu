@@ -21,6 +21,9 @@ BASE = Path(__file__).resolve().parents[2]
 ICA_2025 = BASE / "dados_externos" / "resultados_e_metas_municipios_2025_3.xlsx"
 TERRITORIO = BASE / "data" / "territorio_local.parquet"
 SAIDA = BASE / "reports" / "backtest_prospectivo_2025.json"
+SAIDA_RANKING = BASE / "reports" / "ranking_prospectivo_2025.json"
+DATA_PUBLICACAO_INEP = "2026-04-01"
+ANO_CICLO = 2025
 
 RANDOM_STATE = 42
 N_BOOT = 1000
@@ -184,6 +187,105 @@ def executar_backtest(treino: pd.DataFrame, teste: pd.DataFrame,
     return pd.concat(rankings, ignore_index=True), metricas
 
 
+NOME_UF = {
+    "AC": "Acre", "AL": "Alagoas", "AM": "Amazonas", "AP": "Amapá",
+    "BA": "Bahia", "CE": "Ceará", "DF": "Distrito Federal", "ES": "Espírito Santo",
+    "GO": "Goiás", "MA": "Maranhão", "MG": "Minas Gerais", "MS": "Mato Grosso do Sul",
+    "MT": "Mato Grosso", "PA": "Pará", "PB": "Paraíba", "PE": "Pernambuco",
+    "PI": "Piauí", "PR": "Paraná", "RJ": "Rio de Janeiro", "RN": "Rio Grande do Norte",
+    "RO": "Rondônia", "RR": "Roraima", "RS": "Rio Grande do Sul", "SC": "Santa Catarina",
+    "SE": "Sergipe", "SP": "São Paulo", "TO": "Tocantins",
+}
+
+# Como o painel deve tratar cada UF, derivado do veredito prospectivo de 2025.
+CONTRATO_POR_VEREDITO = {
+    "modelo_vence": "ranking_modelo",
+    "modelo_perde": "regra_simples",
+    "inconclusivo": "abster",
+}
+
+
+def montar_ranking_operacional(ranking: pd.DataFrame, metricas: list[dict],
+                               fonte: dict) -> dict:
+    """Monta o JSON que o painel de 2025 consome, já com o contrato de uso.
+
+    Cada UF recebe ``uso`` (``ranking_modelo`` | ``regra_simples`` | ``abster``)
+    a partir do veredito do backtest prospectivo. A ordenação municipal exposta
+    segue o ``uso``: pelo score do modelo onde ele venceu, pela taxa de 2024 na
+    direção que funcionou naquela UF onde perdeu, e pelo score do modelo
+    (apenas como diagnóstico, sem recomendar ação) onde é inconclusivo.
+    A comparação entre UFs continua impossível: não há eixo nacional no payload.
+    """
+    met = {m["uf"]: m for m in metricas}
+    ufs = {}
+    for uf, grupo in ranking.groupby("sigla_uf"):
+        m = met[uf]
+        uso = CONTRATO_POR_VEREDITO[m["veredito"]]
+        direcao = m["direcao_prevista"]
+        g = grupo.copy()
+        if uso == "regra_simples":
+            # ordena pela regra simples da direção prevista: "melhor_primeiro"
+            # prioriza a MAIOR taxa de 2024 (topo falha mais por regressão à
+            # média); "pior_primeiro" prioriza a MENOR taxa.
+            asc = direcao == "pior_primeiro"
+            g = g.sort_values("taxa_base", ascending=asc)
+        else:
+            g = g.sort_values("score_modelo", ascending=False)
+        g = g.reset_index(drop=True)
+        g["rank_uf"] = np.arange(1, len(g) + 1)
+        linhas = [
+            # [rank, nome, score_modelo, taxa24, meta25, taxa25, y_2025]
+            [int(r.rank_uf), r.nome_municipio, round(float(r.score_modelo), 4),
+             _num(r.taxa_base), _num(r.meta_alvo), _num(r.taxa25), int(r.y)]
+            for r in g.itertuples()
+        ]
+        ufs[uf] = {
+            "nome": NOME_UF.get(uf, uf),
+            "n": int(m["n_municipios"]),
+            "uso": uso,
+            "veredito": m["veredito"],
+            "direcao": direcao,
+            "taxa_falha_2025": m["taxa_falha_2025"],
+            "auc_modelo": m["auc_modelo"],
+            "auc_baseline": m["auc_baseline"],
+            "ganho": m["ganho_sobre_baseline"],
+            "ganho_ic": m["ganho_ic95"],
+            "amostra_pequena": bool(m["n_municipios"] < 100),
+            "m": linhas,
+        }
+    resumo = {
+        "ufs": len(ufs),
+        "municipios": int(len(ranking)),
+        "ufs_ranking_modelo": sum(u["uso"] == "ranking_modelo" for u in ufs.values()),
+        "ufs_regra_simples": sum(u["uso"] == "regra_simples" for u in ufs.values()),
+        "ufs_abster": sum(u["uso"] == "abster" for u in ufs.values()),
+    }
+    return {
+        "fonte": fonte,
+        "ciclo": ANO_CICLO,
+        "data_publicacao_inep": DATA_PUBLICACAO_INEP,
+        "desenho": (
+            "Ranking municipal intra-UF congelado no backtest prospectivo 2024->2025. "
+            "Uso condicional por UF: modelo onde venceu a regra simples com "
+            "significância, regra simples onde perdeu, abstenção onde é inconclusivo. "
+            "Comparação entre UFs bloqueada por construção."
+        ),
+        "aviso_validade": (
+            "Retrato do ciclo 2025 do Compromisso Nacional Criança Alfabetizada. "
+            "Reavaliar a cada publicação anual do Inep antes de mudar a regra de "
+            "qualquer UF."
+        ),
+        "resumo": resumo,
+        "ufs": ufs,
+    }
+
+
+def _num(valor) -> float | None:
+    if valor is None or (isinstance(valor, float) and np.isnan(valor)):
+        return None
+    return round(float(valor), 1)
+
+
 def main() -> None:
     ica = carregar_ica()
     treino, teste = montar_janelas(ica)
@@ -191,11 +293,12 @@ def main() -> None:
     ranking, metricas = executar_backtest(treino, teste, n_boot=n_boot)
     dfm = pd.DataFrame(metricas)
     pesos = dfm.n_municipios
+    fonte = {
+        "arquivo": str(ICA_2025.relative_to(BASE)), "sha256": hash_arquivo(ICA_2025),
+        "url": "https://download.inep.gov.br/avaliacao_da_alfabetizacao/resultados/resultados_e_metas_municipios_2025_3.xlsx",
+    }
     resultado = {
-        "fonte": {
-            "arquivo": str(ICA_2025.relative_to(BASE)), "sha256": hash_arquivo(ICA_2025),
-            "url": "https://download.inep.gov.br/avaliacao_da_alfabetizacao/resultados/resultados_e_metas_municipios_2025_3.xlsx",
-        },
+        "fonte": fonte,
         "desenho": "Treina 2023->2024 e testa prospectivamente 2024->2025; sem tuning ou alvo de 2025 no treino.",
         "resumo": {
             "ufs": int(len(dfm)), "municipios": int(len(ranking)),
@@ -210,8 +313,15 @@ def main() -> None:
         "metricas_por_uf": metricas,
     }
     SAIDA.write_text(json.dumps(resultado, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    operacional = montar_ranking_operacional(ranking, metricas, fonte)
+    SAIDA_RANKING.write_text(
+        json.dumps(operacional, ensure_ascii=False, indent=2), encoding="utf-8")
+
     print(json.dumps(resultado["resumo"], ensure_ascii=False, indent=2))
+    print(json.dumps(operacional["resumo"], ensure_ascii=False, indent=2))
     print(f"Relatório: {SAIDA.relative_to(BASE)}")
+    print(f"Ranking operacional: {SAIDA_RANKING.relative_to(BASE)}")
 
 
 if __name__ == "__main__":

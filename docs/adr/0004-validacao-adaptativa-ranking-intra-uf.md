@@ -143,6 +143,11 @@ desde a Fase 3."
 - Todo UF com IC95% no JSON e visível no painel: confirmado
   (`auc_modelo_ic95` em `reports/ranking_intra_uf.json`, mapeado para
   `auc_ic` no painel — `src/visualization/01_gerar_painel_intra_uf.py`).
+  **Atualização (2026-08-30):** o painel passou a consumir
+  `reports/ranking_prospectivo_2025.json` (backtest do ticket 0018). O IC agora
+  exposto é o do ganho sobre o baseline (`ganho_ic`), que é o que decide o
+  veredito de uso condicional por UF; o campo `auc_ic` do JSON histórico não é
+  mais lido pelo painel.
 - Painel republicado e conferido: bloco de metodologia lista o piso de 40 e
   os 3 UFs de fonte ausente.
 

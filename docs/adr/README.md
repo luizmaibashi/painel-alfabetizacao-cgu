@@ -16,7 +16,13 @@ esta pasta migra de novo.
 | [0005](0005-correcao-da-regua-do-baseline-intra-uf.md) | Correção da régua do baseline intra-UF e a inversão de direção entre estados | Accepted | 2026-08-20 |
 | [0006](0006-ceiling-analysis-como-gate-pre-treino.md) | Ceiling analysis como gate pré-treino | Accepted com correção (§7 método, §7.1 número) | 2026-08-22 |
 | [0007](0007-determinismo-de-execucao-como-requisito-de-entrega.md) | Determinismo de execução como requisito de entrega | Accepted | 2026-08-25 |
+| [0008](0008-skew-treino-servico-nas-features-de-historico.md) | Features de histórico t-1 são não-funcionais no split temporal (skew treino-serviço) | Aceito | 2026-08-29 |
+| [0009](0009-enriquecimento-municipal-fundeb-idhm.md) | Enriquecimento municipal FUNDEB/IDHM (resultado misto, não promovido) | Aceito | 2026-08-29 |
+| [0010](0010-painel-derivado-do-backtest-com-contrato-de-uso-condicional.md) | Painel derivado do backtest prospectivo, com contrato de uso condicional no artefato | Aceito | 2026-08-30 |
 
 > **Nota de 2026-08-25:** o ADR-0006 existia desde 22/08 mas **nunca tinha sido
 > adicionado a este índice** — mais uma ocorrência do padrão que o próprio 0007
 > documenta (artefato criado, registro não atualizado). Incluído junto com o 0007.
+>
+> **Nota de 2026-08-30:** os ADR-0008 e 0009 também não tinham sido indexados —
+> mesmo padrão de novo. Incluídos junto com o 0010.
