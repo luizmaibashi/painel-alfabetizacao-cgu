@@ -26,7 +26,9 @@ ranking intra-UF, porque a fonte não tem série anual (2010 é o ano mais
 recente com cobertura municipal completa).
 
 Ancorado em `docs/adr/0009-enriquecimento-municipal-fundeb-idhm.md` e
-`docs/wayfinder/tech_challenge_fase3/0010-enriquecimento-municipal-fundeb-idhm.md`.
+`docs/wayfinder/tech_challenge_fase3/0019-enriquecimento-municipal-fundeb-idhm.md`
+(raiz da base — renomeado de 0010 em 2026-08-30, colidia com ticket homônimo
+já existente naquela árvore).
 
 ## Colunas (pós-limpeza)
 

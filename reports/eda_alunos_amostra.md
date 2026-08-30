@@ -1,5 +1,6 @@
 # EDA — alunos_amostra (n=5.000)
-**Origem:** `data/Alunos_amostra.csv`
+**Origem:** `data/Alunos_subconjunto_teste_local.csv` (renomeado 2026-08-30,
+path no momento em que este relatório rodou era `data/Alunos_amostra.csv`)
 **Gerado por:** `src/preprocessing/01_eda_alunos.py`
 **Alvo:** `alfabetizado` · classe de risco `"Não"` = 50.8% das linhas
 

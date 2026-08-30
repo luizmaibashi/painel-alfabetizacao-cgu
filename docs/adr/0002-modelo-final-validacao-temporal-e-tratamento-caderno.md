@@ -171,7 +171,7 @@ brainstorm do zero — mais rápida e com decisão de fato compartilhada."
 **Relacionados:**
 - `ADR-0001` (pipeline sklearn, política de leakage) — decisões desta ADR
   não alteram nada do ADR-0001, só adicionam as 3 pendências novas.
-- `PROJETOS/01_PRIORITY/tech-challenge-fase3-alfabetizacao/docs/PLANO_REFINAMENTO_CONCEITOS.md`
+- `PROJETOS/01_PRIORITY/tech-challenge-fase3-alfabetizacao/docs/aprendizado/PLANO_REFINAMENTO_CONCEITOS.md`
   (Seção 2, origem desta ADR).
 - `PROJETOS/01_PRIORITY/tech-challenge-fase3-alfabetizacao/reports/proveniencia_alunos.md`
   (investigação completa de `caderno=12`, 3 tentativas de validação).

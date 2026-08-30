@@ -37,7 +37,7 @@ BASE = Path(__file__).resolve().parents[2]
 # proteger custo de nuvem, e ler 7,3MB local não incorre nesse custo.)
 ALUNOS_COMPLETO = (BASE.parent / "tech-challenge-fase2-alfabetizacao" /
                     "dados" / "Alunos.csv")
-ALUNOS_AMOSTRA = BASE / "data" / "Alunos_amostra.csv"
+ALUNOS_AMOSTRA = BASE / "data" / "Alunos_subconjunto_teste_local.csv"
 
 # Colunas excluídas por política de leakage (ADR-0001) — nunca entram no snapshot.
 # `peso_aluno` entrou nesta lista em 2026-08-18: a NULIDADE dela codifica "faltou
@@ -137,9 +137,13 @@ def calcular_historico_t1(caminho_csv: Path) -> dict[str, pd.DataFrame]:  # noqa
     ano sendo predito. Recalculado do CSV bruto porque `presenca` já saiu do
     dataframe principal por leakage do ano atual.
 
-    CORREÇÃO (2026-08-18): lia `data/Alunos_amostra.csv` FIXO, ignorando
-    `--input`. Rodar na base completa calcularia o histórico sobre a amostra de
-    5.000 e colaria nas 57.781 linhas — errado em silêncio.
+    CORREÇÃO (2026-08-18): lia `data/Alunos_subconjunto_teste_local.csv`
+    (renomeado 2026-08-30, era `Alunos_amostra.csv` — nome sugeria amostra
+    representativa; é subconjunto de 5.000 linhas pra teste local rápido,
+    não a fonte real. Achado depois de um bug real: ver
+    `docs/wayfinder/tech_challenge_fase3/0013-*.md` na raiz da base) FIXO,
+    ignorando `--input`. Rodar na base completa calcularia o histórico sobre
+    o subconjunto de 5.000 e colaria nas 57.781 linhas — errado em silêncio.
 
     POR QUE DOIS NÍVEIS (2026-08-18): a versão por ESCOLA é estruturalmente
     frágil nesta base. O Indicador Criança Alfabetizada é pesquisa AMOSTRAL:

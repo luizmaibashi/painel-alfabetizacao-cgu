@@ -5,7 +5,7 @@
 | Dataset | Arquivo | O que é |
 |---|---|---|
 | `alunos` | `../tech-challenge-fase2-alfabetizacao/dados/Alunos.csv` | Base completa, 57.781 alunos. **É a base de trabalho desde 2026-08-18** |
-| `alunos_amostra` | `data/Alunos_amostra.csv` | Amostra aleatória de 5.000 (8,7%), cópia byte a byte de `dados_sample/Alunos.csv` da Fase 2. Foi a base de trabalho até 2026-08-18; mantida como referência histórica dos relatórios daquele período |
+| `alunos_amostra` | `data/Alunos_subconjunto_teste_local.csv` (renomeado 2026-08-30, era `Alunos_amostra.csv` — nome sugeria amostra representativa e causou 1 bug real no ticket 0013, ver `docs/wayfinder/tech_challenge_fase3/0013-*.md` na raiz da base) | Subconjunto de 5.000 linhas (8,7%), cópia byte a byte de `dados_sample/Alunos.csv` da Fase 2. Foi a base de trabalho até 2026-08-18; mantida como referência histórica dos relatórios daquele período — **não é amostra estatística, é corte de teste local** |
 | `snapshot_modelagem` | `data/snapshot_modelagem.parquet` | Saída de `02_extrair_snapshot.py`: alunos + histórico t-1 (dois níveis) + território/meta quando em `--full`. **É o que o modelo consome** |
 | `territorio_local` | `data/territorio_local.parquet` | Saída de `05_montar_territorio.py`: substituto local e reduzido da Silver da Fase 2, montado sem GCP (IBGE SIDRA + metas do disco + UF por prefixo). 10.704 linhas (município × ano × rede) |
 
