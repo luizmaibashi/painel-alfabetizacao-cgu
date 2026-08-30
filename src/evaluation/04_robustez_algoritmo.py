@@ -104,9 +104,12 @@ CANDIDATOS = {
         nota="configuracao canonica do 02_teste_falsificacao.py (800 arvores, depth 8)",
     ),
     "random_forest": dict(
-        # n_jobs=-1 e seguro aqui: cada arvore tem semente propria e a
-        # paralelizacao nao altera o resultado (verificado no ADR-0007). O
-        # problema de ordem de soma em ponto flutuante e especifico do
+        # n_jobs=-1 e aceitavel aqui: a media das arvores em predict_proba e
+        # uma reducao paralela e NAO e bit-identica (medido 2026-08-30:
+        # |diff| ~ 3,3e-16), mas as metricas deste script sao arredondadas em
+        # 4 casas e o efeito some. So amplifica onde ha bootstrap/percentil a
+        # jusante -- ver a docstring de tests/test_determinismo_execucao.py. O
+        # problema de ordem de soma em ponto flutuante e MUITO maior no
         # tree_method="hist" do XGBoost.
         estimador=RandomForestClassifier(
             n_estimators=800, max_depth=12, min_samples_leaf=10,

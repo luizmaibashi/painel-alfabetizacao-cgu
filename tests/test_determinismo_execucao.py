@@ -30,15 +30,44 @@ falha build. Este teste falha.
 O QUE ELE DELIBERADAMENTE NAO PROIBE
 -------------------------------------
 `n_jobs=-1` em `RandomForest`, `GridSearchCV` e `cross_val_predict` continua
-permitido e desejavel. Eles paralelizam UNIDADES INDEPENDENTES (uma arvore,
-uma combinacao de hiperparametro, uma dobra) — cada uma calculada isoladamente
-e so entao coletada. Nao ha soma compartilhada, entao nao ha dependencia de
-ordem. Verificado empiricamente: `04_ranking_intra_uf.py` (RandomForest,
-`n_jobs=-1`) da resultado bit a bit identico a 1, 2 e 6 threads, incluindo a
-lista nominal de UFs em cada veredito.
+permitido. Eles paralelizam UNIDADES INDEPENDENTES (uma arvore, uma combinacao
+de hiperparametro, uma dobra), entao o efeito de ordem e ordens de grandeza
+menor que no `tree_method="hist"` — mas NAO e zero, e a versao anterior desta
+docstring afirmava que era.
 
-A regra, entao, nao e "paralelismo e ruim" — e "paralelismo sobre uma reducao
-compartilhada quebra reprodutibilidade; sobre unidades independentes, nao".
+CORRECAO MEDIDA EM 2026-08-30. A afirmacao anterior ("nao ha soma compartilhada,
+entao nao ha dependencia de ordem") esta errada para `RandomForest`:
+`predict_proba` MEDIA as arvores, e essa media e uma reducao paralelizada em
+blocos por thread. Medido diretamente:
+
+    RandomForestClassifier(n_estimators=200, max_depth=6, random_state=42)
+    n_jobs=-1 vs n_jobs=-1 : bit-identico? False
+    n_jobs=-1 vs n_jobs=1  : bit-identico? False
+    max |diff| = 3.3e-16  (epsilon de float64)
+
+Por que a verificacao original passou mesmo assim: ela foi feita em
+`04_ranking_intra_uf.py`, que grava metricas arredondadas em 4 casas — e 3,3e-16
+some no arredondamento. Continua verdade que aquele script e bit a bit identico
+a 1, 2 e 6 threads (reconfirmado em 2026-08-30). O que mudou foi o
+`05_backtest_prospectivo_2025.py`: ele passa os scores por um bootstrap de 1.000
+reamostragens, e o percentil 97,5 AMPLIFICA o epsilon — basta uma reamostragem
+cruzar o corte para o limite do IC mudar na 4a casa. Efeito observado:
+
+    RS, ganho_ic95 superior:  0,2717 (1 thread)  vs  0,2716 (6 threads)
+
+Escopo do efeito, medido: 1 valor em 23 UFs; `auc_modelo`, `auc_baseline`,
+`ganho_sobre_baseline`, o bloco `resumo` e os 23 vereditos ficam identicos. A
+menor margem entre um IC e o zero (PE, 0,0035) e 35x maior que a variacao
+observada (0,0001), entao nenhum veredito pode virar por este ruido. E divida
+de reproducibilidade bit-a-bit, nao erro de resultado — registrada como debito
+aberto no ADR-0007 em vez de corrigida as pressas, porque forcar `n_jobs=1` no
+backtest muda o custo de execucao e merece decisao explicita, nao um patch
+lateral no meio de uma auditoria.
+
+A regra, entao, nao e "paralelismo e ruim" nem "sobre unidades independentes e
+seguro" — e "toda reducao em ponto flutuante paralelizada introduz ruido de
+ordem; o que muda e a MAGNITUDE, e se o pipeline a jusante amplifica ou
+arredonda esse ruido".
 """
 import ast
 from pathlib import Path

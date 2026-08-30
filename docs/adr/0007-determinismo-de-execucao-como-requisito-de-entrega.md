@@ -1,7 +1,11 @@
 # ADR-0007: Determinismo de execução como requisito de entrega
 
 **Data**: 2026-08-25
-**Status**: Accepted
+**Status**: Accepted — com **correção medida em 2026-08-30** na §2.2 (a
+premissa "`RandomForest` com `n_jobs=-1` não tem dependência de ordem" é
+falsa; efeito é real mas 35× menor que a margem de qualquer veredito, e
+nenhum número publicado muda). Débito de reprodutibilidade aberto, com 3
+opções de correção listadas na própria §2.2.
 **Proposto por**: Luiz Maibashi
 **Contexto**: Verificação da exigência de "replicabilidade" do enunciado (p.3)
 durante o planejamento do recomeço pedagógico. O que começou como um item
@@ -102,6 +106,69 @@ não muda entre execuções.
 > Paralelismo sobre **unidades independentes**, não.
 
 O tournament tem os dois tipos lado a lado e a distinção está comentada lá.
+
+---
+
+> #### ⚠️ Correção medida em 2026-08-30 — a frase acima é forte demais
+>
+> Auditoria de ponta a ponta rodou `05_backtest_prospectivo_2025.py` duas
+> vezes e o output **não** foi bit a bit idêntico. Investigado até a causa:
+>
+> ```
+> RandomForestClassifier(n_estimators=200, max_depth=6, random_state=42)
+> n_jobs=-1 vs n_jobs=-1 : bit-idêntico? False
+> n_jobs=-1 vs n_jobs=1  : bit-idêntico? False
+> max |diff| = 3,3e-16   (épsilon de float64)
+> ```
+>
+> **`RandomForest` com `n_jobs=-1` não é bit-a-bit determinístico** — nem
+> contra si mesmo. `predict_proba` **calcula a média** das árvores, e essa
+> média é uma redução paralelizada em blocos por thread. Ou seja: a redução
+> compartilhada que a §2.2 dizia não existir, existe. O que a distingue do
+> `tree_method="hist"` é **magnitude**, não natureza.
+>
+> **Por que a verificação original passou e continua válida no que afirmou.**
+> Ela foi feita em `04_ranking_intra_uf.py`, que grava métricas arredondadas
+> em 4 casas — 3,3e-16 desaparece no arredondamento. Reconfirmado em
+> 2026-08-30: aquele script segue bit a bit idêntico a 1, 2 e 6 threads. O
+> erro não foi a medição; foi **generalizar de um script para uma classe de
+> algoritmos**.
+>
+> **O que mudou desde então.** O `05_backtest_prospectivo_2025.py` passa os
+> scores por um bootstrap de 1.000 reamostragens. O percentil 97,5
+> **amplifica** o épsilon: basta uma reamostragem cruzar o corte para o
+> limite do IC mudar na 4ª casa.
+>
+> ```
+> RS, ganho_ic95 superior:  0,2717 (1 thread)  vs  0,2716 (6 threads)
+> ```
+>
+> **Escopo medido, sem inflar:** 1 valor em 23 UFs. `auc_modelo`,
+> `auc_baseline`, `ganho_sobre_baseline`, o bloco `resumo` e os **23
+> vereditos** ficam idênticos. A menor margem entre um IC e o zero (PE,
+> 0,0035) é **35× maior** que a variação observada (0,0001) — nenhum veredito
+> pode virar por este ruído. É **dívida de reprodutibilidade bit-a-bit, não
+> erro de resultado**: nenhum número publicado no README, painel ou notebook
+> muda.
+>
+> **Débito aberto (não corrigido aqui, deliberadamente).** Forçar `n_jobs=1`
+> no backtest resolveria, mas muda o custo de execução de um script que treina
+> 23 modelos — decisão que merece ser explícita, não um patch lateral no meio
+> de uma auditoria. Opções, para decidir antes da próxima rodada Inep:
+> (a) `n_jobs=1` só no `05_backtest`, aceitando o tempo maior; (b) manter
+> `n_jobs=-1` e declarar a tolerância de ±0,0001 no IC como parte do contrato
+> do artefato; (c) gravar o IC com 3 casas, onde o ruído não aparece.
+>
+> **A regra corrigida, que substitui a formulação acima:**
+>
+> > Toda redução em ponto flutuante paralelizada introduz ruído de ordem.
+> > O que muda entre `tree_method="hist"` e `RandomForest` é a **magnitude**
+> > — e se o pipeline a jusante **amplifica** (bootstrap, percentil) ou
+> > **arredonda** esse ruído.
+>
+> Registrado também em `tests/test_determinismo_execucao.py` (docstring),
+> `02_tournament_modelos.py` e `04_robustez_algoritmo.py`, que repetiam a
+> premissa antiga como fato verificado.
 
 ### 2.3 Relatórios de `reports/` ficam versionados — exceção consciente ao `AGENTS.md`
 

@@ -137,9 +137,14 @@ CANDIDATOS = {
             # Aqui importa porque este script alimenta metrics_tournament.json,
             # citado no README e no HANDOFF.
             # Os outros n_jobs=-1 deste arquivo (RandomForest, GridSearchCV,
-            # cross_val_predict) NAO tem o problema: paralelizam unidades
-            # independentes (arvore, combinacao de hiperparametro, dobra), nao
-            # uma soma compartilhada. Ver docs/wayfinder/tech_challenge_fase3/0009.
+            # cross_val_predict) tem o mesmo problema em MAGNITUDE MUITO menor:
+            # paralelizam unidades independentes (arvore, combinacao de
+            # hiperparametro, dobra), mas a media final ainda e uma reducao
+            # paralela -- medido 2026-08-30, |diff| ~ 3,3e-16, que some no
+            # arredondamento de 4 casas destas metricas. Nao confundir com
+            # "nao tem dependencia de ordem": tem, so nao aparece nesta escala.
+            # Ver docs/wayfinder/tech_challenge_fase3/0009 e a docstring de
+            # tests/test_determinismo_execucao.py.
             tree_method="hist", n_jobs=1,
         ),
         "balancear": True,
