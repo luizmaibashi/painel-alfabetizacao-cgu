@@ -12,9 +12,9 @@
 |---|---|---|
 | 1 | **Modelo supervisionado aluno-nível** (exigência do enunciado) | Executado com rigor e **reprovado no próprio critério de falsificação**: 0,6047 contra 0,6331 da meta do PDE aplicada uniformemente, IC95% [−0,0342, −0,0228]. Resultado negativo, medido e documentado |
 | 2 | **A inversão de direção entre estados** | "Quem estava melhor em 2023 falha mais a meta" vale em **16 UFs**; o **oposto** vale em 7. Dois mecanismos medidos: regressão à média onde a meta acompanha o município (MG), e teto de 80,0 que blinda os melhores onde a meta satura (CE). Responde a pergunta de negócio nº 4 do enunciado ("como prever municípios que podem não atingir metas futuras?"), a única sem resposta **desenvolvida nesta fase** |
-| 3 | **Modelo de priorização municipal intra-UF** | AUC **0,6478** contra **0,6209** do baseline honesto — ganho de **+0,027**, IC95% [+0,007, +0,048]. O valor não é ranquear melhor: é **não precisar saber a direção de antemão**. Toda a vantagem vem das 7 UFs onde a direção é imprevisível (ADR-0005). **Entregue particionado por evidência**, não pela média: vence em 3 UFs, **perde em 3** e é inconclusivo em 17 — e o painel recomenda a regra trivial onde ela ganha |
+| 3 | **Modelo de priorização municipal intra-UF** | Validado prospectivamente no ciclo 2025: AUC ponderada **0,6167** contra **0,4523** do baseline cuja direção já era conhecida em 2024 — ganho de **+0,1644**. A decisão é condicional, não nacional: o modelo vence em 14 UFs, o baseline vence no CE e 8 UFs exigem abstenção. O ranking só é acionável onde o IC bootstrap pareado sustenta essa afirmação |
 | 4 | **Advertência de validade sobre comparação entre estados** | Ranking nacional de municípios compara réguas de avaliação distintas — inclusive nos marts da nossa Fase 2 |
-| 5 | **Painel de priorização** (`reports/painel_intra_uf.html`) | 5.216 municípios, particionado por UF, com veredito honesto de 3 estados por UF — inclusive **recomendando a regra simples** nos 3 estados onde ela vence o modelo |
+| 5 | **Painel de priorização** (`reports/painel_intra_uf.html`) | Demonstração histórica de 2024, particionada por UF. O contrato operacional de 2025 está em `reports/decisao_produto_pos_backtest_2025.md`; o painel deve ser regenerado antes de ser usado para recomendação |
 
 A narrativa curta: **testamos onde o enunciado mandou testar, provamos com
 rigor que não funciona, e achamos onde funciona.**
@@ -661,10 +661,12 @@ omitido.
   PDF técnico com erro de certificado) não resolveram a categoria 12 —
   resolvida por análise de dados própria (crosstab), não por documentação
   externa.
-- **Sem dado de 2025** — o modelo nunca foi validado contra o ano de uso
-  real. Decisão registrada em [`ADR-0002`](docs/adr/0002-modelo-final-validacao-temporal-e-tratamento-caderno.md):
-  documentar como limitação, não construir infraestrutura de monitoramento
-  que o enunciado não exige.
+- **Há apenas uma transição temporal validada (2024 → 2025)** — o backtest
+  prospectivo elimina a lacuna de "nenhum ano futuro", mas ainda não prova
+  estabilidade entre ciclos nem substitui monitoramento anual. Além disso, o
+  efeito é heterogêneo: CE favorece a regra simples e 8 UFs permanecem
+  inconclusivas. Ver `reports/backtest_prospectivo_2025.json` e
+  `reports/decisao_produto_pos_backtest_2025.md`.
 - **SICONFI** (`gasto_por_habitante_educacao`, ~9 mil requisições a API
   pública) não foi buscado — o teste barato (população + meta) já mostrou
   que o problema é o modelo tentar ser um baseline municipal, não falta de
@@ -683,30 +685,29 @@ intervalo de confiança:**
    explicar, mais barata de manter (nenhum pipeline de ML em produção), e
    estatisticamente mais eficaz com os dados disponíveis.
 2. **Para priorização entre municípios**, comparar **dentro do estado**, nunca
-   entre estados — e **checar a direção antes de ordenar**: em 16 UFs quem
-   estava melhor em 2023 falha mais; em 7 é o contrário. Uma regra fixa
-   nacional erra sistematicamente em um dos dois grupos. Onde a direção é
-   conhecida, a regra simples já resolve; onde não é, o modelo intra-UF
-   (AUC 0,6478) protege contra escolher o lado errado.
+   entre estados, e liberar o ranking somente onde o teste temporal o
+   sustenta: o modelo venceu em 14 UFs; no CE, a regra simples é superior; e
+   em 8 UFs a recomendação responsável é não ranquear. Uma regra nacional
+   única continua inválida.
 
 ### O painel de priorização
 
-A recomendação 2 não fica em prosa: `reports/painel_intra_uf.html` é uma
-página autocontida onde o gestor escolhe o estado e vê os municípios ordenados
-por risco previsto — 5.216 municípios, 23 estados, com taxa de 2023, meta,
-resultado real e busca por nome.
+A recomendação 2 não fica apenas em prosa: `reports/painel_intra_uf.html` é
+uma demonstração autocontida do ranking histórico. O artefato ainda não
+incorpora a validação temporal de 2025; por isso, a regra de uso operacional
+está explicitada em `reports/decisao_produto_pos_backtest_2025.md` e deve
+guiar sua próxima regeneração.
 
 Três decisões de produto que valem registro:
 
 - **Não existe visão nacional, de propósito.** Se a interface permitisse
   ordenar municípios de estados diferentes, ela convidaria exatamente o erro
   descrito em §9. A restrição vive na ferramenta, não no rodapé.
-- **Cada estado declara se o modelo ajuda ali — em três estados, não dois.**
-  O painel mostra `vence` (PR, RJ, RS), `perde` (MG, RN, TO) ou
-  `inconclusivo` (as outras 17), pelo IC95% pareado contra a regra simples.
-  Nos 3 estados em que perde, ele **recomenda a regra simples** em vez de si
-  mesmo. Um painel que só soubesse dizer "vence/perde" esconderia que a
-  maioria dos casos não tem evidência em nenhuma direção.
+- **Cada estado declara se o modelo ajuda ali, no ciclo futuro.** O
+  backtest 2025 registra `modelo_vence` em 14 UFs, `modelo_perde` no CE e
+  `inconclusivo` em 8. A interface operacional deve recomendar a regra
+  simples no CE e abster-se nas inconclusivas; um número médio não pode
+  esconder essas diferenças.
 - **Cada estado declara qual direção vale ali.** Antes de qualquer ranking, o
   painel diz se a regra que funciona naquele estado é "priorize quem estava
   melhor" ou "quem estava pior" — e avisa quando é um dos 7 estados em que
@@ -736,8 +737,8 @@ jeito, e aqui está a prova — mas deste outro jeito, sim."*
   ainda não exploramos features além das quatro atuais.
 - **Resolver `caderno=12`** com acesso ao dicionário oficial do INEP — hoje o
   resíduo de 6,7% de influência fica sem explicação causal.
-- **Re-executar com dado de 2025** para checar se o efeito de régua estadual
-  persiste ou se foi específico do ciclo 2024.
+- **Re-executar a cada resultado anual** para verificar se o ganho de 2025
+  persiste, antes de alterar a regra de qualquer UF.
 
 ---
 
