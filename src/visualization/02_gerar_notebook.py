@@ -16,8 +16,18 @@ notebook a referencia em vez de duplicar. Duplicar a logica de modelagem aqui
 criaria duas versoes que divergem em silencio (.claude/rules/dados.md).
 
 Por isso o notebook carrega os JSONs de `reports/` para os resultados caros
-(modelos ja treinados) e calcula ao vivo so o que e barato e diagnostico
-(crosstabs, correlacoes, os dois graficos).
+(modelos ja treinados, backtest prospectivo) e calcula ao vivo so o que e
+barato e diagnostico (crosstabs, correlacoes, os dois graficos).
+
+ESTADO: alinhado ao contrato operacional de 2025 (ADR-0010)
+---------------------------------------------------------
+As secoes 6 e 7 consomem `backtest_prospectivo_2025.json` e
+`ranking_prospectivo_2025.json` -- a mesma fonte do painel
+(`01_gerar_painel_intra_uf.py`). Notebook e painel contam a mesma historia:
+validacao prospectiva 2024->2025, uso condicional por UF (modelo em 14, regra
+simples no CE, abstencao em 8). A secao 5 ilustra o mecanismo da regua
+estadual com o ciclo 2023->2024 (dado ja no CSV da Fase 2); o parser do XLSX
+de 2025 nao e duplicado aqui -- vive so em `src/evaluation/05_*`.
 
 PALETA
 ------
@@ -55,7 +65,13 @@ O projeto entrega duas coisas, e a segunda só existe por causa da primeira:
 1. **Modelo aluno-nível** — executado com rigor e **reprovado** no próprio
    critério de falsificação.
 2. **Priorização municipal intra-UF** — o que sobrou de pé depois de testar
-   tudo, mais uma advertência de validade que atinge a Fase 2.
+   tudo, **validado prospectivamente** no ciclo 2024 → 2025 do Inep, mais uma
+   advertência de validade que atinge a Fase 2.
+
+> **Alinhamento (2026-08-30):** as seções 6 e 7 refletem o backtest
+> prospectivo 2024 → 2025 (ticket 0018) e o contrato de uso condicional por UF
+> do `ADR-0010` — a mesma fonte de `reports/painel_intra_uf.html`. Nada de
+> número histórico solto: o painel e este notebook contam a mesma história.
 
 > Para regenerar este notebook do zero:
 > `python src/visualization/02_gerar_notebook.py`"""),
@@ -212,9 +228,12 @@ As avaliações do Compromisso Nacional Criança Alfabetizada são aplicadas
 **pelos estados**. Isso significa que a comparação entre UFs não mede só
 política educacional — mede também diferença de régua.
 
-O gráfico abaixo mostra a variação da taxa de alfabetização entre 2023 e 2024
-por estado. Uma queda de 20 pontos percentuais em um ano não é perda de
-aprendizado real."""),
+O gráfico abaixo ilustra o **mecanismo** com o ciclo 2023 → 2024 (o dado que
+já mora no CSV da Fase 2). Uma queda de 20 pontos percentuais em um ano não é
+perda de aprendizado real — é a régua estadual mudando. Isto é **estrutural,
+não do ano**: a aplicação continua descentralizada por estado no ciclo 2025, e
+é por isso que o backtest prospectivo (seção 6) trava a comparação **dentro**
+de cada UF em vez de comparar UFs entre si."""),
 
 (CODE, """metas = pd.read_csv(FASE2 / "dados" / "br_inep_avaliacao_alfabetizacao_meta_alfabetizacao_municipio.csv.gz")
 metas["id_municipio"] = metas["id_municipio"].astype(str).str.zfill(7)
@@ -244,7 +263,7 @@ ax.axvline(0, color=MUTED, lw=1, zorder=4)
 ax.grid(axis="x", color=GRID, lw=0.7, zorder=0)
 ax.set_axisbelow(True)
 ax.set_xlabel("variação da taxa de alfabetização, 2023 → 2024 (pontos percentuais)")
-ax.set_title("Cada estado aplica sua própria prova\\n"
+ax.set_title("Cada estado aplica sua própria prova — ciclo 2023 → 2024\\n"
              "Variações de ±20pp em um ano não são aprendizado real",
              loc="left", fontweight="bold", color=INK)
 
@@ -284,39 +303,62 @@ municípios gaúchos ("90% falharam a meta") quando parte substancial do efeito
 Isso não invalida a engenharia daqueles marts — invalida a *leitura nacional*
 que se faz em cima deles."""),
 
-(MD, """## 6. O que funciona: priorização dentro do estado
+(MD, """## 6. O que funciona: priorização dentro do estado, testada no futuro
 
 Controlada a régua estadual, características municipais **preveem** quem fica
-para trás. E o baseline intuitivo — *"priorize quem estava pior em 2023"* — é
-**ativamente errado**: fica abaixo do sorteio aleatório.
+para trás. E o baseline intuitivo — *"priorize quem estava pior no ciclo
+anterior"* — é frágil: em vários estados a direção certa é a inversa (regressão
+à média somada à meta progressiva do PDE — quem estava baixo tende a subir
+mais e bater a meta).
 
-O motivo é regressão à média somada à meta progressiva do PDE: municípios com
-taxa baixa em 2023 tendem a melhorar mais e a bater a meta com mais
-frequência."""),
+A prova aqui **não é out-of-fold no mesmo período**. É um **backtest
+prospectivo**: treina a decisão na transição 2023 → 2024 e pontua o ciclo 2025
+do Inep sem nunca ter visto o alvo de 2025 (`src/evaluation/05_*`, ticket
+0018). Cada UF é comparada contra a regra simples com IC95% bootstrap pareado.
+O veredito por UF vira o **contrato de uso** do painel (`ADR-0010`): ranking do
+modelo onde venceu, regra simples onde perdeu, abstenção onde é
+inconclusivo."""),
 
-(CODE, """rk = carregar("ranking_intra_uf.json")
-met = pd.DataFrame(rk["metricas_por_uf"]).sort_values("auc_modelo")
+(CODE, """bt = carregar("backtest_prospectivo_2025.json")
+rk_full = carregar("ranking_prospectivo_2025.json")
 
-fig, ax = plt.subplots(figsize=(7.2, 5.6))
+# Os dois JSONs saem do mesmo main() do 05_backtest_prospectivo_2025.py.
+# Se um foi regenerado e o outro nao (execucao parcial), o notebook estaria
+# misturando o backtest de um ciclo com o contrato de outro -- trava aqui.
+assert bt["resumo"]["municipios"] == rk_full["resumo"]["municipios"], (
+    "backtest e ranking prospectivo divergem em n de municipios -- regenere os dois")
+assert bt["resumo"]["ufs"] == rk_full["resumo"]["ufs"], (
+    "backtest e ranking prospectivo divergem em n de UFs -- regenere os dois")
+
+met = pd.DataFrame(bt["metricas_por_uf"]).sort_values("auc_modelo")
+
+# .get com fallback: se um ciclo futuro introduzir um veredito novo
+# (ex.: "baseline_vence"), o ponto sai cinza em vez de quebrar o notebook.
+COR_VEREDITO = {"modelo_vence": TEAL, "modelo_perde": TERRACOTA, "inconclusivo": MUTED}
+
+fig, ax = plt.subplots(figsize=(7.2, 5.8))
 y = np.arange(len(met))
 
-# haste ligando os dois valores — o que importa é a DISTÂNCIA entre eles
-for yi, (a, b) in enumerate(zip(met.auc_baseline_honesto, met.auc_modelo)):
+# haste ligando baseline e modelo — o que importa é a DISTÂNCIA entre eles
+for yi, (a, b) in enumerate(zip(met.auc_baseline, met.auc_modelo)):
     ax.plot([a, b], [yi, yi], color=GRID, lw=1.6, zorder=1, solid_capstyle="round")
 
-ax.scatter(met.auc_baseline_honesto, y, s=52, color=AMBAR, zorder=3,
-           label="regra simples (direção prevista por LOO)", edgecolor="white", linewidth=1.4)
-ax.scatter(met.auc_modelo, y, s=52, color=TEAL, zorder=3,
-           label="modelo intra-UF", edgecolor="white", linewidth=1.4)
+ax.scatter(met.auc_baseline, y, s=52, color=AMBAR, zorder=3,
+           label="regra simples (direção do próprio estado em 2024)",
+           edgecolor="white", linewidth=1.4)
+ax.scatter(met.auc_modelo, y, s=52,
+           color=[COR_VEREDITO.get(v, MUTED) for v in met.veredito], zorder=3,
+           label="modelo intra-UF — verde vence, terracota perde, cinza inconclusivo",
+           edgecolor="white", linewidth=1.4)
 
 ax.axvline(0.5, color=MUTED, lw=1, ls=(0, (4, 3)), zorder=2)
-ax.set_ylim(-0.8, len(met) - 0.2)   # folga no topo para o rótulo do acaso
+ax.set_ylim(-0.8, len(met) - 0.2)
 ax.text(0.5, len(met) - 0.45, " acaso", fontsize=8, color=MUTED, va="top")
 
 ax.set_yticks(y, met.uf)
-ax.set_xlabel("ROC-AUC (predições out-of-fold)")
-ax.set_title("O modelo contra o baseline honesto\\n"
-             "Empate na maioria dos estados; a vantagem vem de poucos",
+ax.set_xlabel("ROC-AUC prospectivo (predições para o ciclo 2025, alvo nunca visto)")
+ax.set_title("Backtest prospectivo 2024 → 2025: modelo contra regra simples\\n"
+             "Modelo vence em 14 UFs; onde não vence, o painel usa a regra ou se abstém",
              loc="left", fontweight="bold", color=INK)
 ax.grid(axis="x", color=GRID, lw=0.7, zorder=0)
 ax.set_axisbelow(True)
@@ -326,20 +368,23 @@ fig.tight_layout()
 fig.savefig(IMAGES / "modelo_vs_intuicao_por_uf.png", bbox_inches="tight", facecolor="white")
 plt.show()
 
-res = rk["resumo"]
-print("  AS TRÊS BARRAS (média ponderada):")
-print(f"    regra trivial 'pior primeiro'      {res['auc_dir_pior_ponderado']:.4f}  <- régua INVÁLIDA (ADR-0005)")
-print(f"    regra trivial 'melhor primeiro'    {res['auc_dir_melhor_ponderado']:.4f}  (a mesma regra, invertida)")
-print(f"    baseline HONESTO (direção por LOO) {res['auc_baseline_honesto_ponderado']:.4f}  <- a comparação válida")
-print(f"    MODELO                             {res['auc_modelo_ponderado']:.4f}  ({res['ganho_sobre_baseline']:+.4f})")
+res = bt["resumo"]
+print("  MÉDIA PONDERADA POR MUNICÍPIO (backtest prospectivo):")
+print(f"    regra simples  AUC {res['auc_baseline_ponderado']:.4f}")
+print(f"    MODELO         AUC {res['auc_modelo_ponderado']:.4f}  ({res['ganho_ponderado']:+.4f})")
 print()
 print(f"  Municípios pontuados: {res['municipios']:,}".replace(",", "."))
-print(f"  Veredito por UF (IC95% pareado): vence {res['ufs_modelo_vence']}, "
-      f"empata {res['ufs_inconclusivo']}, perde {res['ufs_modelo_perde']}")
+print(f"  n de UFs: {res['ufs']}")
+print(f"  Veredito por UF (IC95% bootstrap pareado, {res['reamostragens_bootstrap']} reamostragens):")
+print(f"    modelo vence   {res['ufs_modelo_vence']}")
+print(f"    inconclusivo   {res['ufs_inconclusivo']}")
+print(f"    modelo perde   {res['ufs_modelo_perde']}")
 print()
-print(f"  A DIREÇÃO INVERTE: 'melhor primeiro' vale em {res['ufs_direcao_melhor_primeiro']} UFs,")
-print(f"  'pior primeiro' em {res['ufs_direcao_pior_primeiro']}. A média de {res['auc_dir_pior_ponderado']:.4f} era")
-print("  esses dois grupos se cancelando — não um erro sistemático único.")"""),
+rk = rk_full["resumo"]
+print("  CONTRATO DE USO DO PAINEL (ADR-0010), derivado do veredito acima:")
+print(f"    ranking do modelo  {rk['ufs_ranking_modelo']} UFs")
+print(f"    regra simples      {rk['ufs_regra_simples']} UF (CE)")
+print(f"    abstenção          {rk['ufs_abster']} UFs — o painel diz que não há recomendação")"""),
 
 (MD, """## 7. O que sai disso
 
@@ -349,15 +394,17 @@ print("  esses dois grupos se cancelando — não um erro sistemático único.")
    modelo aluno-nível. Mais simples, mais barata, e estatisticamente mais
    eficaz com os dados disponíveis.
 2. **Priorização entre municípios** → comparar **dentro do estado**, nunca
-   entre estados — e **checar a direção antes de ordenar**: em 16 UFs quem
-   estava melhor em 2023 falha mais; em 7 é o contrário. Uma regra nacional
-   fixa erra sistematicamente em um dos dois grupos. Onde a direção não é
-   previsível, o modelo intra-UF protege contra escolher o lado errado
-   (+0,027 sobre o baseline honesto, IC95% [+0,007, +0,048] — ADR-0005).
+   entre estados. O backtest prospectivo 2024 → 2025 diz onde confiar em quê:
+   o modelo intra-UF vence a regra simples em **14 das 23 UFs** (ganho
+   ponderado +0,16 de AUC, IC95% bootstrap pareado por UF); no CE a regra
+   simples fica; nas **8 restantes o veredito é inconclusivo** e a resposta
+   honesta é não priorizar por esse critério.
 
 A recomendação 2 não fica em prosa: `reports/painel_intra_uf.html` é a
-ferramenta, com 5.216 municípios e a advertência de validade embutida na
-interface — o painel **não tem visão nacional, de propósito**.
+ferramenta, com **5.285 municípios**, **3 modos por UF** (ranking do modelo /
+regra simples / abstenção diagnóstica) travados pelo contrato do `ADR-0010`, e
+a advertência de validade embutida na interface — o painel **não tem visão
+nacional, de propósito**. Notebook e painel leem os mesmos JSONs de `reports/`.
 
 ---
 
@@ -365,10 +412,13 @@ interface — o painel **não tem visão nacional, de propósito**.
 
 Definir um critério de falsificação antes de medir, executá-lo, **desconfiar da
 própria vitória quando ela aparece**, corrigir a régua e reportar o resultado
-desfavorável com significância — duas vezes, em dois grãos diferentes.
+desfavorável com significância — duas vezes, em dois grãos diferentes — e então
+**testar o que sobrou num backtest prospectivo**, com o alvo do ciclo seguinte
+nunca visto no treino.
 
 O resultado negativo do modelo aluno-nível não é o fracasso do projeto. É o
-que dá credibilidade ao resultado positivo do modelo intra-UF."""),
+que dá credibilidade ao resultado positivo do modelo intra-UF — que passou no
+teste mais duro que havia para dar: prever o futuro."""),
 ]
 
 
