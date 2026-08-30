@@ -32,8 +32,15 @@ linha 128) antes de salvar o parquet -- correto para o classificador, mas
 significa que nao esta em `data/snapshot_modelagem.parquet`. Em vez de
 duplicar a logica de extracao, este script LE o snapshot ja processado
 (mesmas features, mesma limpeza) e faz merge só da coluna `proficiencia`
-vinda do CSV bruto, por `id_aluno`+`ano` (chave granular, id_aluno sozinho
-nao e garantido unico entre anos).
+vinda do CSV BRUTO COMPLETO (`ALUNOS_COMPLETO` em 02_extrair_snapshot.py --
+57.781 alunos, `tech-challenge-fase2-alfabetizacao/dados/Alunos.csv` --
+mesma fonte que gerou o snapshot), por `id_aluno`+`ano` (chave granular,
+id_aluno sozinho nao e garantido unico entre anos).
+
+CORRIGIDO 2026-08-30: primeira versao usava `data/Alunos_amostra.csv`
+(5.000 linhas, subconjunto de teste local) em vez da fonte completa --
+n real caia pra 4.165 sem necessidade. Achado do proprio Luiz ao revisar
+o resultado ("voce nao rodou com o dataset completo?").
 
 MESMO DESENHO DO TOURNAMENT (02_tournament_modelos.py)
 ---------------------------------------------------------
@@ -64,6 +71,12 @@ from pipeline_preprocessamento import (  # noqa: E402
     colunas_feature, construir_preprocessador, descrever_snapshot,
     validar_cobertura_colunas,
 )
+
+# Mesma fonte que gerou o snapshot completo (ALUNOS_COMPLETO em
+# 02_extrair_snapshot.py) -- NAO data/Alunos_amostra.csv, que e subconjunto
+# de 5.000 linhas usado so para teste local rapido.
+ALUNOS_COMPLETO = (BASE.parent / "tech-challenge-fase2-alfabetizacao" /
+                    "dados" / "Alunos.csv")
 
 RANDOM_STATE = 42
 N_FOLDS = 5
@@ -116,18 +129,16 @@ def carregar_dados_regressao() -> pd.DataFrame:
     validar_cobertura_colunas(df)
 
     bruto = pd.read_csv(
-        BASE / "data" / "Alunos_amostra.csv",
+        ALUNOS_COMPLETO,
         usecols=["ano", "id_aluno", "proficiencia"],
     )
     n_antes = len(df)
     df = df.merge(bruto, on=["ano", "id_aluno"], how="inner", validate="one_to_one")
     perdidos = n_antes - len(df)
     if perdidos:
-        print(f"AVISO: {perdidos} linhas do snapshot fora do merge -- "
-              f"data/Alunos_amostra.csv ({len(bruto)} linhas) e SUBCONJUNTO "
-              f"do snapshot completo ({n_antes} linhas, varias fontes/anos), "
-              f"nao a fonte inteira. `n` real da regressao e menor que o do "
-              f"classificador (ver contexto.n_linhas na saida).")
+        print(f"AVISO: {perdidos} linhas do snapshot fora do merge (sem "
+              f"correspondencia em {ALUNOS_COMPLETO.name}, {len(bruto)} "
+              f"linhas na fonte completa).")
 
     # 1 caso residual: presenca="Presente" mas proficiencia NaN no CSV bruto
     # -- anomalia de dado (nao e o padrao "ausente" ja tratado na extracao,
