@@ -172,6 +172,29 @@ footer.note code{font-family:var(--mono);font-size:.9em}
 .hl-item.hl-bad .hl-n{color:var(--warn)}
 .hl-item.hl-muted .hl-n{color:var(--ink-2)}
 .hl-d{font-size:.85rem;color:var(--ink-2);line-height:1.35}
+
+.example{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem 1.3rem;margin-bottom:1.4rem;box-shadow:var(--shadow)}
+.example h3{font-size:1rem;font-weight:700;margin:0 0 .6rem;display:flex;align-items:center;gap:.5rem}
+.example h3 .tag{font-family:var(--mono);font-size:.62rem;letter-spacing:.09em;text-transform:uppercase;background:var(--primary-soft);color:var(--primary);padding:.2rem .5rem;border-radius:5px;font-weight:600}
+.example p{font-family:var(--prose);font-size:.92rem;color:var(--ink-2);line-height:1.55;margin:0 0 .7rem;max-width:74ch}
+.example p:last-child{margin-bottom:0}
+.example .steps{display:grid;gap:.5rem;margin-top:.8rem}
+.example .step{display:grid;grid-template-columns:auto 1fr;gap:.7rem;align-items:baseline;font-size:.88rem}
+.example .step b{font-family:var(--mono);color:var(--primary);white-space:nowrap}
+.example .step span{color:var(--ink-2)}
+
+.row-example{background:var(--surface-2);border:1px dashed var(--line);border-radius:10px;padding:.9rem 1.1rem;margin-bottom:1rem}
+.row-example .re-title{font-size:.88rem;font-weight:600;margin-bottom:.6rem}
+.row-example .re-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem .9rem;margin-bottom:.7rem}
+.row-example .re-f .k{font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.15rem}
+.row-example .re-f .v{font-family:var(--mono);font-size:1rem;font-weight:600}
+.row-example .re-read{font-family:var(--prose);font-size:.88rem;color:var(--ink-2);line-height:1.55;margin:0}
+
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--ink-2)}
+th.sortable::after{content:"⇅";margin-left:.35rem;opacity:.35;font-size:.85em}
+th.sortable[aria-sort="ascending"]::after{content:"↑";opacity:1;color:var(--primary)}
+th.sortable[aria-sort="descending"]::after{content:"↓";opacity:1;color:var(--primary)}
 </style>
 
 <div class="wrap">
@@ -199,6 +222,17 @@ footer.note code{font-family:var(--mono);font-size:.9em}
   <div class="warn">
     <span class="ic">!</span>
     <p><strong>Este painel não permite comparação entre estados — de propósito.</strong> As avaliações são aplicadas pelos próprios estados, e a variação estadual entre anos chega a 20 pontos percentuais. Ordenar municípios de UFs diferentes na mesma escala compara réguas de prova distintas, não desempenho educacional. Também <strong>não serve para decisão sobre um aluno</strong>: é priorização municipal para orientar busca ativa e alocação de apoio, nunca para negar direito ou rotular uma criança.</p>
+  </div>
+
+  <div class="example">
+    <h3><span class="tag">exemplo de uso</span> Como uma secretaria de educação usaria isto</h3>
+    <p>Imagine a equipe da Secretaria de Educação do <strong>Amazonas</strong> — um dos 14 estados onde o modelo comprovadamente ajuda — decidindo, no início do ano, para quais municípios enviar equipe de busca ativa e reforço pedagógico primeiro, com orçamento para visitar só uma parte deles.</p>
+    <div class="steps">
+      <div class="step"><b>1.</b><span>Seleciona <strong>AM</strong> na lista de estados abaixo.</span></div>
+      <div class="step"><b>2.</b><span>A tabela já vem ordenada por risco previsto, do maior para o menor — o topo da lista é quem provavelmente mais precisa de apoio.</span></div>
+      <div class="step"><b>3.</b><span><strong>Coari</strong> aparece em 1º lugar, com risco previsto de <strong>0,89</strong> — a nota mais alta do estado. É o primeiro candidato a receber visita.</span></div>
+      <div class="step"><b>4.</b><span>A equipe pode clicar no cabeçalho de qualquer coluna para reordenar — por exemplo, por "Taxa 2024" crescente, para achar quem já estava pior antes mesmo de olhar a previsão.</span></div>
+    </div>
   </div>
 
   <div class="picker">
@@ -231,6 +265,18 @@ footer.note code{font-family:var(--mono);font-size:.9em}
     <p>Decisões completas em <code>docs/adr/0002-modelo-final-validacao-temporal-e-tratamento-caderno.md</code>, <code>reports/decisao_produto_pos_backtest_2025.md</code> e <code>reports/diagnostico_ufs_inconclusivas.md</code>.</p>
   </details>
 
+  <div class="row-example">
+    <div class="re-title">Como ler uma linha da tabela — exemplo real: Coari (AM), 1º lugar no ranking do estado</div>
+    <div class="re-fields">
+      <div class="re-f"><div class="k">Risco previsto</div><div class="v">0,89</div></div>
+      <div class="re-f"><div class="k">Taxa 2024</div><div class="v">33,0%</div></div>
+      <div class="re-f"><div class="k">Meta 2025</div><div class="v">52,0%</div></div>
+      <div class="re-f"><div class="k">Taxa 2025</div><div class="v">37,0%</div></div>
+      <div class="re-f"><div class="k">Resultado real</div><div class="v">abaixo da meta</div></div>
+    </div>
+    <p class="re-read"><strong>Leitura:</strong> antes de o resultado de 2025 sair, o modelo já apontava Coari com risco 0,89 — a nota mais alta do estado, praticamente o teto da escala. Isso foi calculado só com o que já se sabia: em 2024 apenas 33,0% dos alunos estavam alfabetizados, bem abaixo da meta de 52,0% fixada para 2025. O resultado real confirmou o alerta: a taxa fechou em 37,0%, <strong>15 pontos percentuais abaixo da meta</strong>. É esse tipo de acerto, repetido centenas de vezes no Brasil todo, que soma os 65,3% de acerto do modelo citados acima — e é por isso que, num estado como o Amazonas, vale a pena confiar na ordem que a tabela sugere.</p>
+  </div>
+
   <div class="toolbar">
     <input class="search" id="search" type="search" placeholder="Buscar município…" aria-label="Buscar município">
     <span class="count" id="count"></span>
@@ -239,15 +285,16 @@ footer.note code{font-family:var(--mono);font-size:.9em}
   <div class="tbl-wrap">
     <table>
       <thead><tr>
-        <th>#</th><th>Município</th><th id="thOrd">Risco previsto</th>
-        <th style="text-align:right">Taxa 2024</th>
-        <th style="text-align:right">Meta 2025</th>
-        <th style="text-align:right">Taxa 2025</th>
-        <th>Resultado real</th>
+        <th>#</th><th class="sortable" data-key="nome">Município</th><th id="thOrd" class="sortable" data-key="score">Risco previsto</th>
+        <th class="sortable" data-key="t24" style="text-align:right">Taxa 2024</th>
+        <th class="sortable" data-key="meta" style="text-align:right">Meta 2025</th>
+        <th class="sortable" data-key="t25" style="text-align:right">Taxa 2025</th>
+        <th class="sortable" data-key="real">Resultado real</th>
       </tr></thead>
       <tbody id="rows"></tbody>
     </table>
   </div>
+  <p class="auc-small" style="color:var(--muted)">Clique no cabeçalho de uma coluna para reordenar a tabela (crescente/decrescente). Clique de novo para inverter.</p>
 
   <footer class="note">
     <p><strong>Como ler a tabela.</strong> “Taxa 2024” e “Meta 2025” são o que já se sabia antes do resultado de 2025 — é o que o modelo usa para prever. “Taxa 2025” e “Resultado real” são o que de fato aconteceu, mostrados aqui só para você conferir se a previsão bateu.</p>
@@ -261,6 +308,9 @@ const DATA = {"ufs":{"AL":{"nome":"Alagoas","n":102,"uso":"abster","veredito":"i
 const ufs = Object.keys(DATA.ufs).sort();
 let atual = ufs.includes("MG") ? "MG" : ufs[0];
 let filtro = "";
+let sortKey = null;
+let sortDir = 1;
+const colIdx = {nome:1, score:2, t24:3, meta:4, t25:5, real:6};
 
 const el = id => document.getElementById(id);
 const pct = v => (v*100).toFixed(1).replace(".", ",") + "%";
@@ -291,7 +341,7 @@ function montarChips(){
   el("chips").innerHTML = ufs.map(uf =>
     `<button class="chip" data-uf="${uf}" aria-pressed="${uf===atual}"><span class="mk ${DATA.ufs[uf].uso}"></span>${uf}</button>`).join("");
   el("chips").querySelectorAll(".chip").forEach(b =>
-    b.addEventListener("click", () => { atual = b.dataset.uf; filtro=""; el("search").value=""; render(); }));
+    b.addEventListener("click", () => { atual = b.dataset.uf; filtro=""; sortKey=null; sortDir=1; el("search").value=""; render(); }));
 }
 
 function montarResumoMetodologia(){
@@ -367,10 +417,27 @@ function render(){
   el("trust").innerHTML = renderTrust(d);
 
   const termo = filtro.trim().toLowerCase();
-  const linhas = d.m.filter(r => !termo || r[1].toLowerCase().includes(termo));
+  let linhas = d.m.filter(r => !termo || r[1].toLowerCase().includes(termo));
+
+  if (sortKey){
+    const idx = colIdx[sortKey];
+    linhas = linhas.slice().sort((a, b) => {
+      let va = a[idx], vb = b[idx];
+      if (sortKey === "nome") return sortDir * String(va).localeCompare(String(vb), "pt-BR");
+      va = (va === null || va === undefined) ? -Infinity : va;
+      vb = (vb === null || vb === undefined) ? -Infinity : vb;
+      return sortDir * (va - vb);
+    });
+  }
+
+  document.querySelectorAll("th.sortable").forEach(th => {
+    th.setAttribute("aria-sort", th.dataset.key === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none");
+  });
+
+  const ordTxt = sortKey ? "ordenado por sua escolha" : rotuloOrd;
   el("count").textContent = termo
     ? `${linhas.length} de ${d.m.length} municípios`
-    : `${d.m.length} municípios — ${rotuloOrd}`;
+    : `${d.m.length} municípios — ${ordTxt}`;
 
   el("rows").innerHTML = linhas.map(r => {
     const [rank, nome, score, t24, meta, t25, real] = r;
@@ -392,6 +459,14 @@ function render(){
 }
 
 el("search").addEventListener("input", e => { filtro = e.target.value; render(); });
+document.querySelectorAll("th.sortable").forEach(th => {
+  th.addEventListener("click", () => {
+    const k = th.dataset.key;
+    sortDir = (sortKey === k) ? -sortDir : 1;
+    sortKey = k;
+    render();
+  });
+});
 montarProvenance();
 montarChips();
 montarResumoMetodologia();
