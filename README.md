@@ -34,9 +34,9 @@ gestor de secretaria estadual ou municipal de educação: em qual município
 investir busca ativa e acompanhamento pedagógico primeiro, dado orçamento
 limitado. Ele evita dois erros de uso de dado público — (1) comparar
 municípios de estados diferentes numa régua nacional única, quando cada
-estado aplica sua própria prova (efeito medido, não hipotético — ver
-`§9`), e (2) apresentar um "score de IA" onde o histórico simplesmente não
-sustenta a afirmação, em vez de dizer isso abertamente.
+estado aplica sua própria prova (efeito medido, não hipotético — detalhado
+mais abaixo), e (2) apresentar um "score de IA" onde o histórico
+simplesmente não sustenta a afirmação, em vez de dizer isso abertamente.
 
 **Benefício para a sociedade.** Uso responsável de dado público para apoiar
 uma política de primeira infância (alfabetização até o 2º ano do
@@ -57,23 +57,13 @@ próprio estado.
 A narrativa curta: **testamos onde os dados permitiam testar, dissemos com
 rigor onde não funcionava, e entregamos, sem exagero, onde funcionava.**
 
-### As 5 perguntas de negócio da fase acadêmica de origem
-
-| Pergunta | Onde está respondida |
-|---|---|
-| Quais fatores mais impactam a alfabetização? | §7.1 (SHAP) |
-| Quais municípios apresentam maior risco educacional? | Entregável 3 — modelo intra-UF + painel |
-| **Quais regiões possuem padrões semelhantes?** | **Herdada da Fase 2**: `agg_vulnerabilidade_ml` (K-Means, mart em produção) já responde isso a nível município. Não foi refeita nesta fase — a Fase 3 focou no eixo aluno-nível que a Fase 2 não cobria (§1); reutilizar o mart existente é a resposta honesta, não construir um clustering novo para dizer a mesma coisa |
-| Como prever municípios que podem não atingir metas futuras? | Entregável 2 — a resposta que a Fase 3 de fato desenvolveu |
-| Quais variáveis possuem maior influência nos modelos? | §7.1 (SHAP) |
-
 ## Origem e licença
 
 Este repositório é um recorte, com narrativa reorientada, do projeto
 [**Tech Challenge Fase 3 — Predição e Inteligência Analítica para
 Alfabetização**](https://github.com/luizmaibashi/tech-challenge-fase3-alfabetizacao)
 (Pós-Tech em Data Analytics, FIAP). O trabalho técnico — modelagem, testes
-estatísticos, ADRs — é o mesmo; o que muda aqui é o produto em destaque (o
+estatísticos, decisões documentadas passo a passo — é o mesmo; o que muda aqui é o produto em destaque (o
 painel, não o modelo aluno-nível) e o público-alvo (gestor público, não
 avaliador acadêmico). Enviado ao **2º Concurso de Reúso de Dados Abertos da
 CGU**. Código sob licença [MIT](LICENSE) — reúso e adaptação livres, inclusive
@@ -171,6 +161,16 @@ de verdade, não reencontrar um padrão já visto.
 
 <details>
 <summary><strong>Detalhamento técnico completo</strong> — metodologia, testes estatísticos e decisões registradas em ADR, para quem quer reproduzir ou avaliar o rigor da análise (clique para expandir)</summary>
+
+### As 5 perguntas de negócio da fase acadêmica de origem
+
+| Pergunta | Onde está respondida |
+|---|---|
+| Quais fatores mais impactam a alfabetização? | §7.1 (SHAP) |
+| Quais municípios apresentam maior risco educacional? | Entregável 3 — modelo intra-UF + painel |
+| **Quais regiões possuem padrões semelhantes?** | **Herdada da Fase 2**: `agg_vulnerabilidade_ml` (K-Means, mart em produção) já responde isso a nível município. Não foi refeita nesta fase — a Fase 3 focou no eixo aluno-nível que a Fase 2 não cobria (§1); reutilizar o mart existente é a resposta honesta, não construir um clustering novo para dizer a mesma coisa |
+| Como prever municípios que podem não atingir metas futuras? | Entregável 2 — a resposta que a Fase 3 de fato desenvolveu |
+| Quais variáveis possuem maior influência nos modelos? | §7.1 (SHAP) |
 
 ## 1. Contexto do problema
 
