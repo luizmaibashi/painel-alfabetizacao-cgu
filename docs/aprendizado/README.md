@@ -1,7 +1,7 @@
 # Docs de aprendizado (processo, não produto)
 
 Material de preparação, sabatina e refinamento de conceitos do autor —
-diferente de `docs/adr/` (decisões do produto) e `docs/HANDOFF_RENAN.md`
+diferente de `docs/adr/` (decisões do produto) e o diário de bordo interno (não publicado)
 (narrativa técnica do produto). Movidos pra cá em 2026-08-30 (estavam soltos
 em `docs/`, misturados com artefatos do produto).
 

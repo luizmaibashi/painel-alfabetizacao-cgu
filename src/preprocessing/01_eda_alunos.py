@@ -11,11 +11,11 @@ target. Foi exatamente por aí que `peso_aluno` passou: 835 nulos que eram os
 alunos ausentes, com alfabetizado="Não" em 100% dos casos. A coluna atravessou
 EDA, dicionário, ADR, baseline, tournament e SHAP sem ninguém ver, porque todo
 mundo olhava o valor e ninguém olhava a ausência dele.
-(Ver Cap. 9 do docs/HANDOFF_RENAN.md e src/preprocessing/03_guarda_leakage.py.)
+(Ver Cap. 9 do diário de bordo interno (não publicado) e src/preprocessing/03_guarda_leakage.py.)
 
 REESCRITO EM 2026-08-18: antes era um script linear que fixava
 `data/Alunos_amostra.csv` (5.000 linhas) no código. A base completa tem 57.781
-alunos e estava disponível o tempo todo — ver Cap. 10 do HANDOFF_RENAN.md.
+alunos e estava disponível o tempo todo — ver Cap. 10 do diário de bordo interno (não publicado).
 
 USO
     python src/preprocessing/01_eda_alunos.py                 # base completa
@@ -195,7 +195,7 @@ def eda(df: pd.DataFrame, nome: str, origem: str) -> str:
     L.append("Item acrescentado em 2026-08-18. O item 6 conta nulos mas nunca os "
              "cruza com o alvo — e foi por essa fresta que `peso_aluno` passou: "
              "835 nulos que eram os alunos ausentes, todos com alvo \"Não\". "
-             "Ver Cap. 9 do `docs/HANDOFF_RENAN.md`.\n\n")
+             "Ver Cap. 9 do diário de bordo interno (não publicado).\n\n")
     if y is None:
         L.append("- Sem alvo neste dataset, item não aplicável.\n")
     else:

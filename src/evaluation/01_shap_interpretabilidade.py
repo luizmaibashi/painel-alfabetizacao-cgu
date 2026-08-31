@@ -4,7 +4,7 @@ Interpretabilidade via SHAP — e execução dos gates do ADR-0001 §5.
 POR QUE ESTE SCRIPT EXISTE
 --------------------------
 Fecha a última lacuna 🔴 da auditoria do enunciado (Cap. 7.3 do
-docs/HANDOFF_RENAN.md) e faz três coisas que nenhum outro script fazia:
+o diário de bordo interno (não publicado)) e faz três coisas que nenhum outro script fazia:
 
   1. Responde 2 das 5 perguntas de negócio do enunciado:
      "Quais fatores mais impactam a alfabetização?" e

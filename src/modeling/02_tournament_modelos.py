@@ -1,7 +1,7 @@
 """
 Tournament de modelos: Regressão Logística vs Random Forest vs XGBoost.
 
-POR QUE ESTE SCRIPT EXISTE (ver Cap. 7 do docs/HANDOFF_RENAN.md)
+POR QUE ESTE SCRIPT EXISTE (ver Cap. 7 do diário de bordo interno (não publicado))
 ----------------------------------------------------------------
 A auditoria do enunciado achou 3 lacunas que este script fecha de uma vez:
 
@@ -403,7 +403,7 @@ def main():
     vencedor = max(resultados, key=lambda k: resultados[k]["teste"]["recall"])
     print(f"\nMaior Recall no teste: {vencedor} "
           f"({resultados[vencedor]['teste']['recall']:.3f})")
-    print("NAO e decisao final - ver ressalvas no relatorio e no HANDOFF_RENAN.md")
+    print("NAO e decisao final - ver ressalvas no relatorio e no diário de bordo interno (não publicado)")
 
     print("\n" + "=" * 72)
     print("ACHADO SOBRE O THRESHOLD CALIBRADO (F2, ver limiar_por_custo)")

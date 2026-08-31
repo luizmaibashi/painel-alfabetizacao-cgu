@@ -119,6 +119,12 @@ IBGE_MUNICIPIOS = "https://servicodados.ibge.gov.br/api/v1/localidades/municipio
 # cobertura municipal completa). Ver reports/proveniencia_idhm.md,
 # reports/eda_idhm.md e reports/dicionario_idhm.md para o gate CRISP-DM.
 IDHM = BASE / "dados_externos" / "idhm_municipio_2010.csv"
+# ADR-0011: infraestrutura escolar agregada por municipio (Censo Escolar 2023,
+# ponderada pela matricula do 2o ano). Ano 2023 e escolha de VALIDADE TEMPORAL,
+# nao de disponibilidade: o Censo 2024 existe, mas foi publicado depois do
+# desfecho que o alvo mede. Ver reports/proveniencia via
+# reports/dicionario_censo_escolar.md e reports/eda_censo_escolar.md.
+INFRA_ESCOLAR = BASE / "dados_externos" / "censo_escolar_municipio_2023.csv"
 
 RANDOM_STATE = 42
 N_FOLDS_MAX = 5
@@ -138,6 +144,13 @@ FEATURES_BASE = ["taxa23", "meta_alfabetizacao_2024", "meta_alfabetizacao_2025",
 #   2. Contagem de UFs que mudam de veredito (inconclusivo -> modelo_vence).
 # FUNDEB adiado (ADR-0009 SS7) -- so IDHM nesta rodada.
 FEATURES_IDHM = ["idhm", "idhm_e", "idhm_l", "idhm_r"]
+# ADR-0011: indices compostos, nao os 12 indicadores individuais. Motivo em
+# reports/dicionario_censo_escolar.md SS"Features criadas": varias UFs treinam
+# com 40-100 municipios (piso do ADR-0004), e 12 features nesse regime e
+# convite a overfitting. mat_2ano_total/n_escolas_2ano ficam DE FORA: sao os
+# unicos com sinal isolado, mas r=+0,985 e +0,838 com populacao_total, que ja
+# esta em FEATURES_BASE — colinearidade sem informacao nova.
+FEATURES_INFRA = ["infra_saneamento", "infra_conectividade", "infra_pedagogico"]
 FEATURES = FEATURES_BASE  # default: comportamento antigo preservado
 
 
@@ -192,7 +205,7 @@ def buscar_nomes_ibge() -> pd.DataFrame:
     return df
 
 
-def montar_dataset(com_idhm: bool = False) -> pd.DataFrame:
+def montar_dataset(com_idhm: bool = False, com_infra: bool = False) -> pd.DataFrame:
     df = pd.read_csv(METAS)
     df["id_municipio"] = df["id_municipio"].astype(str).str.zfill(7)
     d23 = df[df.ano == 2023][["id_municipio", "taxa_alfabetizacao",
@@ -222,6 +235,21 @@ def montar_dataset(com_idhm: bool = False) -> pd.DataFrame:
         print(f"  IDHM: {cobertura_idhm}/{cobertura_antes} municipios com "
               f"match ({cobertura_idhm / cobertura_antes:.1%}) — sem piso "
               f"minimo (ADR-0009), SimpleImputer cobre o resto")
+
+    if com_infra:
+        # ADR-0011: infraestrutura escolar do Censo 2023, ja agregada por
+        # municipio e ponderada pela matricula do 2o ano
+        # (src/preprocessing/06_agregar_censo_escolar.py). Constante no tempo
+        # como o IDHM: um unico ano, aplicado ao ciclo 2023->2024.
+        infra = pd.read_csv(INFRA_ESCOLAR, usecols=["id_municipio"] + FEATURES_INFRA,
+                             dtype={"id_municipio": str})
+        infra["id_municipio"] = infra["id_municipio"].str.zfill(7)
+        cobertura_antes = len(m)
+        m = m.merge(infra, on="id_municipio", how="left")
+        cobertura_infra = m[FEATURES_INFRA[0]].notna().sum()
+        print(f"  INFRA: {cobertura_infra}/{cobertura_antes} municipios com "
+              f"match ({cobertura_infra / cobertura_antes:.1%}) — sem piso "
+              f"minimo (ADR-0011), SimpleImputer cobre o resto")
 
     # UF pelo prefixo do codigo IBGE — definicao, nao heuristica (ver docstring
     # de buscar_nomes_ibge e o mesmo mapa em 05_montar_territorio.py).

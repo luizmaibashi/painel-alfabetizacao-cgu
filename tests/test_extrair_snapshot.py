@@ -1,6 +1,6 @@
 """
 Teste de unidade para as duas funcoes com bug real ja documentado
-(docs/HANDOFF_RENAN.md Cap. 9.7) em src/preprocessing/02_extrair_snapshot.py.
+(o diário de bordo interno (não publicado) Cap. 9.7) em src/preprocessing/02_extrair_snapshot.py.
 
 POR QUE ESTE ARQUIVO EXISTE
 ----------------------------

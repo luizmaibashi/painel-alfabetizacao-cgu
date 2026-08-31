@@ -19,6 +19,7 @@ esta pasta migra de novo.
 | [0008](0008-skew-treino-servico-nas-features-de-historico.md) | Features de histórico t-1 são não-funcionais no split temporal (skew treino-serviço) | Aceito | 2026-08-29 |
 | [0009](0009-enriquecimento-municipal-fundeb-idhm.md) | Enriquecimento municipal FUNDEB/IDHM (resultado misto, não promovido) | Aceito | 2026-08-29 |
 | [0010](0010-painel-derivado-do-backtest-com-contrato-de-uso-condicional.md) | Painel derivado do backtest prospectivo, com contrato de uso condicional no artefato | Aceito | 2026-08-30 |
+| [0011](0011-enriquecimento-infraestrutura-censo-escolar.md) | Enriquecimento com infraestrutura escolar do Censo Escolar (resultado misto, não promovido) | Aceito | 2026-08-31 |
 
 > **Nota de 2026-08-25:** o ADR-0006 existia desde 22/08 mas **nunca tinha sido
 > adicionado a este índice** — mais uma ocorrência do padrão que o próprio 0007
@@ -26,3 +27,7 @@ esta pasta migra de novo.
 >
 > **Nota de 2026-08-30:** os ADR-0008 e 0009 também não tinham sido indexados —
 > mesmo padrão de novo. Incluídos junto com o 0010.
+>
+> **Nota de 2026-08-31:** o ADR-0011 foi indexado **na mesma sessão em que foi
+> criado** — primeira vez que o padrão documentado acima (artefato criado,
+> registro não atualizado) não se repetiu.

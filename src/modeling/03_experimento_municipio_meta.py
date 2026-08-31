@@ -4,7 +4,7 @@ EXPERIMENTO OPÇÃO B — reformular o alvo: MUNICÍPIO vai atingir a meta do PD
 CONTEXTO
 --------
 O modelo aluno-nível falhou no teste de falsificação (Cap. 14 do
-HANDOFF_RENAN.md): perdeu para a meta do PDE aplicada uniformemente, e o
+o diário de bordo interno (não publicado)): perdeu para a meta do PDE aplicada uniformemente, e o
 teste de resíduo (03_teste_residuo.py) mostrou que não sobra sinal individual.
 
 A pergunta desta rodada é outra: no grão em que o dado NASCE (município), dá

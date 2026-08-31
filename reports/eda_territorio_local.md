@@ -69,7 +69,7 @@ Razão `max/p99` alta indica cauda desproporcional — não é prova de erro, é
 
 ### 9. A NULIDADE de cada coluna prediz o alvo? (item novo — não estava no checklist)
 
-Item acrescentado em 2026-08-18. O item 6 conta nulos mas nunca os cruza com o alvo — e foi por essa fresta que `peso_aluno` passou: 835 nulos que eram os alunos ausentes, todos com alvo "Não". Ver Cap. 9 do `docs/HANDOFF_RENAN.md`.
+Item acrescentado em 2026-08-18. O item 6 conta nulos mas nunca os cruza com o alvo — e foi por essa fresta que `peso_aluno` passou: 835 nulos que eram os alunos ausentes, todos com alvo "Não". Ver Cap. 9 do diário de bordo interno (não publicado).
 
 - Sem alvo neste dataset, item não aplicável.
 

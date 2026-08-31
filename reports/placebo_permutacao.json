@@ -1,0 +1,194 @@
+{
+  "desenho": "permutacao dentro da UF; mesma permutacao para as 3 colunas",
+  "n_replicacoes": 20,
+  "features_permutadas": [
+    "infra_saneamento",
+    "infra_conectividade",
+    "infra_pedagogico"
+  ],
+  "nulo": {
+    "n_mudancas_por_replicacao": [
+      4,
+      4,
+      2,
+      3,
+      2,
+      4,
+      2,
+      3,
+      5,
+      3,
+      2,
+      6,
+      5,
+      2,
+      5,
+      2,
+      1,
+      1,
+      2,
+      4
+    ],
+    "media_n_mudancas": 3.1,
+    "auc_ponderado_por_replicacao": [
+      0.6448,
+      0.641,
+      0.6443,
+      0.6446,
+      0.641,
+      0.6483,
+      0.6492,
+      0.6359,
+      0.6509,
+      0.6384,
+      0.6511,
+      0.6427,
+      0.648,
+      0.6495,
+      0.6443,
+      0.642,
+      0.6398,
+      0.6476,
+      0.6416,
+      0.6454
+    ],
+    "media_auc": 0.6445,
+    "flips_por_uf": {
+      "BA": 10,
+      "GO": 3,
+      "PE": 7,
+      "RN": 3,
+      "CE": 9,
+      "MG": 8,
+      "MT": 9,
+      "SC": 2,
+      "TO": 3,
+      "ES": 1,
+      "MS": 3,
+      "RO": 3,
+      "RS": 1
+    },
+    "direcao_por_uf": {
+      "BA": {
+        "inconclusivo->modelo_perde": 10
+      },
+      "GO": {
+        "inconclusivo->modelo_vence": 3
+      },
+      "PE": {
+        "inconclusivo->modelo_vence": 7
+      },
+      "RN": {
+        "modelo_perde->inconclusivo": 3
+      },
+      "CE": {
+        "inconclusivo->modelo_perde": 9
+      },
+      "MG": {
+        "modelo_perde->inconclusivo": 8
+      },
+      "MT": {
+        "inconclusivo->modelo_perde": 9
+      },
+      "SC": {
+        "inconclusivo->modelo_perde": 2
+      },
+      "TO": {
+        "modelo_perde->inconclusivo": 3
+      },
+      "ES": {
+        "inconclusivo->modelo_perde": 1
+      },
+      "MS": {
+        "inconclusivo->modelo_perde": 3
+      },
+      "RO": {
+        "inconclusivo->modelo_perde": 3
+      },
+      "RS": {
+        "modelo_vence->inconclusivo": 1
+      }
+    }
+  },
+  "observado_infra_real": {
+    "n_mudancas": 4,
+    "mudancas": {
+      "BA": {
+        "antes": "inconclusivo",
+        "depois": "modelo_perde"
+      },
+      "GO": {
+        "antes": "inconclusivo",
+        "depois": "modelo_vence"
+      },
+      "PE": {
+        "antes": "inconclusivo",
+        "depois": "modelo_vence"
+      },
+      "TO": {
+        "antes": "modelo_perde",
+        "depois": "inconclusivo"
+      }
+    },
+    "auc_ponderado": 0.6456
+  },
+  "p_valores": {
+    "p_n_mudancas": 0.4,
+    "p_auc": 0.35,
+    "por_uf": {
+      "BA": {
+        "p": 0.5238,
+        "p_bh": 0.5238
+      },
+      "CE": {
+        "p": 0.4762,
+        "p_bh": 0.5159
+      },
+      "ES": {
+        "p": 0.0952,
+        "p_bh": 0.3095
+      },
+      "GO": {
+        "p": 0.1905,
+        "p_bh": 0.3095
+      },
+      "MG": {
+        "p": 0.4286,
+        "p_bh": 0.5159
+      },
+      "MS": {
+        "p": 0.1905,
+        "p_bh": 0.3095
+      },
+      "MT": {
+        "p": 0.4762,
+        "p_bh": 0.5159
+      },
+      "PE": {
+        "p": 0.381,
+        "p_bh": 0.5159
+      },
+      "RN": {
+        "p": 0.1905,
+        "p_bh": 0.3095
+      },
+      "RO": {
+        "p": 0.1905,
+        "p_bh": 0.3095
+      },
+      "RS": {
+        "p": 0.0952,
+        "p_bh": 0.3095
+      },
+      "SC": {
+        "p": 0.1429,
+        "p_bh": 0.3095
+      },
+      "TO": {
+        "p": 0.1905,
+        "p_bh": 0.3095
+      }
+    },
+    "correcao": "Benjamini-Hochberg (FDR); p com correcao de continuidade"
+  }
+}

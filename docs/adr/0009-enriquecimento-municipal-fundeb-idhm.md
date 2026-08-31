@@ -3,7 +3,8 @@
 **Data**: 2026-08-29
 **Status**: Accepted com resultado MISTO — **IDHM não promovido a
 produção**. FUNDEB adiado (Seção 7). Resultado final do experimento na
-Seção 8.
+Seção 8. **Nota retroativa na Seção 9 (2026-08-31): o critério de sucesso
+adotado aqui era frágil — ver ADR-0011 §9.**
 **Proposto por**: Luiz Maibashi
 **Contexto**: Ticket 0010, próximo item aberto da frente `pos_tech`
 (`brain/sessions/frentes/pos_tech.md`). Sabatina rodada via `/grill-with-docs`.
@@ -260,3 +261,36 @@ existe no código como capacidade testada, não ativada.
       ponderado — nunca uma métrica sem a outra.
 - [ ] Limitação do IDHM 2010 (sem atualização anual) documentada
       explicitamente, não escondida.
+
+---
+
+## 9. NOTA RETROATIVA (2026-08-31) — o critério de sucesso da Seção 2 era frágil
+
+Adicionada depois do placebo por permutação do [ADR-0011](0011-enriquecimento-infraestrutura-censo-escolar.md)
+§9. **A decisão deste ADR não muda — o IDHM continua não promovido. O que muda
+é o motivo, e ele importa.**
+
+O critério de sucesso da Seção 2, item 4, definiu "contagem de UFs que mudam
+de veredito" como uma das duas métricas. O placebo mediu a distribuição nula
+dessa métrica: permutando features **sem informação** dentro de cada UF, a
+mediana é de **3 mudanças de veredito** (faixa 1–6) em 20 replicações. Os
+resultados observados no IDHM (4 mudanças) e na infraestrutura escolar (4)
+estão ambos dentro dessa faixa, com p = 0,40.
+
+Mais específico: o "PE: inconclusivo → modelo_vence" celebrado na Seção 8
+deste ADR é reproduzido por **ruído puro em 7 de 20 permutações (35%),
+sempre na mesma direção**. E o "BA: inconclusivo → modelo_perde" tratado
+aqui como regressão real aparece em **10 de 20 (50%)**, também sempre na
+mesma direção.
+
+**Leitura corrigida da Seção 8:** o resultado do IDHM não foi "ganho real em
+PE/MG/RN parcialmente anulado por regressão em BA". Foi **movimento de
+fronteira nas duas pontas** — UFs cujo IC bootstrap já estava encostado no
+zero atravessam a linha com qualquer coluna a mais, sempre para o lado de que
+já estavam mais perto. A conclusão prática (não promover) estava certa; o
+raciocínio que a sustentava, não.
+
+**Regra que fica para qualquer enriquecimento futuro:** contagem de mudanças
+de veredito só é interpretável **contra uma distribuição nula**. Reportá-la
+sozinha faria qualquer feature parecer ter efeito, porque 1–6 mudanças é o que
+o acaso entrega. Ver ADR-0011 §9 para o desenho do teste.

@@ -1,0 +1,92 @@
+{
+  "adr": "ADR-0011",
+  "pergunta": "infra explica o NIVEL de alfabetizacao ou o FURO DA META?",
+  "n_municipios": 5231,
+  "correcao_multiplas": "Holm-Bonferroni, 6 testes (3 indices x 2 alvos)",
+  "correlacoes": [
+    {
+      "indice": "infra_saneamento",
+      "alvo": "nivel (taxa23)",
+      "r_nacional": 0.1006,
+      "p": 3.119239973372065e-13,
+      "p_holm": 0.0,
+      "p_holm_fmt": "<1e-300",
+      "r_intra_uf": -0.0004,
+      "ufs_usadas": 23
+    },
+    {
+      "indice": "infra_saneamento",
+      "alvo": "furo da meta (y)",
+      "r_nacional": -0.0775,
+      "p": 1.9584028609660402e-08,
+      "p_holm": 0.0,
+      "p_holm_fmt": "<1e-300",
+      "r_intra_uf": -0.0114,
+      "ufs_usadas": 23
+    },
+    {
+      "indice": "infra_conectividade",
+      "alvo": "nivel (taxa23)",
+      "r_nacional": 0.2043,
+      "p": 2.137286919854564e-50,
+      "p_holm": 0.0,
+      "p_holm_fmt": "<1e-300",
+      "r_intra_uf": 0.0868,
+      "ufs_usadas": 23
+    },
+    {
+      "indice": "infra_conectividade",
+      "alvo": "furo da meta (y)",
+      "r_nacional": -0.0067,
+      "p": 0.6290185630897006,
+      "p_holm": 0.629019,
+      "p_holm_fmt": "6.29e-01",
+      "r_intra_uf": -0.0023,
+      "ufs_usadas": 23
+    },
+    {
+      "indice": "infra_pedagogico",
+      "alvo": "nivel (taxa23)",
+      "r_nacional": 0.258,
+      "p": 2.4488366524467085e-80,
+      "p_holm": 0.0,
+      "p_holm_fmt": "<1e-300",
+      "r_intra_uf": 0.0741,
+      "ufs_usadas": 23
+    },
+    {
+      "indice": "infra_pedagogico",
+      "alvo": "furo da meta (y)",
+      "r_nacional": -0.0585,
+      "p": 2.2895638032046454e-05,
+      "p_holm": 4.6e-05,
+      "p_holm_fmt": "4.60e-05",
+      "r_intra_uf": -0.0139,
+      "ufs_usadas": 23
+    }
+  ],
+  "r2_intra_uf": {
+    "nivel_taxa23": 0.0332,
+    "furo_da_meta_y": 0.0174
+  },
+  "efeito_ecologico": [
+    {
+      "indice": "infra_saneamento",
+      "r_nacional": 0.1006,
+      "r_intra_uf": -0.0004,
+      "fracao_do_sinal_entre_estados": 0.996
+    },
+    {
+      "indice": "infra_conectividade",
+      "r_nacional": 0.2043,
+      "r_intra_uf": 0.0868,
+      "fracao_do_sinal_entre_estados": 0.5751
+    },
+    {
+      "indice": "infra_pedagogico",
+      "r_nacional": 0.258,
+      "r_intra_uf": 0.0741,
+      "fracao_do_sinal_entre_estados": 0.7128
+    }
+  ]
+}

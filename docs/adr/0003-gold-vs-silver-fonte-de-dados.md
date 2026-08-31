@@ -106,7 +106,7 @@ a Gold nunca foi a fonte certa.
 - Reforça, com evidência independente, uma escolha de arquitetura que já
   estava certa desde o ADR-0001 — não foi preciso mudar nada no pipeline.
 - Fecha a lacuna 🟡 nº 2 da auditoria do enunciado (Cap. 7.2 do
-  `HANDOFF_RENAN.md`): a divergência agora tem parágrafo formal, pronto pra
+  `o diário de bordo interno (não publicado)`): a divergência agora tem parágrafo formal, pronto pra
   entrar no README ("Descrição da base utilizada").
 
 **Negativas (Custo/Risco):**
@@ -170,7 +170,7 @@ divergência do enunciado implícita.
 - `PROJETOS/01_PRIORITY/tech-challenge-fase3-alfabetizacao/src/preprocessing/05_montar_territorio.py`
   — exclui `taxa_alfabetizacao` e `percentual_participacao` por comentário
   explícito no código, coerente com o achado desta ADR.
-- `PROJETOS/01_PRIORITY/tech-challenge-fase3-alfabetizacao/docs/HANDOFF_RENAN.md`
+- diário de bordo interno (não publicado)
   — Cap. 7.2 (auditoria do enunciado, divergência nº 2) referencia esta ADR
   como resolução.
 - `[IAST] - Tech Challenge - Fase 3.pdf` (p.2, p.3 — as duas menções

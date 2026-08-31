@@ -17,3 +17,8 @@ dados_externos/idhm_municipio_1991_2010.csv.gz
 # nao-match). Aspas tambem removidas: nao tem funcao de escape em .gitignore,
 # viravam parte literal (porem inofensiva) do padrao.
 \[IAST\] - Tech Challenge - Fase 3.pdf
+
+# Cache do Censo Escolar (32 MB) e CSV bruto (210 MB): o agregado municipal
+# versionado (dados_externos/censo_escolar_municipio_2023.csv) e regeneravel
+# a partir deles via src/preprocessing/06_agregar_censo_escolar.py.
+dados_externos/_cache_censo_escolar_*.zip

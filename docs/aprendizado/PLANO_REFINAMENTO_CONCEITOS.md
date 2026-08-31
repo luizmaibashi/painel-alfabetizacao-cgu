@@ -42,7 +42,7 @@
 
 **Recursos:**
 - `.claude/rules/dados.md` (local, já tem gate de proveniência)
-- `HANDOFF_RENAN.md` (seção "Dados e Proveniência")
+- `o diário de bordo interno (não publicado)` (seção "Dados e Proveniência")
 - Seu próprio EDA (já fez, só refinar)
 
 ---
@@ -89,7 +89,7 @@ Decisão 3: Como tratar `caderno=12`?
   4. ...
 
 **Recursos:**
-- `HANDOFF_RENAN.md` (já tem decisões documentadas)
+- `o diário de bordo interno (não publicado)` (já tem decisões documentadas)
 - `docs/adr/0001-*.md` (ADR existente)
 - `.claude/rules/dados.md` (gates)
 
@@ -186,7 +186,7 @@ Próximas Iterações:
 
 1. **Faça uma atividade por vez** (não todas de uma vez)
 2. **Documente cada descoberta** em markdown
-3. **Cruze com HANDOFF_RENAN.md** — não deixe nada desalinhado
+3. **Cruze com o diário de bordo interno (não publicado)** — não deixe nada desalinhado
 4. **Quando terminar cada seção, commit:**
    ```
    git add docs/

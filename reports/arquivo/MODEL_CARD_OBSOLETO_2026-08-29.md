@@ -418,7 +418,7 @@ Se usar o modelo em produção:
 |---|---|---|
 | README completo | `README.md` (11 seções) | Final |
 | Notebook analítico | `notebooks/01_analise_completa.ipynb` (gerado por script, não à mão) | Reexecutável |
-| Documento vivo | `docs/HANDOFF_RENAN.md` (16 capítulos, com sequência de erros e correções) | Até 2026-08-20 |
+| Documento vivo | o diário de bordo interno (não publicado) (16 capítulos, com sequência de erros e correções) | Até 2026-08-20 |
 | Arquivos de Arquitetura | `docs/adr/` (5 ADRs, incluindo trade-offs de vazamento e régua) | Approved |
 | EDA | `reports/eda_alunos.md` | Com 9 itens verificados |
 | Dicionário | `reports/dicionario_alunos.md` | Pós-limpeza + conexão com objetivo |
@@ -436,7 +436,7 @@ Se usar o modelo em produção:
 - **Última atualização:** 2026-08-20
 
 Para dúvidas sobre uso do modelo em produção, consulte:
-- `docs/HANDOFF_RENAN.md` Cap. 15 (decisões pendentes)
+- o diário de bordo interno (não publicado) Cap. 15 (decisões pendentes)
 - `docs/adr/0005-modelo-intra-uf-e-invalidade-nacional.md` (justificativa da mudança)
 
 ---

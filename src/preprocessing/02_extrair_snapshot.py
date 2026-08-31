@@ -43,14 +43,14 @@ ALUNOS_AMOSTRA = BASE / "data" / "Alunos_subconjunto_teste_local.csv"
 # `peso_aluno` entrou nesta lista em 2026-08-18: a NULIDADE dela codifica "faltou
 # à prova" (100% dos nulos com alvo "Não"), o mesmo evento de `presenca`. Antes
 # ela era só excluída das features, mas continuava no snapshot e aparecia como
-# "coluna descartada em silêncio" — ver Cap. 9.3 do docs/HANDOFF_RENAN.md.
+# "coluna descartada em silêncio" — ver Cap. 9.3 do diário de bordo interno (não publicado).
 COLUNAS_LEAKAGE = ["proficiencia", "presenca", "preenchimento_caderno", "peso_aluno"]
 
 # Colunas sem variância/sem uso como feature (EDA, reports/eda_alunos.md item 2)
 COLUNAS_SEM_USO = ["serie"]
 
 # ATENÇÃO (correção de 2026-08-18, motivada pelo feedback oficial da Fase 2 —
-# ver docs/HANDOFF_RENAN.md, Capítulo 6):
+# ver o diário de bordo interno (não publicado), Capítulo 6):
 # Apontamos para a OBT *com metas imputadas*, não para a OBT base. A imputação
 # KNN de metas (dataproc_05_knn_metas.py, ADR-004 da Fase 2) foi o primeiro
 # ponto forte citado pelo avaliador — cobertura 43,6% → 100%, holdout MAE
@@ -63,7 +63,7 @@ BUCKET_SILVER = ("gs://tc-alfabetizacao-fiap-879273/silver/"
 # mas para derivar o flag `meta_is_imputada` — a tabela do KNN não grava esse
 # flag, e usar meta imputada sem marcar que é imputada repete exatamente o erro
 # de rotulagem que o avaliador apontou no dashboard da Fase 2 (crítica (b) do
-# Cap. 1.2 do HANDOFF_RENAN.md). O flag é descartado do modelo se a cobertura
+# Cap. 1.2 do diário de bordo interno (não publicado)). O flag é descartado do modelo se a cobertura
 # real de meta original for baixa demais para ele significar algo.
 COLUNAS_TERRITORIO = ["id_municipio", "ano", "rede", "populacao_total",
                        "gasto_por_habitante_educacao", "sigla_uf",
@@ -92,7 +92,7 @@ def carregar_alunos(caminho_csv: Path, populacao: str) -> pd.DataFrame:
     Consequência: os ~9.700 alunos ausentes (16,8%) NÃO fazem parte da população
     do indicador. Mantê-los foi a origem dos CINCO caminhos de vazamento que
     este projeto encontrou — todos codificavam o mesmo evento, "faltou à prova".
-    Removê-los corta o problema na raiz. Ver Cap. 13 do docs/HANDOFF_RENAN.md.
+    Removê-los corta o problema na raiz. Ver Cap. 13 do diário de bordo interno (não publicado).
     """
     df = pd.read_csv(caminho_csv)
     df["id_municipio"] = df["id_municipio"].astype(str).str.zfill(7)  # ADR-005 Fase 2
@@ -101,7 +101,7 @@ def carregar_alunos(caminho_csv: Path, populacao: str) -> pd.DataFrame:
     # Motivo: 100% dos alunos ausentes têm alfabetizado="Não" por CONVENÇÃO do
     # dado (não fez prova => não alfabetizado), não por medição. São 16,7% da
     # amostra. Manter ou remover essas linhas da população de modelagem é uma
-    # decisão em aberto (Cap. 10.2 do HANDOFF_RENAN.md) — e ela só pode ser
+    # decisão em aberto (Cap. 10.2 do diário de bordo interno (não publicado)) — e ela só pode ser
     # analisada se soubermos QUEM são, mesmo depois de `presenca` sair por
     # leakage. Daí registrar aqui, explicitamente fora do modelo.
     if "presenca" in df.columns:

@@ -190,8 +190,7 @@ faltou à prova) por caminhos diferentes — três por **valor**
 (`proficiencia`, `presenca`, `preenchimento_caderno`), duas por **ausência
 de valor** (`peso_aluno`, cuja nulidade coincidia 100% com faltosos;
 `caderno=12`, que tinha 79,7% de ausentes disfarçados de categoria de
-risco). Todas as cinco estão fora do modelo. Detalhe em
-[`docs/HANDOFF_RENAN.md`](docs/HANDOFF_RENAN.md) Caps. 9 e 11.
+risco). Todas as cinco estão fora do modelo. Detalhe no diário de bordo interno (não publicado), Caps. 9 e 11.
 
 ### Validação e generalização
 
@@ -387,8 +386,7 @@ de 20,4% para **46,5%**, absorvendo o que o histórico deixou de explicar.
 
 > **Correção de 2026-08-29.** Esta seção reportava `60,9% / 13,3% / 11,6% /
 > 14,2%`, de um modelo superado (400 árvores, depth 3, antes de território — os
-> blocos nem incluíam meta do PDE, `sigla_uf` e população). O
-> [`HANDOFF_RENAN.md`](docs/HANDOFF_RENAN.md) Cap. 10.3 carrega um terceiro par
+> blocos nem incluíam meta do PDE, `sigla_uf` e população). O diário de bordo interno (não publicado), Cap. 10.3, carrega um terceiro par
 > (`45,1% / 9,9%`), de outra execução intermediária.
 >
 > Na mesma revisão descobriu-se que esta seção e a §7.2 descreviam **modelos
@@ -427,7 +425,7 @@ correlaciona 0,979 com a taxa de alfabetização do próprio ano. Ou seja: a
 meta *é* um número município tão forte que comparar o modelo contra um
 baseline mais fraco não provava nada. Corrigimos o teste para usar **o
 melhor baseline disponível**, não o primeiro que passasse — e o veredito
-inverteu. Ver [`docs/HANDOFF_RENAN.md`](docs/HANDOFF_RENAN.md) Cap. 14 para
+inverteu. Ver o diário de bordo interno (não publicado), Cap. 14, para
 a sequência completa, incluindo o bug de leitura do intervalo de confiança
 que também foi corrigido nesse processo.
 
@@ -637,6 +635,96 @@ fora (+0,155, IC95% [+0,082, +0,226]). Nas 16 previsíveis, empate técnico
 (−0,010, IC cruza zero). O modelo é um **seguro contra errar a direção**, não
 um ranqueador superior.
 
+### O enriquecimento com infraestrutura escolar — e o efeito ecológico
+
+O enunciado autoriza enriquecer a base com Censo Escolar (pág. 3-4). Foi feito,
+medido e **não promovido a produção** ([ADR-0011](docs/adr/0011-enriquecimento-infraestrutura-censo-escolar.md)).
+O caminho até a decisão vale mais que a decisão.
+
+**O que foi construído.** Censo Escolar 2023 (217.625 escolas) agregado por
+município, filtrado à população que o indicador de fato mede — escola em
+atividade, rede pública, com matrícula no 2º ano — e ponderado por
+`QT_MAT_FUND_AI_2`, não por média simples entre escolas. Sobram 73.660
+escolas e 2.357.055 matrículas, cobrindo **5.231/5.232 municípios (100,0%)**
+do dataset canônico.
+
+**Por que 2023 e não 2024.** O Censo 2024 existe, mas o servidor do Inep o
+publica com `Last-Modified` de julho/2026 — depois do desfecho que o alvo
+mede. Usá-lo daria ao modelo informação indisponível no momento da decisão:
+o mesmo skew treino-serviço do [ADR-0008](docs/adr/0008-skew-treino-servico-nas-features-de-historico.md).
+A escolha do ano aqui é tratamento de leakage, não disponibilidade.
+
+**O resultado: não ajuda.** AUC ponderado 0,6478 → 0,6456 (−0,0022). O IC
+bootstrap pareado não identifica **nenhuma** UF em que a infraestrutura ajude,
+e identifica **duas** em que atrapalha (PR, RJ). A previsão registrada antes
+de rodar era de resultado positivo — errou, e o registro do erro está no
+[dicionário](reports/dicionario_censo_escolar.md).
+
+**O achado que salva o esforço.** "Não prevê o furo da meta" não é "não tem
+relação com alfabetização" — são alvos diferentes, e confundir os dois seria
+concluir algo que o teste nunca perguntou. Medindo contra o **nível** de
+alfabetização (`taxa23`), a associação existe e é forte. Mas quase toda ela
+desaparece dentro do estado:
+
+| Índice | r nacional | r intra-UF | fração do sinal que era entre estados |
+|---|---:|---:|---:|
+| `infra_pedagogico` | +0,258 | +0,074 | **71%** |
+| `infra_conectividade` | +0,204 | +0,087 | 58% |
+| `infra_saneamento` | +0,101 | −0,000 | **100%** |
+
+*(n = 5.231; p com correção de Holm para as 6 comparações;
+[`06_infra_nivel_vs_meta.py`](src/evaluation/06_infra_nivel_vs_meta.py))*
+
+Isto é **efeito ecológico**: estados com melhor infraestrutura escolar têm,
+simultaneamente, maior alfabetização — sem que uma coisa explique a outra
+entre municípios do mesmo estado. É exatamente o mecanismo que já tinha
+derrubado o modelo municipal nacional deste projeto (§5.2: "o sinal era a
+régua estadual"), agora **reproduzido de forma independente** com uma fonte de
+dado que o projeto nunca tinha usado.
+
+A leitura de política pública que decorre daí é contraintuitiva e é o ponto:
+um ranking nacional de municípios por infraestrutura escolar pareceria
+explicar alfabetização (r = +0,26) e estaria, em 71% do efeito, apenas
+reordenando estados.
+
+### O placebo que invalidou a própria métrica de sucesso do projeto
+
+Dois enriquecimentos **sem correlação entre si** (IDHM socioeconômico de 2010
+e infraestrutura escolar de 2023, r ≈ 0,02–0,08) moveram as **mesmas** UFs na
+**mesma** direção: BA de `inconclusivo` para `modelo_perde`, PE de
+`inconclusivo` para `modelo_vence`. Se a mudança viesse da informação de cada
+fonte, isso não deveria acontecer.
+
+A hipótese alternativa — de que a mudança vem do simples ato de **adicionar
+dimensão** — foi testada por permutação dentro da UF: os índices são
+embaralhados entre municípios do mesmo estado, o que preserva a distribuição
+marginal e a correlação entre eles e destrói só o vínculo com o alvo
+([`09_placebo_permutacao.py`](src/modeling/09_placebo_permutacao.py), 20
+replicações).
+
+| Métrica | Sob ruído (features sem informação) | Com dado real | p |
+|---|---|---|---:|
+| Mudanças de veredito | mediana 3 (faixa 1–6) | 4 | 0,400 |
+| AUC ponderado | 0,6445 [0,6359; 0,6511] | 0,6456 | 0,350 |
+
+**As quatro mudanças observadas com dado real são reproduzidas por ruído puro,
+sempre na mesma direção** — BA em 10 de 20 permutações (50%), PE em 7 de 20
+(35%), GO e TO em 3 de 20. Nenhuma UF sobrevive à correção de
+Benjamini-Hochberg.
+
+O mecanismo é simples e vale para qualquer enriquecimento: uma UF cujo
+intervalo de confiança já está encostado no zero atravessa a fronteira com
+**qualquer** coluna a mais, e sempre para o lado de que já estava mais perto.
+
+A consequência é desconfortável e está registrada: **a métrica "contagem de
+UFs que mudam de veredito", usada como critério de sucesso desde o
+[ADR-0009](docs/adr/0009-enriquecimento-municipal-fundeb-idhm.md), mede
+instabilidade de fronteira, não ganho de informação.** O "PE fechou" celebrado
+no experimento com IDHM é o mesmo flip que o acaso entrega em 35% das
+permutações. A decisão de não promover aquele enriquecimento continua certa —
+o raciocínio que a sustentava, não. A nota retroativa está no próprio ADR-0009
+§9, em vez de silenciosamente corrigida.
+
 ## 9. Limitações do projeto
 
 ⚠️ **A limitação mais consequente: comparação entre estados não é válida.**
@@ -682,6 +770,18 @@ omitido.
 - **Reprodutibilidade de versão**: scikit-learn 1.8→1.9 mudou o Recall do
   baseline em ~1,6pp com o mesmo seed e dado — `requirements.txt` pinado
   mitiga, mas não elimina esse tipo de variação entre ambientes.
+
+- **O enriquecimento com infraestrutura escolar cobre um único ano (2023).**
+  A escolha é de validade temporal, não de conveniência (ver §8), mas
+  significa que o efeito medido é estrutural, não dinâmico: não se testou se
+  *mudança* de infraestrutura acompanha *mudança* de alfabetização. E a
+  conclusão vale para o ciclo 2023→2024 — promover isso ao backtest 2025
+  exigiria refazer a escolha do ano **para aquele ciclo**, não herdar esta.
+- **Três enriquecimentos externos foram testados e nenhum entrou em produção**
+  — IDHM (misto), FUNDEB (adiado por fricção de acesso), infraestrutura
+  escolar (misto, AUC agregado negativo). As features existem no código como
+  capacidade testada e desligada, não como promessa não cumprida:
+  `montar_dataset(com_idhm=True)` e `montar_dataset(com_infra=True)`.
 
 ## 10. Aplicação prática para políticas públicas
 
@@ -753,6 +853,15 @@ jeito, e aqui está a prova — mas deste outro jeito, sim."*
   resíduo de 6,7% de influência fica sem explicação causal.
 - **Re-executar a cada resultado anual** para verificar se o ganho de 2025
   persiste, antes de alterar a regra de qualquer UF.
+- **Reportar toda contagem de veredito contra a distribuição nula** — já
+  medida (§8): permutação entrega 1–6 mudanças por acaso. Qualquer
+  enriquecimento futuro precisa vir com esse `p`, nunca com a contagem
+  sozinha. O placebo custa 20 execuções e é reaproveitável como está.
+- **Rodar o placebo com mais replicações** — 20 dão resolução mínima de
+  p ≈ 0,048, insuficiente para o teste por UF depois da correção de múltiplas
+  comparações. A conclusão global não depende disso (o observado cai no meio
+  da distribuição nula), mas o teste UF a UF fica subdimensionado por
+  construção.
 
 ---
 
@@ -762,22 +871,68 @@ jeito, e aqui está a prova — mas deste outro jeito, sim."*
 tech-challenge-fase3-alfabetizacao/
 ├── data/                    Snapshots processados (território local, etc.)
 ├── docs/
-│   └── HANDOFF_RENAN.md     Documento vivo — narrativa completa capítulo a capítulo
+│   └── adr/                 Decisões arquiteturais registradas (0001–0011)
 ├── images/                  Gráficos SHAP e diagnósticos
 ├── notebooks/
 │   └── 01_analise_completa.ipynb   Narrativa analítica, gerada e executada por script
 ├── reports/                 EDA, dicionário, métricas, proveniência,
 │                            ranking intra-UF e o painel HTML
 ├── src/
-│   ├── preprocessing/       Extração, guarda de leakage, pipeline, território
-│   ├── modeling/            Baseline, tournament, experimento municipal, ranking
-│   ├── evaluation/          SHAP, falsificação, teste de resíduo
+│   ├── preprocessing/       Extração, guarda de leakage, pipeline, território,
+│   │                        agregação e EDA do Censo Escolar
+│   ├── modeling/            Baseline, tournament, ranking intra-UF, regressão,
+│   │                        experimentos de enriquecimento e placebo
+│   ├── evaluation/          SHAP, falsificação, resíduo, backtest 2025,
+│   │                        nível vs. furo da meta
 │   └── visualization/       Geração do painel e do notebook
 ├── requirements.txt
 └── README.md                Este arquivo
 ```
 
 ## Reprodutibilidade
+
+### Pré-requisitos
+
+**Este projeto depende da pasta da Fase 2, que precisa estar ao lado dele:**
+
+```
+PROJETOS/01_PRIORITY/
+├── tech-challenge-fase2-alfabetizacao/
+│   └── dados/
+│       ├── br_inep_avaliacao_alfabetizacao_meta_alfabetizacao_municipio.csv.gz
+│       └── Alunos.csv
+└── tech-challenge-fase3-alfabetizacao/     <- este projeto
+```
+
+A Fase 3 consome o dado tratado pela Fase 2 (é o que o enunciado pede, pág. 2:
+"os dados tratados na camada Gold serão utilizados"). Os scripts resolvem o
+caminho por `BASE.parent / "tech-challenge-fase2-alfabetizacao"` — sem a pasta
+irmã, falham na leitura.
+
+**Dados que NÃO estão no repositório e são baixados ou gerados na hora:**
+
+| Arquivo | Como obter | Tamanho |
+|---|---|---|
+| `dados_externos/resultados_e_metas_municipios_2025_3.xlsx` | Baixado automaticamente pelo backtest, com verificação de SHA-256 | 519 KB |
+| `dados_externos/_cache_censo_escolar_2023.zip` | Baixado automaticamente pela agregação do Censo | 32 MB |
+| `data/*.parquet` | Gerados pelos scripts de pré-processamento | — |
+
+### Verificação de reprodução (executada em 2026-08-31)
+
+O backtest foi rodado **do zero**, com a planilha do Inep baixada novamente da
+fonte oficial, e os dois artefatos canônicos saíram **idênticos bit a bit** aos
+versionados:
+
+```
+IDENTICO  reports/backtest_prospectivo_2025.json
+IDENTICO  reports/ranking_prospectivo_2025.json
+```
+
+O SHA-256 da planilha baixada confere com o registrado em
+[`proveniencia_ica_2025.md`](reports/proveniencia_ica_2025.md) e dentro do
+próprio JSON. A imutabilidade do backtest não é uma afirmação do README: é uma
+propriedade verificada, e há teste que falha se a constante do código divergir
+da proveniência publicada.
 
 **Entregável 1 — modelo aluno-nível** (resultado negativo, §7):
 
@@ -807,6 +962,22 @@ python src/visualization/01_gerar_painel_intra_uf.py    # gera reports/painel_in
 O painel depende de `reports/ranking_prospectivo_2025.json` — rode o backtest
 antes do gerador.
 
+**Enriquecimento externo — testado e não promovido** (§8, ADR-0009 e ADR-0011):
+
+```bash
+python src/preprocessing/06_agregar_censo_escolar.py    # baixa o Censo 2023 e agrega por município
+python src/preprocessing/07_eda_censo_escolar.py        # EDA dos 9 itens do gate CRISP-DM
+python src/modeling/06_experimento_idhm.py              # IDHM: misto, não promovido
+python src/modeling/08_experimento_infra_escolar.py     # infraestrutura: misto, não promovido
+python src/evaluation/06_infra_nivel_vs_meta.py         # nível vs. furo da meta (efeito ecológico)
+python src/modeling/09_placebo_permutacao.py 20         # distribuição nula por permutação
+```
+
+O primeiro script baixa ~32 MB do Inep e guarda em
+`dados_externos/_cache_censo_escolar_2023.zip` (fora do git); as execuções
+seguintes reusam o cache. O agregado municipal versionado é
+`dados_externos/censo_escolar_municipio_2023.csv`.
+
 **Notebook da narrativa analítica:**
 
 ```bash
@@ -819,7 +990,7 @@ alguém roda uma célula fora de ordem, salva, e o arquivo versionado passa a
 mostrar um número que o código não produz mais.
 
 Decisões técnicas completas, incluindo a sequência de correções (vazamentos
-achados, escala corrigida, régua de teste recalibrada), em
-[`docs/HANDOFF_RENAN.md`](docs/HANDOFF_RENAN.md) e nos ADRs em
+achados, escala corrigida, régua de teste recalibrada), no diário de
+bordo interno (não publicado) e nos ADRs em
 [`docs/adr/`](docs/adr/) (migrados de `docs/wayfinder/tech_challenge_fase3/adr/`
-em 2026-08-20 — ver Cap. 15 do documento vivo).
+em 2026-08-20).

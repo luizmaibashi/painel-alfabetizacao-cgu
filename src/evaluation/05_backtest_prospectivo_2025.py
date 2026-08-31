@@ -19,6 +19,13 @@ from sklearn.preprocessing import RobustScaler
 
 BASE = Path(__file__).resolve().parents[2]
 ICA_2025 = BASE / "dados_externos" / "resultados_e_metas_municipios_2025_3.xlsx"
+# A planilha e a FONTE do backtest, mas nao entra no git (`*.xlsx` no
+# .gitignore da base). Sem o download automatico abaixo, este script — que
+# produz o numero canonico do projeto — falhava num clone limpo, e o
+# "pipeline reproduzivel" exigido pelo enunciado (pag. 7) nao se sustentava.
+URL_ICA_2025 = ("https://download.inep.gov.br/avaliacao_da_alfabetizacao/"
+                "resultados/resultados_e_metas_municipios_2025_3.xlsx")
+SHA256_ICA_2025 = "709c7eeba34d9c91e7f193e6c2b25e453ec7b535a6d8ac7e39c095bd0c24eb60"
 TERRITORIO = BASE / "data" / "territorio_local.parquet"
 SAIDA = BASE / "reports" / "backtest_prospectivo_2025.json"
 SAIDA_RANKING = BASE / "reports" / "ranking_prospectivo_2025.json"
@@ -46,6 +53,69 @@ COLUNAS_ICA = {
 
 def hash_arquivo(caminho: Path) -> str:
     return hashlib.sha256(caminho.read_bytes()).hexdigest()
+
+
+def sha256_de(caminho: Path) -> str:
+    h = hashlib.sha256()
+    with open(caminho, "rb") as f:
+        for bloco in iter(lambda: f.read(1 << 20), b""):
+            h.update(bloco)
+    return h.hexdigest()
+
+
+def garantir_fonte_ica(caminho: Path = ICA_2025, url: str = URL_ICA_2025,
+                        sha_esperado: str = SHA256_ICA_2025) -> Path:
+    """
+    Garante que a planilha oficial do Inep esteja no disco e seja A MESMA que
+    produziu o resultado canonico.
+
+    Falha ALTO em divergencia de hash, nunca segue em silencio: um arquivo
+    diferente com o mesmo nome produziria um backtest diferente sem que nada
+    quebrasse — o modo de falha mais caro possivel para um numero que o
+    projeto trata como imutavel (ADR-0010).
+    """
+    if not caminho.exists():
+        import time
+        import urllib.error
+        import urllib.request
+        print(f"  fonte ausente; baixando de {url}")
+        caminho.parent.mkdir(parents=True, exist_ok=True)
+        # O servidor do Inep derruba a conexao de forma intermitente
+        # (WinError 10054 observado em 2026-08-31); 3 tentativas com espera
+        # resolvem. Sem o retry, o script falharia por instabilidade de rede
+        # e nao por problema do projeto — erro caro de diagnosticar.
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Accept": "*/*"})
+        ultimo_erro = None
+        for tentativa in range(1, 4):
+            try:
+                with urllib.request.urlopen(req, timeout=600) as r:
+                    dados = r.read()
+                caminho.write_bytes(dados)
+                break
+            except (urllib.error.URLError, OSError) as e:
+                ultimo_erro = e
+                print(f"    tentativa {tentativa}/3 falhou ({e}); repetindo...")
+                time.sleep(3)
+        else:
+            raise RuntimeError(
+                f"Nao foi possivel baixar a fonte ICA apos 3 tentativas: "
+                f"{ultimo_erro}. Baixe manualmente de {url} e salve em "
+                f"{caminho}.")
+
+    sha = sha256_de(caminho)
+    if sha != sha_esperado:
+        raise ValueError(
+            "SHA-256 da fonte ICA nao confere.\n"
+            f"  esperado: {sha_esperado}\n"
+            f"  obtido:   {sha}\n"
+            f"  arquivo:  {caminho}\n"
+            "O Inep pode ter republicado a planilha. NAO prossiga sem decidir "
+            "explicitamente: um dado diferente muda o resultado canonico do "
+            "projeto (ADR-0010).")
+    print(f"  fonte verificada (SHA-256 confere): {caminho.name}")
+    return caminho
 
 
 def carregar_ica(caminho: Path = ICA_2025) -> pd.DataFrame:
@@ -287,6 +357,7 @@ def _num(valor) -> float | None:
 
 
 def main() -> None:
+    garantir_fonte_ica()
     ica = carregar_ica()
     treino, teste = montar_janelas(ica)
     n_boot = N_BOOT

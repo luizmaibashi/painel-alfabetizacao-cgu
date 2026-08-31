@@ -17,7 +17,7 @@ silêncio, sem erro nenhum. O `--full` rodaria e daria quase o mesmo resultado
 ruim do `--local-only`, sem explicação visível.
 
 É o mesmo padrão que o avaliador da Fase 2 apontou no streaming ("o evento
-chega, é validado, é persistido, e para ali") — ver Cap. 6 do HANDOFF_RENAN.md.
+chega, é validado, é persistido, e para ali") — ver Cap. 6 do diário de bordo interno (não publicado).
 
 Agora as colunas são resolvidas a partir do que o snapshot realmente contém:
 `colunas_feature(df)` e `construir_preprocessador(df)` recebem o dataframe.
@@ -66,7 +66,7 @@ COLUNA_TARGET = "alfabetizado"
 # Efeito medido: uma regra única "peso_aluno é nulo -> risco" atinge
 # Precision 1,000. Sem essa coluna e sem os alunos ausentes, o ROC-AUC do
 # modelo cai para 0,497 — ou seja, todo o desempenho aparente vinha daqui.
-# Detalhe completo no Cap. 9 do docs/HANDOFF_RENAN.md.
+# Detalhe completo no Cap. 9 do diário de bordo interno (não publicado).
 #
 # Numéricas restantes -> Robust Scaling, não Standardization (aula 6:
 # mediana/IQR, não sensível a outlier). Protege `populacao_total`, que é
@@ -89,7 +89,7 @@ CANDIDATAS_NUMERICAS = [
     "gasto_por_habitante_educacao",
     # Só existe no --full: meta do PDE, imputada por KNN na Fase 2 (ADR-004).
     # NÃO é leakage: definida externamente por política pública, não deriva do
-    # desempenho do aluno predito (ver Cap. 6.3 do HANDOFF_RENAN.md).
+    # desempenho do aluno predito (ver Cap. 6.3 do diário de bordo interno (não publicado)).
     "meta_alfabetizacao_2024_imputada",
 ]
 

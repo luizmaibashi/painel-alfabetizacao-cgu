@@ -39,7 +39,7 @@ candidatos treinados sobre o mesmo split, com `GridSearchCV` +
 `StratifiedKFold(5)` no treino e teste tocado uma vez só.
 
 ⚠️ **Números refeitos em 2026-08-18** após a descoberta do vazamento por
-`peso_aluno` (Cap. 9 do HANDOFF_RENAN.md). A tabela abaixo é a versão válida:
+`peso_aluno` (Cap. 9 do diário de bordo interno (não publicado)). A tabela abaixo é a versão válida:
 
 | Modelo | Recall | Precision | F1 | ROC-AUC | gap treino-val |
 |---|---|---|---|---|---|
@@ -161,7 +161,7 @@ brainstorm do zero — mais rápida e com decisão de fato compartilhada."
 - checar: os 3 modelos do tournament rodaram com o MESMO split (comparação justa)
 - checar: SHAP de caderno=12 comentado explicitamente no relatório, não omitido
 - checar: seção "Limitações do projeto" do README menciona ausência de dado 2025
-- checar: as 3 decisões desta ADR aparecem no HANDOFF_RENAN.md antes da call
+- checar: as 3 decisões desta ADR aparecem no diário de bordo interno (não publicado) antes da call
 ```
 
 ---
@@ -177,8 +177,8 @@ brainstorm do zero — mais rápida e com decisão de fato compartilhada."
   (investigação completa de `caderno=12`, 3 tentativas de validação).
 - `PROJETOS/01_PRIORITY/tech-challenge-fase3-alfabetizacao/reports/dicionario_alunos.md`
   (linha `caderno`, decisão CONDICIONAL).
-- `PROJETOS/01_PRIORITY/tech-challenge-fase3-alfabetizacao/docs/HANDOFF_RENAN.md`
-  — **documento vivo único do projeto** (a partir de 2026-08-18 consolidou o
+- diário de bordo interno (não publicado)
+  — **diário de bordo interno único do projeto, não publicado** (a partir de 2026-08-18 consolidou o
   feedback da Fase 2, a auditoria do enunciado e o Risk Register, que antes
   eram arquivos separados). As 3 decisões desta ADR aparecem nos Capítulos 4,
   6 e 8.

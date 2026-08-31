@@ -55,7 +55,7 @@ Quando `TRILHA_APRENDIZADO_FASE3.md` chegar, a gente vai:
 4. Documentar decisão em ADR novo (ex: ADR-0002-xgboost-vs-randomforest)
 
 ### Fase 3: Entrega Documentada
-1. Atualizar HANDOFF_RENAN.md com novas técnicas
+1. Atualizar o diário de bordo interno (não publicado) com novas técnicas
 2. Gerar visualizações (SHAP, Feature Importance comparado)
 3. README completo (11 seções, conforme enunciado)
 4. Enviar pra Renan validar (sem call — só entrega + feedback async)
@@ -107,4 +107,4 @@ Quando chegar:
 **Artefatos relacionados:**
 - `docs/wayfinder/tech_challenge_fase3/SPEC_FINAL.md` — spec completa
 - `docs/adr/0001-*.md` — decisões de leakage
-- `HANDOFF_RENAN.md` — brief pra Renan (atualizado em tempo real)
+- `o diário de bordo interno (não publicado)` — brief pra Renan (atualizado em tempo real)

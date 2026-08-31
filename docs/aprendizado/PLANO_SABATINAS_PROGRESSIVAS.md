@@ -171,7 +171,7 @@ Cada módulo vai seguir este fluxo:
 - Interpretação: Por que modelo prevê cada aluno
 
 **Por que importa:**
-- Seu HANDOFF_RENAN.md já menciona "SHAP ainda não implementado"
+- Seu o diário de bordo interno (não publicado) já menciona "SHAP ainda não implementado"
 - **CRÍTICO** pra enviar ao Renan (ele vai perguntar "por que esse aluno?")
 - Feature Importance negativa (`caderno = -0.038`) — SHAP explica por quê
 

@@ -168,7 +168,7 @@ desde a Fase 3."
 - `ADR-0002` (modelo aluno-nível, superseded pelo pivô município) e
   `ADR-0003` (Gold vs Silver) — nenhum cobria o ranking intra-UF; este ADR
   preenche essa lacuna.
-- `docs/HANDOFF_RENAN.md`, Cap. 16.6 — números da tabela atualizados junto
+- o diário de bordo interno (não publicado), Cap. 16.6 — números da tabela atualizados junto
   com este ADR.
 - `src/modeling/04_ranking_intra_uf.py` — `MIN_MUNICIPIOS_POR_UF`,
   `bootstrap_ic_auc`, `treinar_por_uf`.

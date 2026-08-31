@@ -16,7 +16,7 @@ Parquet já processado, não a fonte:
 | `gasto_por_habitante_educacao` | API pública do SICONFI/Tesouro | ~9.000 requisições |
 
 Foi a terceira dependência do projeto que se revelou falsa (as outras: a base
-completa de alunos e a regra "AI Jail"). Ver Cap. 10 do docs/HANDOFF_RENAN.md.
+completa de alunos e a regra "AI Jail"). Ver Cap. 10 do diário de bordo interno (não publicado).
 
 O QUE ESTE SCRIPT FAZ E O QUE NÃO FAZ
 -------------------------------------

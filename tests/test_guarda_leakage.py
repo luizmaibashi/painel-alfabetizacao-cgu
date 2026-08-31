@@ -5,7 +5,7 @@ POR QUE ESTE ARQUIVO EXISTE
 ----------------------------
 GATE ML - Guarda de qualidade/leakage precisa de teste proprio
 (.claude/rules/dados.md, base de conhecimento). O guarda ja teve um bug real
-(HANDOFF_RENAN.md Cap. 12.2): qualquer coluna categorica de alta cardinalidade
+(o diário de bordo interno (não publicado) Cap. 12.2): qualquer coluna categorica de alta cardinalidade
 (`sigla_uf`, 27 valores) ia parar em `pd.qcut`, levantando
 `ArrowNotImplementedError` -- excecao fora do `except (ValueError, TypeError)`
 da epoca, que escapava em silencio. So foi descoberto porque o autor decidiu,

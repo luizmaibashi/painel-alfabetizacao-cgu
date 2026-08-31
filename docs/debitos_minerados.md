@@ -1,6 +1,6 @@
 # Débitos minerados — tech-challenge-fase3-alfabetizacao (pos_tech)
 
-> Rodada 1: 2026-08-22, via skill `/minerar-debitos`. Fonte: `docs/HANDOFF_RENAN.md` (13 capítulos) — projeto sem `AGENTS.md` com "Débitos técnicos conhecidos" numerado; o HANDOFF cumpre a mesma função (diagnóstico de falha, causa raiz, correção). Já é a origem de 6 gates existentes em `.claude/rules/dados.md` (threshold vs balanceamento, ADR sem código, cobertura de teste, guarda de leakage com teste próprio, nulidade prediz alvo — item 9 do gate CRISP-DM, baseline mesma população). Esses não foram reminerados — são o material de origem.
+> Rodada 1: 2026-08-22, via skill `/minerar-debitos`. Fonte: o diário de bordo interno (não publicado) (13 capítulos) — projeto sem `AGENTS.md` com "Débitos técnicos conhecidos" numerado; o HANDOFF cumpre a mesma função (diagnóstico de falha, causa raiz, correção). Já é a origem de 6 gates existentes em `.claude/rules/dados.md` (threshold vs balanceamento, ADR sem código, cobertura de teste, guarda de leakage com teste próprio, nulidade prediz alvo — item 9 do gate CRISP-DM, baseline mesma população). Esses não foram reminerados — são o material de origem.
 
 | Capítulo | Achado | Classificação | Destino |
 |---|---|---|---|

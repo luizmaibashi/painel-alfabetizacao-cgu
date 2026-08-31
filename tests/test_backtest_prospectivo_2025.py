@@ -128,3 +128,75 @@ def test_num_trata_nulo_e_arredonda():
     assert MODULO._num(None) is None
     assert MODULO._num(float("nan")) is None
     assert MODULO._num(72.348) == 72.3
+
+
+# --- Garantia da fonte (ADR-0010 + reprodutibilidade do enunciado) ---------
+#
+# POR QUE ESTES TESTES EXISTEM
+# A planilha do Inep nao entra no git (`*.xlsx` ignorado) e, em 2026-08-31, a
+# revisao do projeto achou que ela tambem nao estava no disco: o script que
+# produz o numero canonico do projeto NAO rodava num clone limpo, contra o
+# "pipeline reproduzivel" exigido pelo enunciado (pag. 7).
+#
+# A correcao (baixar sob demanda) cria um risco novo e pior: baixar um arquivo
+# DIFERENTE com o mesmo nome produziria um backtest diferente sem nada
+# quebrar. Por isso a verificacao de SHA-256 tem que falhar ALTO, e por isso
+# ela tem teste proprio.
+
+import hashlib
+
+import pytest
+
+
+def test_sha256_de_confere_com_hashlib(tmp_path):
+    arq = tmp_path / "x.bin"
+    conteudo = b"conteudo de teste do backtest"
+    arq.write_bytes(conteudo)
+    assert MODULO.sha256_de(arq) == hashlib.sha256(conteudo).hexdigest()
+
+
+def test_sha256_de_muda_quando_o_conteudo_muda(tmp_path):
+    a, b = tmp_path / "a.bin", tmp_path / "b.bin"
+    a.write_bytes(b"conteudo A")
+    b.write_bytes(b"conteudo B")
+    assert MODULO.sha256_de(a) != MODULO.sha256_de(b)
+
+
+def test_garantir_fonte_aceita_arquivo_com_sha_esperado(tmp_path):
+    arq = tmp_path / "ica.xlsx"
+    arq.write_bytes(b"planilha oficial")
+    sha = hashlib.sha256(b"planilha oficial").hexdigest()
+    assert MODULO.garantir_fonte_ica(arq, url="http://nao-usar", sha_esperado=sha) == arq
+
+
+def test_garantir_fonte_FALHA_ALTO_com_sha_divergente(tmp_path):
+    """
+    O teste mais importante deste arquivo: arquivo trocado NAO pode passar em
+    silencio. Sem isso, o Inep republicar a planilha mudaria o resultado
+    canonico do projeto sem aviso nenhum.
+    """
+    arq = tmp_path / "ica.xlsx"
+    arq.write_bytes(b"planilha ADULTERADA")
+    with pytest.raises(ValueError, match="SHA-256"):
+        MODULO.garantir_fonte_ica(arq, url="http://nao-usar", sha_esperado="0" * 64)
+
+
+def test_garantir_fonte_nao_baixa_quando_arquivo_ja_existe(tmp_path):
+    """URL invalida de proposito: se tentasse baixar, o teste quebraria."""
+    arq = tmp_path / "ica.xlsx"
+    arq.write_bytes(b"ja esta aqui")
+    sha = hashlib.sha256(b"ja esta aqui").hexdigest()
+    MODULO.garantir_fonte_ica(arq, url="http://host.invalido.invalido/x.xlsx",
+                               sha_esperado=sha)
+
+
+def test_sha_esperado_do_projeto_bate_com_o_registrado_no_relatorio():
+    """
+    Guarda contra deriva entre a constante do codigo e a proveniencia
+    publicada: os dois tem que contar a mesma historia sobre qual arquivo
+    gerou o numero canonico.
+    """
+    import json
+    rel = Path(__file__).resolve().parents[1] / "reports" / "backtest_prospectivo_2025.json"
+    registrado = json.loads(rel.read_text(encoding="utf-8"))["fonte"]["sha256"]
+    assert MODULO.SHA256_ICA_2025 == registrado
