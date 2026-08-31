@@ -1,0 +1,33 @@
+name: Testes
+
+# Roda em toda PR e em todo push para main. Enunciado (pag. 6) exige
+# "boas praticas de versionamento" incluindo branches e pull requests --
+# este workflow e o gate que da sentido a isso: uma PR so deveria ser
+# aceitavel para merge se os 128 testes de unidade continuarem passando.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Rodar suite de testes
+        run: pytest -q
+
+      - name: Compilar todos os scripts (sanidade de sintaxe)
+        run: |
+          find src tests -name "*.py" -print0 | xargs -0 -n1 python -m py_compile
