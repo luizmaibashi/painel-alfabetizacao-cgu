@@ -1,25 +1,63 @@
-# Tech Challenge Fase 3 — Predição e Inteligência Analítica para Alfabetização no Brasil
+# Painel de Priorização Municipal de Alfabetização — Reúso de Dados Abertos
 
-> Modelo supervisionado que prevê se um **aluno** será considerado
-> alfabetizado, testado contra o próprio critério de sucesso que o projeto
-> definiu antes de treinar qualquer coisa. **Veredito: o modelo aluno-nível
-> não supera o melhor baseline municipal** — e a investigação de por quê
-> levou a um segundo entregável que funciona.
+> **[Abrir o painel ao vivo →](https://luizmaibashi.github.io/painel-alfabetizacao-cgu/)**
+> Ferramenta gratuita e de código aberto que cruza dados públicos federais
+> (INEP + IBGE) para dizer a um gestor municipal, estado por estado, se um
+> modelo estatístico consegue apontar quais municípios correm risco de não
+> atingir a meta de alfabetização infantil no próximo ciclo — **e onde a
+> resposta honesta é "os dados não sustentam essa afirmação ali"**.
+
+## Por que isto é reúso de dados abertos, e por que importa
+
+A alfabetização infantil (Indicador Criança Alfabetizada, INEP) é medida e
+publicada oficialmente todo ano, por município. O dado existe e é público —
+mas chega ao gestor como uma tabela crua de milhares de linhas, sem dizer
+**onde o histórico permite antecipar risco** e onde não permite. Este
+projeto cruza três fontes públicas para transformar essa tabela em uma
+ferramenta de priorização, com o cuidado adicional de **nunca afirmar mais
+do que os dados sustentam**:
+
+| Fonte pública | O que traz | Onde |
+|---|---|---|
+| **INEP — Resultados da Avaliação da Alfabetização** | Taxas municipais de alfabetização e metas do PDE, 2023–2026 | [gov.br/inep — resultados 2025](https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/avaliacao-da-alfabetizacao/resultados/2025) |
+| **IBGE — SIDRA (API pública)** | População municipal | [sidra.ibge.gov.br](https://sidra.ibge.gov.br/) |
+| **INEP — Censo Escolar 2023** | Infraestrutura escolar por município (testado como enriquecimento) | [gov.br/inep — microdados](https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-escolar) |
+
+Nenhuma dessas fontes exige credencial paga ou acesso restrito. O download
+da planilha de resultados é verificado por hash (SHA-256, registrado em
+[`reports/proveniencia_ica_2025.md`](reports/proveniencia_ica_2025.md)) —
+qualquer pessoa pode refazer o mesmo download e confirmar que os dados que
+alimentam o painel são exatamente os publicados pelo INEP.
+
+**Relevância e impacto potencial.** O painel serve à decisão concreta de um
+gestor de secretaria estadual ou municipal de educação: em qual município
+investir busca ativa e acompanhamento pedagógico primeiro, dado orçamento
+limitado. Ele evita dois erros de uso de dado público — (1) comparar
+municípios de estados diferentes numa régua nacional única, quando cada
+estado aplica sua própria prova (efeito medido, não hipotético — ver
+`§9`), e (2) apresentar um "score de IA" onde o histórico simplesmente não
+sustenta a afirmação, em vez de dizer isso abertamente.
+
+**Benefício para a sociedade.** Uso responsável de dado público para apoiar
+uma política de primeira infância (alfabetização até o 2º ano do
+fundamental é meta nacional do PDE) sem custo de licença, sem coleta de
+dado pessoal identificável, e com o código de geração do painel público —
+qualquer secretaria de educação pode adaptar o mesmo pipeline para seu
+próprio estado.
 
 ## O que este projeto entrega
 
 | # | Entregável | Resultado |
 |---|---|---|
-| 1 | **Modelo supervisionado aluno-nível** (exigência do enunciado) | Executado com rigor e **reprovado no próprio critério de falsificação**: 0,6047 contra 0,6331 da meta do PDE aplicada uniformemente, IC95% [−0,0342, −0,0228]. Resultado negativo, medido e documentado |
-| 2 | **A inversão de direção entre estados** | "Quem estava melhor em 2023 falha mais a meta" vale em **16 UFs**; o **oposto** vale em 7. Dois mecanismos medidos: regressão à média onde a meta acompanha o município (MG), e teto de 80,0 que blinda os melhores onde a meta satura (CE). Responde a pergunta de negócio nº 4 do enunciado ("como prever municípios que podem não atingir metas futuras?"), a única sem resposta **desenvolvida nesta fase** |
-| 3 | **Modelo de priorização municipal intra-UF** | Validado prospectivamente no ciclo 2025 sobre **5.285 municípios de 23 UFs**: AUC ponderada **0,6167** contra **0,4523** do baseline cuja direção já era conhecida em 2024 — ganho de **+0,1644**. A decisão é condicional, não nacional: o modelo vence em 14 UFs, o baseline vence no CE e 8 UFs exigem abstenção. O ranking só é acionável onde o IC bootstrap pareado sustenta essa afirmação |
-| 4 | **Advertência de validade sobre comparação entre estados** | Ranking nacional de municípios compara réguas de avaliação distintas — inclusive nos marts da nossa Fase 2 |
-| 5 | **Painel de priorização** (`reports/painel_intra_uf.html`) | Regenerado com o contrato operacional de 2025: ranking do modelo nas 14 UFs vencedoras, regra simples no CE, abstenção (só diagnóstico) nas 8 UFs inconclusivas. Particionado por UF, sem eixo nacional. Fonte oficial, SHA-256 da planilha e data de corte no rodapé. Gerado de `reports/ranking_prospectivo_2025.json` |
+| 1 | **Painel de priorização municipal** (`reports/painel_intra_uf.html`, [ao vivo aqui](https://luizmaibashi.github.io/painel-alfabetizacao-cgu/)) | Validado prospectivamente no ciclo 2025 sobre **5.285 municípios de 23 UFs**: AUC ponderada **0,6167** contra **0,4523** do baseline cuja direção já era conhecida em 2024 — ganho de **+0,1644**. A decisão é condicional, não nacional: o modelo vence em 14 UFs, o baseline vence no CE e 8 UFs exigem abstenção — o painel mostra isso, em vez de esconder atrás de uma média nacional |
+| 2 | **A inversão de direção entre estados** | "Quem estava melhor em 2023 falha mais a meta" vale em **16 UFs**; o **oposto** vale em 7. Dois mecanismos medidos: regressão à média onde a meta acompanha o município (MG), e teto de 80,0 que blinda os melhores onde a meta satura (CE) |
+| 3 | **Advertência de validade sobre comparação entre estados** | Ranking nacional de municípios compara réguas de avaliação distintas — o painel é particionado por UF por causa deste achado, de propósito |
+| 4 | **Modelo supervisionado aluno-nível** (exigência acadêmica de origem, mantido por transparência metodológica) | Testado com o mesmo rigor e **reprovado no próprio critério de falsificação**: 0,6047 contra 0,6331 da meta do PDE aplicada uniformemente, IC95% [−0,0342, −0,0228]. Resultado negativo, medido e documentado — evidência do padrão de honestidade estatística que sustenta o painel acima |
 
-A narrativa curta: **testamos onde o enunciado mandou testar, provamos com
-rigor que não funciona, e achamos onde funciona.**
+A narrativa curta: **testamos onde os dados permitiam testar, dissemos com
+rigor onde não funcionava, e entregamos, sem exagero, onde funcionava.**
 
-### As 5 perguntas de negócio do enunciado
+### As 5 perguntas de negócio da fase acadêmica de origem
 
 | Pergunta | Onde está respondida |
 |---|---|
@@ -28,6 +66,21 @@ rigor que não funciona, e achamos onde funciona.**
 | **Quais regiões possuem padrões semelhantes?** | **Herdada da Fase 2**: `agg_vulnerabilidade_ml` (K-Means, mart em produção) já responde isso a nível município. Não foi refeita nesta fase — a Fase 3 focou no eixo aluno-nível que a Fase 2 não cobria (§1); reutilizar o mart existente é a resposta honesta, não construir um clustering novo para dizer a mesma coisa |
 | Como prever municípios que podem não atingir metas futuras? | Entregável 2 — a resposta que a Fase 3 de fato desenvolveu |
 | Quais variáveis possuem maior influência nos modelos? | §7.1 (SHAP) |
+
+## Origem e licença
+
+Este repositório é um recorte, com narrativa reorientada, do projeto
+[**Tech Challenge Fase 3 — Predição e Inteligência Analítica para
+Alfabetização**](https://github.com/luizmaibashi/tech-challenge-fase3-alfabetizacao)
+(Pós-Tech em Data Analytics, FIAP). O trabalho técnico — modelagem, testes
+estatísticos, ADRs — é o mesmo; o que muda aqui é o produto em destaque (o
+painel, não o modelo aluno-nível) e o público-alvo (gestor público, não
+avaliador acadêmico). Enviado ao **2º Concurso de Reúso de Dados Abertos da
+CGU**. Código sob licença [MIT](LICENSE) — reúso e adaptação livres, inclusive
+por outras secretarias de educação.
+
+Caso de reúso cadastrado no Portal Brasileiro de Dados Abertos:
+`[link a preencher após homologação]`.
 
 ---
 
