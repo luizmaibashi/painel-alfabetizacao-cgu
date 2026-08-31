@@ -161,25 +161,39 @@ footer.note code{font-family:var(--mono);font-size:.9em}
 
 .provenance{font-family:var(--mono);font-size:.74rem;color:var(--muted);background:var(--surface-2);border:1px solid var(--line-2);border-radius:8px;padding:.7rem .9rem;margin-bottom:1.4rem;line-height:1.7;word-break:break-all}
 .provenance b{color:var(--ink-2)}
+
+.headline{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.7rem;margin:1.5rem 0}
+.hl-item{border-radius:10px;padding:1rem 1.1rem;border:1px solid var(--line)}
+.hl-item.hl-good{background:var(--ok-soft)}
+.hl-item.hl-bad{background:var(--warn-soft)}
+.hl-item.hl-muted{background:var(--surface-2)}
+.hl-n{font-family:var(--mono);font-size:1.9rem;font-weight:700;line-height:1;margin-bottom:.35rem}
+.hl-item.hl-good .hl-n{color:var(--ok)}
+.hl-item.hl-bad .hl-n{color:var(--warn)}
+.hl-item.hl-muted .hl-n{color:var(--ink-2)}
+.hl-d{font-size:.85rem;color:var(--ink-2);line-height:1.35}
 </style>
 
 <div class="wrap">
   <header class="top">
     <div class="kicker" id="kicker">Compromisso Nacional Criança Alfabetizada</div>
-    <h1>Quais municípios do meu estado não vão atingir a meta?</h1>
-    <p class="sub">Risco previsto de o município ficar abaixo da meta do PDE no próximo ciclo, ordenado dentro de cada estado — com uso condicional por UF, definido por um teste fora do ciclo de treino.</p>
+    <h1>Quais municípios do meu estado correm mais risco de não atingir a meta?</h1>
+    <p class="sub">Uma lista de prioridade por estado, para decidir onde apoiar primeiro — construída só com o que já se sabia, testada contra o que de fato aconteceu depois, e honesta sobre onde a resposta ainda não é confiável.</p>
   </header>
 
-  <p class="lead">Este painel estima, <strong>antes do resultado sair</strong>, quais municípios têm mais chance de não bater a meta de alfabetização — para ajudar a decidir onde priorizar apoio primeiro. O modelo foi <strong>congelado com dados até 2024 e testado no ciclo de 2025</strong> sem ver o resultado de 2025. Onde ele provou vencer uma regra simples, o painel mostra o ranking do modelo. Onde perdeu, mostra a regra simples. Onde o teste foi inconclusivo, <strong>o painel se abstém</strong> — mostra só o diagnóstico.</p>
+  <p class="lead">Este painel aponta, <strong>antes do resultado sair</strong>, quais municípios têm mais chance de não bater a meta de alfabetização — para ajudar a decidir onde apoiar primeiro. Para provar que isso funciona de verdade e não é sorte, testamos a previsão contra o que <strong>realmente aconteceu em 2025</strong>, sem deixar o modelo "ver" esse resultado antes de prever. Onde ele provou acertar mais que um método simples, o painel usa o modelo. Onde não provou — ou provou o contrário —, <strong>o painel avisa e usa o método mais simples e confiável</strong> em vez de fingir uma certeza que os dados não sustentam.</p>
+
+  <div class="headline" id="headline"></div>
 
   <div class="provenance" id="provenance"></div>
 
   <div class="gterms">
-    <details><summary>Risco previsto</summary><p>Probabilidade estimada (0 a 1) de o município ficar abaixo da meta no próximo ciclo, calculada só com dado do ciclo anterior — sem espiar o resultado real.</p></details>
+    <details><summary>Risco previsto</summary><p>Uma nota de 0 a 1 que estima a chance de o município ficar abaixo da meta no próximo ciclo, calculada só com o que já se sabia até o ano anterior — sem espiar o resultado real.</p></details>
     <details><summary>Meta do PDE</summary><p>Meta de alfabetização de cada município, definida pelo Plano de Metas do Compromisso Nacional Criança Alfabetizada. Ela sobe a cada ano, então comparar direto com a taxa do ano anterior engana.</p></details>
-    <details><summary>Regra simples</summary><p>Ordenar os municípios só pela taxa do ano anterior, numa direção fixa. Em alguns estados "quem estava melhor falha mais" (regressão à média); em outros é o contrário (a meta satura e protege quem já está no topo). O modelo só se justifica se superar essa regra.</p></details>
-    <details><summary>Backtest prospectivo</summary><p>Testar o modelo num ciclo que ele nunca viu: treina com 2023→2024, prevê 2024→2025 e só então compara com o que de fato aconteceu em 2025. É a evidência mais forte de que a previsão funciona fora do laboratório.</p></details>
-    <details><summary>IC95%</summary><p>Faixa onde o ganho verdadeiro sobre a regra simples provavelmente está, por bootstrap pareado. Se a faixa cruza o zero, não dá para afirmar que o modelo é melhor — é o caso das 8 UFs em que o painel se abstém.</p></details>
+    <details><summary>Método simples</summary><p>Ordenar os municípios só pela taxa do ano anterior, numa direção fixa. Em alguns estados "quem estava melhor falha mais" (efeito estatístico de regressão à média); em outros é o contrário (a meta satura e protege quem já está no topo). O modelo só se justifica se apontar risco melhor que este método, que é de graça.</p></details>
+    <details><summary>Acerto do modelo</summary><p>Se pegarmos dois municípios ao acaso — um que ficou abaixo da meta e outro que não —, o "acerto" é a chance de o modelo apontar corretamente qual dos dois estava em mais risco. 50% é o mesmo que sortear; perto de 100% é acerto quase sempre. (Estatísticos chamam isso de AUC.)</p></details>
+    <details><summary>Teste no mundo real</summary><p>O modelo foi treinado só com dados até 2024 e usado para prever 2025 sem nunca ver esse resultado — depois comparamos a previsão com o que de fato aconteceu. É a evidência mais forte de que a previsão funciona fora do laboratório. (Também chamado de backtest prospectivo.)</p></details>
+    <details><summary>Margem de confiança</summary><p>A vantagem medida entre modelo e método simples nunca é um número exato — é uma faixa. Se essa faixa cruza o zero, não dá para afirmar que um é melhor que o outro; é o caso dos estados em que o painel se abstém. (Estatísticos chamam isso de IC95%.)</p></details>
   </div>
 
   <div class="warn">
@@ -191,9 +205,9 @@ footer.note code{font-family:var(--mono);font-size:.9em}
     <div class="picker-label">Selecione o estado</div>
     <div class="chips" id="chips"></div>
     <div class="legend-uf">
-      <span><i class="ranking_modelo"></i>ranking do modelo (venceu o backtest)</span>
-      <span><i class="regra_simples"></i>regra simples (modelo perdeu)</span>
-      <span><i class="abster"></i>abstenção (inconclusivo)</span>
+      <span><i class="ranking_modelo"></i>modelo comprovadamente melhor</span>
+      <span><i class="regra_simples"></i>método simples é melhor aqui</span>
+      <span><i class="abster"></i>dado insuficiente — sem recomendação</span>
     </div>
   </div>
 
@@ -205,7 +219,7 @@ footer.note code{font-family:var(--mono);font-size:.9em}
   <div id="trust"></div>
 
   <details class="method">
-    <summary>Como este modelo foi construído e testado <span class="mchev">&#9662;</span></summary>
+    <summary>Como sabemos que isso funciona (detalhe técnico, opcional) <span class="mchev">&#9662;</span></summary>
     <ol>
       <li><strong>Dado:</strong> taxa de alfabetização por município (2023, 2024 e 2025), meta do PDE por município e porte populacional — planilha oficial de resultados e metas do Inep, publicada em <span id="mData">01/04/2026</span>.</li>
       <li><strong>Um modelo por estado, não um modelo nacional.</strong> Um modelo único para o Brasil, testado fora da amostra (Leave-One-UF-Out), caiu para AUC 0,48 — pior que sortear. Cada estado aplica sua própria prova e sua própria meta.</li>
@@ -236,7 +250,7 @@ footer.note code{font-family:var(--mono);font-size:.9em}
   </div>
 
   <footer class="note">
-    <p><strong>Como ler a tabela.</strong> “Taxa 2024” e “Meta 2025” são o que já se sabia antes do resultado de 2025 — é o que o modelo usa para prever. “Taxa 2025” e “Resultado real” são o que de fato aconteceu, mostrados só para conferência do backtest.</p>
+    <p><strong>Como ler a tabela.</strong> “Taxa 2024” e “Meta 2025” são o que já se sabia antes do resultado de 2025 — é o que o modelo usa para prever. “Taxa 2025” e “Resultado real” são o que de fato aconteceu, mostrados aqui só para você conferir se a previsão bateu.</p>
     <p id="footProv"></p>
     <p>Gerado por <code>src/visualization/01_gerar_painel_intra_uf.py</code> a partir de <code>reports/ranking_prospectivo_2025.json</code> (saída de <code>src/evaluation/05_backtest_prospectivo_2025.py</code>).</p>
   </footer>
@@ -252,6 +266,7 @@ const el = id => document.getElementById(id);
 const pct = v => (v*100).toFixed(1).replace(".", ",") + "%";
 const num = v => v === null || v === undefined ? "—" : Number(v).toFixed(1).replace(".", ",");
 const n3 = v => v.toFixed(3).replace(".", ",");
+const pp = v => (v*100).toFixed(1).replace(".", ",") + " p.p.";
 
 function corRisco(s){
   if (s >= 0.75) return "var(--r4)";
@@ -283,6 +298,10 @@ function montarResumoMetodologia(){
   const r = DATA.resumo;
   el("mVence").textContent = r.ufs_ranking_modelo;
   el("mAbster").textContent = r.ufs_abster;
+  el("headline").innerHTML = `
+    <div class="hl-item hl-good"><div class="hl-n">${r.ufs_ranking_modelo}</div><div class="hl-d">estados onde o modelo <b>provou acertar mais</b> — use o ranking</div></div>
+    <div class="hl-item hl-bad"><div class="hl-n">${r.ufs_regra_simples}</div><div class="hl-d">estado onde o método simples <b>ganhou do modelo</b> — usamos ele</div></div>
+    <div class="hl-item hl-muted"><div class="hl-n">${r.ufs_abster}</div><div class="hl-d">estados sem dado suficiente — o painel <b>se abstém</b>, com honestidade</div></div>`;
 }
 
 function renderTrust(d){
@@ -293,28 +312,30 @@ function renderTrust(d){
   const regraTxt = d.direcao === "melhor_primeiro"
     ? "priorizar quem tinha a <b>maior</b> taxa em 2024"
     : "priorizar quem tinha a <b>menor</b> taxa em 2024";
+  const ganhoTxt = (d.ganho>=0?"+":"") + pp(d.ganho);
+  const margemTxt = pp(d.ganho_ic[0]) + " a " + pp(d.ganho_ic[1]);
 
   const cls = {ranking_modelo:"good", regra_simples:"bad", abster:"warn"}[d.uso];
   const txt = {
-    ranking_modelo: "✓ No backtest de 2025, o modelo <b>superou</b> a regra simples neste estado, com o intervalo de confiança inteiramente positivo (ganho <b>" + (d.ganho>=0?"+":"") + n3(d.ganho) + "</b>, IC95% " + n3(d.ganho_ic[0]) + " a " + n3(d.ganho_ic[1]) + "). <b>Use o ranking abaixo.</b>",
-    regra_simples: "⚠ No backtest de 2025, o modelo <b>ficou atrás</b> da regra simples neste estado, com o intervalo inteiramente negativo (ganho <b>" + n3(d.ganho) + "</b>, IC95% " + n3(d.ganho_ic[0]) + " a " + n3(d.ganho_ic[1]) + "). A tabela abaixo está ordenada pela <b>regra simples</b> (" + regraTxt + "); o score do modelo é mostrado só para referência.",
-    abster: "≈ No backtest de 2025, a diferença entre modelo e regra simples <b>não é estatisticamente distinguível</b> neste estado (ganho <b>" + (d.ganho>=0?"+":"") + n3(d.ganho) + "</b>, IC95% " + n3(d.ganho_ic[0]) + " a " + n3(d.ganho_ic[1]) + ", cruzando zero). <b>O painel não recomenda ordem de ação aqui</b> — a tabela é só diagnóstico. Olhe a lista inteira e complemente com conhecimento local."
+    ranking_modelo: "✓ Testamos contra o que <b>realmente aconteceu em 2025</b>: o modelo acertou mais que o método simples neste estado, e a vantagem não foi sorte — mesmo na leitura mais conservadora, ele continua na frente. <b>Use o ranking abaixo para priorizar.</b> <span class=\"ic\">(vantagem " + ganhoTxt + " de acerto, margem " + margemTxt + ")</span>",
+    regra_simples: "⚠ Testamos contra o que <b>realmente aconteceu em 2025</b>: aqui o método simples acertou mais que o modelo. A tabela abaixo segue o <b>método simples</b> (" + regraTxt + "); a nota do modelo aparece só como referência. <span class=\"ic\">(desvantagem do modelo: " + ganhoTxt + ")</span>",
+    abster: "≈ Testamos contra o que <b>realmente aconteceu em 2025</b>: neste estado <b>não dá para afirmar com segurança</b> se o modelo ou o método simples acerta mais — a diferença observada pode ser só sorte da amostra. <b>Por isso o painel não recomenda ordem de ação aqui</b> — a tabela é só diagnóstico. Use como apoio, complementado por conhecimento local. <span class=\"ic\">(diferença " + ganhoTxt + ", margem " + margemTxt + " cruza zero)</span>"
   }[d.uso];
 
   return `
     <div class="auc-compare">
-      <p class="auc-note">Comparação medida no ciclo de 2025, que o modelo nunca viu no treino. A régua da esquerda é o sorteio aleatório (0,5); mais à direita é melhor.</p>
+      <p class="auc-note">Comparação feita com o resultado real de 2025, que o modelo nunca tinha visto antes de prever. Quanto mais à direita, maior a chance de acerto; a marca "sorteio aleatório" é o que se conseguiria escolhendo ao acaso.</p>
       <div class="auc-track">
         <span class="auc-tick"><label>sorteio aleatório</label></span>
-        <span class="auc-end left">0,0</span>
-        <span class="auc-end right">1,0</span>
+        <span class="auc-end left">0%</span>
+        <span class="auc-end right">100%</span>
         <span class="auc-mark intuicao" style="left:${clamp(d.auc_baseline)}%"></span>
         <span class="auc-mark modelo" style="left:${clamp(d.auc_modelo)}%"></span>
       </div>
       <div class="auc-legend">
-        <span><i class="dot intuicao"></i>regra simples — <b>${n3(d.auc_baseline)}</b></span>
-        <span><i class="dot modelo"></i>modelo — <b>${n3(d.auc_modelo)}</b></span>
-        <span>diferença <b>${d.ganho >= 0 ? "+" : ""}${n3(d.ganho)}</b> <span class="ic">IC95% ${n3(d.ganho_ic[0])} a ${n3(d.ganho_ic[1])}</span></span>
+        <span><i class="dot intuicao"></i>método simples — <b>${pct(d.auc_baseline)}</b> de acerto</span>
+        <span><i class="dot modelo"></i>modelo — <b>${pct(d.auc_modelo)}</b> de acerto</span>
+        <span>vantagem do modelo <b>${ganhoTxt}</b> <span class="ic">(margem: ${margemTxt})</span></span>
       </div>
       ${avisoAmostra}
     </div>
@@ -331,16 +352,16 @@ function render(){
   const rotuloOrd = d.uso === "regra_simples"
     ? "ordenado pela regra simples"
     : d.uso === "abster" ? "score do modelo (diagnóstico)" : "ranking do modelo";
-  el("thOrd").textContent = d.uso === "regra_simples" ? "Score do modelo (ref.)" : "Risco previsto";
+  el("thOrd").textContent = d.uso === "regra_simples" ? "Nota do modelo (referência)" : "Risco previsto";
 
   el("stats").innerHTML = `
     <div class="stat"><div class="k">Municípios</div><div class="v">${d.n}</div></div>
     <div class="stat"><div class="k">Ficaram abaixo da meta</div>
       <div class="v" style="color:${d.taxa_falha_2025>=.5?'var(--r4)':'var(--ink)'}">${pct(d.taxa_falha_2025)}</div>
       <div class="d">observado em 2025</div></div>
-    <div class="stat"><div class="k">AUC do modelo (2025)</div><div class="v">${n3(d.auc_modelo)}</div>
-      <div class="d">fora do ciclo de treino</div></div>
-    <div class="stat"><div class="k">AUC da regra simples</div><div class="v">${n3(d.auc_baseline)}</div>
+    <div class="stat"><div class="k">Acerto do modelo (2025)</div><div class="v">${pct(d.auc_modelo)}</div>
+      <div class="d">testado no ano seguinte, sem ver o resultado antes</div></div>
+    <div class="stat"><div class="k">Acerto do método simples</div><div class="v">${pct(d.auc_baseline)}</div>
       <div class="d">${d.direcao === "melhor_primeiro" ? "“priorize quem estava melhor”" : "“priorize quem estava pior”"}</div></div>`;
 
   el("trust").innerHTML = renderTrust(d);
