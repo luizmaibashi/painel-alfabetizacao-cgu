@@ -1,73 +1,74 @@
-# Painel de Priorização Municipal de Alfabetização — Reúso de Dados Abertos
+# Painel de Priorização Municipal de Alfabetização: Reúso de Dados Abertos
 
 > **[Abrir o painel ao vivo →](https://luizmaibashi.github.io/painel-alfabetizacao-cgu/)**
 > Ferramenta gratuita e de código aberto que cruza dados públicos federais
 > (INEP + IBGE) para dizer a um gestor municipal, estado por estado, se um
 > modelo estatístico consegue apontar quais municípios correm risco de não
-> atingir a meta de alfabetização infantil no próximo ciclo — **e onde a
-> resposta honesta é "os dados não sustentam essa afirmação ali"**.
+> atingir a meta de alfabetização infantil no próximo ciclo, e onde a
+> resposta honesta é "os dados não sustentam essa afirmação ali".
 
 ## Por que isto é reúso de dados abertos, e por que importa
 
 A alfabetização infantil (Indicador Criança Alfabetizada, INEP) é medida e
-publicada oficialmente todo ano, por município. O dado existe e é público —
+publicada oficialmente todo ano, por município. O dado existe e é público,
 mas chega ao gestor como uma tabela crua de milhares de linhas, sem dizer
-**onde o histórico permite antecipar risco** e onde não permite. Este
-projeto cruza três fontes públicas para transformar essa tabela em uma
-ferramenta de priorização, com o cuidado adicional de **nunca afirmar mais
-do que os dados sustentam**:
+onde o histórico permite antecipar risco e onde não permite. Este projeto
+cruza três fontes públicas para transformar essa tabela em uma ferramenta
+de priorização, com o cuidado adicional de nunca afirmar mais do que os
+dados sustentam:
 
 | Fonte pública | O que traz | Onde |
 |---|---|---|
-| **INEP — Resultados da Avaliação da Alfabetização** | Taxas municipais de alfabetização e metas do PDE, 2023–2026 | [gov.br/inep — resultados 2025](https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/avaliacao-da-alfabetizacao/resultados/2025) |
-| **IBGE — SIDRA (API pública)** | População municipal | [sidra.ibge.gov.br](https://sidra.ibge.gov.br/) |
-| **INEP — Censo Escolar 2023** | Infraestrutura escolar por município (testado como enriquecimento) | [gov.br/inep — microdados](https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-escolar) |
+| INEP: Resultados da Avaliação da Alfabetização | Taxas municipais de alfabetização e metas do PDE, 2023-2026 | [gov.br/inep, resultados 2025](https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/avaliacao-da-alfabetizacao/resultados/2025) |
+| IBGE: SIDRA (API pública) | População municipal | [sidra.ibge.gov.br](https://sidra.ibge.gov.br/) |
+| INEP: Censo Escolar 2023 | Infraestrutura escolar por município (testado como enriquecimento) | [gov.br/inep, microdados](https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-escolar) |
 
 Nenhuma dessas fontes exige credencial paga ou acesso restrito. O download
 da planilha de resultados é verificado por hash (SHA-256, registrado em
-[`reports/proveniencia_ica_2025.md`](reports/proveniencia_ica_2025.md)) —
-qualquer pessoa pode refazer o mesmo download e confirmar que os dados que
+[`reports/proveniencia_ica_2025.md`](reports/proveniencia_ica_2025.md)).
+Qualquer pessoa pode refazer o mesmo download e confirmar que os dados que
 alimentam o painel são exatamente os publicados pelo INEP.
 
 **Relevância e impacto potencial.** O painel serve à decisão concreta de um
 gestor de secretaria estadual ou municipal de educação: em qual município
 investir busca ativa e acompanhamento pedagógico primeiro, dado orçamento
-limitado. Ele evita dois erros de uso de dado público — (1) comparar
-municípios de estados diferentes numa régua nacional única, quando cada
-estado aplica sua própria prova (efeito medido, não hipotético — detalhado
-mais abaixo), e (2) apresentar um "score de IA" onde o histórico
-simplesmente não sustenta a afirmação, em vez de dizer isso abertamente.
+limitado. Ele evita dois erros de uso de dado público: comparar municípios
+de estados diferentes numa régua nacional única, quando cada estado aplica
+sua própria prova (efeito medido, não hipotético, detalhado mais abaixo); e
+apresentar um "score de IA" onde o histórico simplesmente não sustenta a
+afirmação, em vez de dizer isso abertamente.
 
 **Benefício para a sociedade.** Uso responsável de dado público para apoiar
 uma política de primeira infância (alfabetização até o 2º ano do
-fundamental é meta nacional do PDE) sem custo de licença, sem coleta de
-dado pessoal identificável, e com o código de geração do painel público —
-qualquer secretaria de educação pode adaptar o mesmo pipeline para seu
+fundamental é meta nacional do PDE), sem custo de licença, sem coleta de
+dado pessoal identificável, e com o código de geração do painel público.
+Qualquer secretaria de educação pode adaptar o mesmo pipeline para seu
 próprio estado.
 
 ## O que este projeto entrega
 
 | # | Entregável | Resultado |
 |---|---|---|
-| 1 | **Painel de priorização municipal** (`reports/painel_intra_uf.html`, [ao vivo aqui](https://luizmaibashi.github.io/painel-alfabetizacao-cgu/)) | Testado contra o resultado real de 2025 em **5.285 municípios de 23 estados**: o modelo acerta **65,3%** das vezes contra **45,2%** de um método simples de comparação — ganho de **16,4 pontos percentuais**. A decisão é por estado, não nacional: o modelo vence em 14 estados, o método simples vence em 1 (Ceará) e em 8 o painel se abstém — mostra o diagnóstico, não esconde a incerteza atrás de uma média nacional |
-| 2 | **A descoberta de que não existe uma regra nacional única** | "Quem estava melhor em 2023 falha mais a meta no ano seguinte" vale em 16 estados; o **oposto** vale em 7. Dois mecanismos diferentes por trás disso — por isso um modelo nacional único não funciona, e o painel é sempre por estado |
-| 3 | **Advertência de validade sobre comparação entre estados** | Um ranking nacional de municípios compararia réguas de avaliação distintas — o painel é dividido por estado por causa deste achado, de propósito |
-| 4 | **Modelo por aluno** (exigência da fase acadêmica de origem, mantido por transparência) | Testado com o mesmo rigor e **reprovado no próprio critério que definimos antes de testar**: 60,5% de acerto contra 63,3% de aplicar a meta oficial a todos os alunos do município. Resultado negativo, medido e mantido no relatório — evidência do padrão de honestidade que sustenta o painel acima |
+| 1 | Painel de priorização municipal (`reports/painel_intra_uf.html`, [ao vivo aqui](https://luizmaibashi.github.io/painel-alfabetizacao-cgu/)) | Testado contra o resultado real de 2025 em 5.285 municípios de 23 estados: o modelo acerta 65,3% das vezes contra 45,2% de um método simples de comparação, ganho de 16,4 pontos percentuais. A decisão é por estado, não nacional: o modelo vence em 14 estados, o método simples vence em 1 (Ceará) e em 8 o painel se abstém, mostrando o diagnóstico em vez de esconder a incerteza atrás de uma média nacional |
+| 2 | A descoberta de que não existe uma regra nacional única | "Quem estava melhor em 2023 falha mais a meta no ano seguinte" vale em 16 estados; o oposto vale em 7. Dois mecanismos diferentes por trás disso, por isso um modelo nacional único não funciona e o painel é sempre por estado |
+| 3 | Advertência de validade sobre comparação entre estados | Um ranking nacional de municípios compararia réguas de avaliação distintas. O painel é dividido por estado por causa deste achado, de propósito |
+| 4 | Modelo por aluno (exigência da fase acadêmica de origem, mantido por transparência) | Testado com o mesmo rigor e reprovado no próprio critério definido antes de testar: 60,5% de acerto contra 63,3% de aplicar a meta oficial a todos os alunos do município. Resultado negativo, medido e mantido no relatório, evidência do padrão de honestidade que sustenta o painel acima |
 
-A narrativa curta: **testamos onde os dados permitiam testar, dissemos com
-rigor onde não funcionava, e entregamos, sem exagero, onde funcionava.**
+A narrativa curta: testamos onde os dados permitiam testar, dissemos com
+rigor onde não funcionava e entregamos, sem exagero, onde funcionava.
 
 ## Origem e licença
 
 Este repositório é um recorte, com narrativa reorientada, do projeto
-[**Tech Challenge Fase 3 — Predição e Inteligência Analítica para
-Alfabetização**](https://github.com/luizmaibashi/tech-challenge-fase3-alfabetizacao)
-(Pós-Tech em Data Analytics, FIAP). O trabalho técnico — modelagem, testes
-estatísticos, decisões documentadas passo a passo — é o mesmo; o que muda aqui é o produto em destaque (o
-painel, não o modelo aluno-nível) e o público-alvo (gestor público, não
-avaliador acadêmico). Enviado ao **2º Concurso de Reúso de Dados Abertos da
-CGU**. Código sob licença [MIT](LICENSE) — reúso e adaptação livres, inclusive
-por outras secretarias de educação.
+[Tech Challenge Fase 3: Predição e Inteligência Analítica para
+Alfabetização](https://github.com/luizmaibashi/tech-challenge-fase3-alfabetizacao)
+(Pós-Tech em Data Analytics, FIAP). O trabalho técnico (modelagem, testes
+estatísticos, decisões documentadas passo a passo) é o mesmo; o que muda
+aqui é o produto em destaque (o painel, não o modelo aluno-nível) e o
+público-alvo (gestor público, não avaliador acadêmico). Enviado ao 2º
+Concurso de Reúso de Dados Abertos da CGU. Código sob licença
+[MIT](LICENSE): reúso e adaptação livres, inclusive por outras secretarias
+de educação.
 
 Caso de reúso cadastrado no Portal Brasileiro de Dados Abertos:
 `[link a preencher após homologação]`.
@@ -76,86 +77,85 @@ Caso de reúso cadastrado no Portal Brasileiro de Dados Abertos:
 
 ## Como funciona, em linguagem simples
 
-### Primeiro tentamos prever aluno por aluno — e não funcionou
+### Primeiro tentamos prever aluno por aluno, e não funcionou
 
-O pedido original (fase acadêmica de origem) era prever, **para cada aluno**,
+O pedido original (fase acadêmica de origem) era prever, para cada aluno,
 se ele seria alfabetizado ou não, usando dados disponíveis antes da prova.
-Construímos esse modelo com todo o cuidado — removendo qualquer coluna que
+Construímos esse modelo com todo o cuidado, removendo qualquer coluna que
 "entregasse a resposta de graça" (por exemplo, uma coluna que só existe
 quando o aluno faltou à prova, o que já revela o resultado por outro
-caminho) — e testamos contra a régua mais simples possível: **aplicar a
-meta oficial do governo para aquele município a todos os alunos dele,
-igualzinho, sem olhar nada do aluno individualmente.**
+caminho), e testamos contra a régua mais simples possível: aplicar a meta
+oficial do governo para aquele município a todos os alunos dele, igualzinho,
+sem olhar nada do aluno individualmente.
 
 O modelo perdeu dessa régua simples. Não por pouco, e não por azar: perdeu
 de forma consistente, com três algoritmos diferentes, com folga estatística
-segura. A causa, uma vez investigada, foi simples de entender: **os dados
-disponíveis não descrevem o aluno — descrevem o município dele.** Depois de
+segura. A causa, uma vez investigada, foi simples de entender: os dados
+disponíveis não descrevem o aluno, descrevem o município dele. Depois de
 tirar tudo que era "cola", o que sobra sobre cada aluno é, na prática, uma
-cópia do dado do município onde ele estuda. E um número que já existe de
+cópia do dado do município onde ele estuda. Um número que já existe de
 graça (a meta oficial) prevê isso tão bem quanto, ou melhor, do que um
 modelo caro de treinar e manter.
 
-**Essa é uma vitória para o gestor, não uma derrota do projeto.** Significa
-que não é preciso pagar por infraestrutura de IA para saber quais alunos
-priorizar — a meta oficial, que o governo já publica, já cumpre esse papel.
+Essa é uma vitória para o gestor, não uma derrota do projeto: não é preciso
+pagar por infraestrutura de IA para saber quais alunos priorizar. A meta
+oficial, que o governo já publica, já cumpre esse papel.
 
 ### O que funciona: priorizar município, dentro do próprio estado
 
 Com o aluno descartado, testamos o mesmo tipo de pergunta um nível acima:
-**dá para prever quais municípios vão ficar abaixo da meta no próximo
-ano?** Aqui, sim, havia sinal real — mas só quando comparamos municípios
-**do mesmo estado entre si**. Cada estado brasileiro aplica sua própria
-prova de alfabetização, com sua própria dificuldade a cada ano — comparar
-municípios de estados diferentes na mesma régua seria como comparar notas
-de provas diferentes como se fossem a mesma prova.
+dá para prever quais municípios vão ficar abaixo da meta no próximo ano?
+Aqui, sim, havia sinal real, mas só quando comparamos municípios do mesmo
+estado entre si. Cada estado brasileiro aplica sua própria prova de
+alfabetização, com sua própria dificuldade a cada ano: comparar municípios
+de estados diferentes na mesma régua seria como comparar notas de provas
+diferentes como se fossem a mesma prova.
 
-Para provar que o modelo funciona de verdade — e não é sorte de ajuste —
-nós o "congelamos" com dados até 2024 e o usamos para prever 2025 **sem
-deixá-lo ver esse resultado antes**. Só depois comparamos a previsão com o
-que de fato aconteceu. É o teste mais rigoroso disponível: prever o futuro
-de verdade, não reencontrar um padrão já visto.
+Para provar que o modelo funciona de verdade, e não é sorte de ajuste, nós
+o "congelamos" com dados até 2024 e o usamos para prever 2025 sem deixá-lo
+ver esse resultado antes. Só depois comparamos a previsão com o que de fato
+aconteceu. É o teste mais rigoroso disponível: prever o futuro de verdade,
+não reencontrar um padrão já visto.
 
 ### Os números, traduzidos
 
 | Pergunta | Resposta |
 |---|---|
-| Em quantos municípios o modelo foi testado de verdade (não simulado)? | **5.285**, em 23 estados |
-| Em quantos estados o modelo provou apontar risco melhor que um método simples e gratuito? | **14 de 23** |
-| Em quantos estados o método simples continua sendo a melhor escolha? | **1** (Ceará) |
-| Em quantos estados os dados não são suficientes para afirmar qualquer coisa com segurança? | **8** — e o painel avisa isso abertamente, em vez de arriscar um palpite |
-| Se eu sortear dois municípios ao acaso — um que ficou abaixo da meta, outro que não —, qual a chance de o modelo apontar corretamente qual dos dois estava em mais risco? | **65,3%**, contra **45,2%** de um método simples de comparação (sortear ao acaso daria 50%) |
-| E o modelo por aluno, o que a fase acadêmica de origem pedia? | **Perdeu** do método simples (60,5% de acerto contra 63,3%) — resultado negativo, medido e mantido no relatório, não escondido |
+| Em quantos municípios o modelo foi testado de verdade (não simulado)? | 5.285, em 23 estados |
+| Em quantos estados o modelo provou apontar risco melhor que um método simples e gratuito? | 14 de 23 |
+| Em quantos estados o método simples continua sendo a melhor escolha? | 1 (Ceará) |
+| Em quantos estados os dados não são suficientes para afirmar qualquer coisa com segurança? | 8, e o painel avisa isso abertamente, em vez de arriscar um palpite |
+| Se eu sortear dois municípios ao acaso (um que ficou abaixo da meta, outro que não), qual a chance de o modelo apontar corretamente qual dos dois estava em mais risco? | 65,3%, contra 45,2% de um método simples de comparação (sortear ao acaso daria 50%) |
+| E o modelo por aluno, o que a fase acadêmica de origem pedia? | Perdeu do método simples (60,5% de acerto contra 63,3%), resultado negativo, medido e mantido no relatório, não escondido |
 
 ### Limitações, sem rodeio
 
-- **Não compara municípios de estados diferentes, de propósito.** Cada
-  estado aplica sua própria prova; a variação de um ano para outro dentro
-  do mesmo estado já chega a 20 pontos percentuais. Colocar municípios de
-  estados diferentes na mesma lista seria enganoso — por isso o painel é
-  sempre filtrado por estado, sem ranking nacional.
-- **Não serve para decisão sobre um aluno específico.** É uma ferramenta de
+- Não compara municípios de estados diferentes, de propósito. Cada estado
+  aplica sua própria prova; a variação de um ano para outro dentro do mesmo
+  estado já chega a 20 pontos percentuais. Colocar municípios de estados
+  diferentes na mesma lista seria enganoso, por isso o painel é sempre
+  filtrado por estado, sem ranking nacional.
+- Não serve para decisão sobre um aluno específico. É uma ferramenta de
   priorização municipal, para orientar onde alocar apoio pedagógico e
-  orçamento — nunca para rotular ou negar direito a uma criança.
-- **Só existe um "teste no mundo real" completo até agora** (previsão de
-  2025, conferida contra o resultado real de 2025). Com o tempo, cada novo
-  ciclo aumenta a confiança — ou revela se algo precisa mudar.
-- **Nos 8 estados sem sinal suficiente, o painel prefere dizer "não
-  sabemos" a inventar uma resposta.** Isso é decisão de desenho, não falha:
-  uma ferramenta pública que finge certeza onde não há é mais perigosa do
-  que uma que admite o limite.
+  orçamento, nunca para rotular ou negar direito a uma criança.
+- Só existe um "teste no mundo real" completo até agora (previsão de 2025,
+  conferida contra o resultado real de 2025). Com o tempo, cada novo ciclo
+  aumenta a confiança, ou revela se algo precisa mudar.
+- Nos 8 estados sem sinal suficiente, o painel prefere dizer "não sabemos"
+  a inventar uma resposta. É decisão de desenho, não falha: uma ferramenta
+  pública que finge certeza onde não há é mais perigosa do que uma que
+  admite o limite.
 
-### O que fazer com isso — recomendação prática
+### O que fazer com isso, recomendação prática
 
-1. **Para priorizar alunos dentro de uma escola**, use a meta oficial do
-   PDE do município, aplicada a todos os alunos dele — é mais simples,
-   mais barata (nenhum modelo em produção) e, pelos nossos testes, tão ou
-   mais eficaz que um modelo de IA.
-2. **Para priorizar municípios dentro do seu estado**, use o painel — mas
-   só onde ele mostra o "ranking do modelo" (14 estados). Onde mostra
-   "método simples" (Ceará) ou "sem recomendação" (8 estados), siga o que
-   o painel indica: nunca compare municípios de estados diferentes numa
-   régua única.
+1. Para priorizar alunos dentro de uma escola, use a meta oficial do PDE
+   do município, aplicada a todos os alunos dele: é mais simples, mais
+   barata (nenhum modelo em produção) e, pelos nossos testes, tão ou mais
+   eficaz que um modelo de IA.
+2. Para priorizar municípios dentro do seu estado, use o painel, mas só
+   onde ele mostra o "ranking do modelo" (14 estados). Onde mostra "método
+   simples" (Ceará) ou "sem recomendação" (8 estados), siga o que o painel
+   indica: nunca compare municípios de estados diferentes numa régua única.
 
 ---
 
