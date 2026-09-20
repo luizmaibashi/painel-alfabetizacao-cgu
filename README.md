@@ -58,7 +58,7 @@ próprio estado.
 
 | # | Entregável | Resultado |
 |---|---|---|
-| 1 | Painel de priorização municipal ([ao vivo](https://luizmaibashi.github.io/painel-alfabetizacao-cgu/)) | Testado contra o resultado real de 2025 em 5.285 municípios de 23 estados. O modelo acerta 65,3% das vezes contra 45,2% de um método simples de comparação (sortear ao acaso daria 50%). A decisão é por estado: modelo em 14, método simples em 1 (Ceará), abstenção em 8 |
+| 1 | Painel de priorização municipal ([ao vivo](https://luizmaibashi.github.io/painel-alfabetizacao-cgu/)) | Testado contra o resultado real de 2025 em 5.285 municípios de 23 estados. O modelo acerta 61,7% das vezes contra 45,2% de um método simples de comparação (sortear ao acaso daria 50%). A decisão é por estado: modelo em 14, método simples em 1 (Ceará), abstenção em 8 |
 | 2 | A descoberta de que não existe regra nacional única | "Quem estava melhor em 2023 falha mais a meta no ano seguinte" vale em 16 estados, e o oposto vale em 7. Por isso o painel é sempre por estado |
 | 3 | Advertência de validade sobre comparação entre estados | Um ranking nacional compararia réguas de avaliação distintas. O painel é dividido por estado de propósito |
 | 4 | Modelo por aluno (exigência da fase acadêmica de origem, mantido por transparência) | Testado com o mesmo rigor e reprovado no critério definido antes de testar: 60,5% de acerto contra 63,3% de aplicar a meta oficial a todos os alunos do município. Resultado negativo, medido e mantido no relatório |
@@ -123,7 +123,7 @@ futuro, não reencontrar um padrão já visto.
 | Em quantos estados o modelo apontou risco melhor que o método simples? | 14 de 23 |
 | Em quantos o método simples continua sendo a melhor escolha? | 1 (Ceará) |
 | Em quantos os dados não bastam para afirmar nada com segurança? | 8, e o painel avisa isso na tela |
-| Sorteando dois municípios (um que furou a meta, outro que não), qual a chance de o modelo apontar corretamente qual estava em mais risco? | 65,3%, contra 45,2% do método simples |
+| Sorteando dois municípios (um que furou a meta, outro que não), qual a chance de o modelo apontar corretamente qual estava em mais risco? | 61,7% (AUC ponderada pelo número de municípios de cada estado, `reports/backtest_prospectivo_2025.json`), contra 45,2% do método simples |
 | E o modelo por aluno, que a fase acadêmica pedia? | Perdeu do método simples (60,5% contra 63,3%), mantido no relatório |
 
 ### Limitações, sem rodeio
